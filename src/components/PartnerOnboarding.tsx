@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Link2, Edit3, ArrowLeft, ArrowRight, Users, Sparkles, Gift, MessageHeart, Clock, Hand, Briefcase, GraduationCap, Dumbbell, Calendar, Check } from 'lucide-react';
+import { Heart, Link2, Edit3, ArrowLeft, ArrowRight, Users, Sparkles, Gift, MessageCircleHeart, Clock, Hand, Briefcase, GraduationCap, Dumbbell, Calendar, Check } from 'lucide-react';
 import { authService } from '../services/auth';
 import { cycleService } from '../services/cycle';
 
@@ -12,7 +12,7 @@ interface PartnerOnboardingProps {
 const supportStyles = [
   { id: 'acts-of-service', label: 'Acts of Service', icon: Sparkles, description: 'Helping with tasks' },
   { id: 'gifts', label: 'Thoughtful Gifts', icon: Gift, description: 'Meaningful presents' },
-  { id: 'emotional-support', label: 'Emotional Support', icon: MessageHeart, description: 'Being there to listen' },
+  { id: 'emotional-support', label: 'Emotional Support', icon: MessageCircleHeart, description: 'Being there to listen' },
   { id: 'quality-time', label: 'Quality Time', icon: Clock, description: 'Undivided attention' },
   { id: 'physical-touch', label: 'Physical Touch', icon: Hand, description: 'Hugs and closeness' },
 ];
@@ -66,17 +66,28 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+    visible: { 
+      opacity: 1, 
+      transition: { 
+        staggerChildren: 0.08, 
+        delayChildren: 0.1 
+      } 
+    },
   };
+
   const itemVariants = {
     hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } 
+    },
   };
+
   const buttonTap = { scale: 0.97 };
 
   const PreferencesForm = () => (
     <div className="space-y-6">
-      {/* Support Style Selection */}
       <motion.div variants={itemVariants} className="space-y-3">
         <label className="block text-sm font-medium text-slate-700">
           Your Support Style
@@ -124,7 +135,6 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
         </div>
       </motion.div>
 
-      {/* Schedule Selection */}
       <motion.div variants={itemVariants} className="space-y-3">
         <label className="block text-sm font-medium text-slate-700">
           Your Schedule
@@ -213,8 +223,9 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
           {step === 'link-choice' && (
             <motion.div
               key="link-choice"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
             >
@@ -259,8 +270,9 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
           {step === 'link-input' && (
             <motion.div
               key="link-input"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-5"
             >
@@ -316,8 +328,9 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
           {step === 'manual-setup' && (
             <motion.div
               key="manual-setup"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-5"
             >

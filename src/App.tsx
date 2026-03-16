@@ -62,7 +62,28 @@ function App() {
         console.log('User data:', user);
 
         if (!user) {
-          console.warn('No user data found');
+          console.warn('No user data found - this is a new user');
+          // For new users, we need to wait for the user document to be created
+          // Retry fetching user data a few times with delays
+          let retryCount = 0;
+          const maxRetries = 5;
+          
+          while (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            const userData = await authService.getUserData(currentUser.uid);
+            console.log(`Retry ${retryCount + 1}: User data:`, userData);
+            
+            if (userData) {
+              // User data created, restart the initialization with the new data
+              console.log('User data created, restarting initialization');
+              initializeApp();
+              return;
+            }
+            retryCount++;
+          }
+          
+          // If we still don't have user data after retries, show error
+          console.error('User data not created after multiple retries');
           setCurrentView('auth');
           return;
         }

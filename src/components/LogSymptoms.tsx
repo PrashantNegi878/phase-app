@@ -143,6 +143,9 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
       const [year, month, day] = date.split('-').map(Number);
       const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
       
+      // Ensure the date is normalized to start of day (00:00:00)
+      parsedDate.setHours(0, 0, 0, 0);
+      
       await cycleService.logDailySymptoms(userId, parsedDate, symptoms);
       onLogComplete();
     } catch (err) {
