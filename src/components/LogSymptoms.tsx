@@ -138,7 +138,12 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
     setSaving(true);
     setError('');
     try {
-      await cycleService.logDailySymptoms(userId, new Date(date), symptoms);
+      // Parse date string properly to avoid timezone issues
+      // date is in format "YYYY-MM-DD", parse it as local date
+      const [year, month, day] = date.split('-').map(Number);
+      const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      await cycleService.logDailySymptoms(userId, parsedDate, symptoms);
       onLogComplete();
     } catch (err) {
       console.error('Error saving symptoms:', err);
@@ -222,7 +227,10 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
             />
             <p className="mt-2 text-sm text-earth-500">
-              {formatDateForDisplay(new Date(date))}
+              {(() => {
+                const [year, month, day] = date.split('-').map(Number);
+                return formatDateForDisplay(new Date(year, month - 1, day));
+              })()}
             </p>
           </div>
 
