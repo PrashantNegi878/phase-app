@@ -1,4 +1,4 @@
-# Period & Cycle Tracker PWA
+# Phase - Period & Cycle Tracker PWA
 
 A comprehensive, dual-perspective Progressive Web App for period and cycle tracking with intelligent symptom-based cycle prediction for irregular cycles (PCOD).
 
