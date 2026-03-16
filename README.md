@@ -8,6 +8,12 @@ A comprehensive, dual-perspective Progressive Web App for period and cycle track
 - **Tracker**: Female user tracking their cycle with customizable symptom logging
 - **Partner**: Support partner with account linking or manual mode
 
+🔐 **Hybrid Authentication**
+- **Google Sign-In**: Secure OAuth authentication
+- **Magic Link**: Passwordless email authentication
+- **Role Selection**: Choose tracker or partner role before authentication
+- **Seamless Integration**: Both auth methods create proper Firestore documents
+
 📊 **Advanced Cycle Prediction**
 - Symptom-based PCOD algorithm (not calendar-based)
 - Weighted scoring: Cervical fluid (5 pts), BBT (2 pts), Cramps (1 pt)
