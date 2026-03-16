@@ -21,7 +21,7 @@ interface RequestBody {
 }
 
 // Initialize Gemini with API key from environment
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(import.meta.env.GEMINI_API_KEY || '');
 
 export default async function handler(
   req: VercelRequest,
@@ -107,7 +107,7 @@ Do not include any other text, only the JSON array.`;
 
     return res.status(500).json({
       error: 'Failed to generate suggestions',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      details: import.meta.env.NODE_ENV === 'development' ? errorMessage : undefined,
     });
   }
 }
