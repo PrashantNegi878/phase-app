@@ -162,11 +162,11 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               <label className="block text-sm font-medium text-slate-700 mb-3">
                 I am a...
               </label>
-              <div className="relative bg-earth-100 p-1 rounded-2xl">
+              <div className="relative bg-earth-200/70 p-1.5 rounded-2xl">
                 {/* Sliding background */}
                 <motion.div
                   layout
-                  className="absolute top-1 bottom-1 bg-white rounded-xl shadow-sm"
+                  className="absolute top-1.5 bottom-1.5 bg-white rounded-xl shadow-md ring-1 ring-sage-200/50"
                   initial={false}
                   animate={{
                     left: role === 'tracker' ? '4px' : '50%',

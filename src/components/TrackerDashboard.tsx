@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight } from 'lucide-react';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
 import { CycleData, TrackerProfile } from '../types';
@@ -16,17 +18,13 @@ interface TrackerDashboardProps {
   onLogPeriod: () => void;
 }
 
-const PHASE_COLORS: Record<string, { bg: string; text: string; light: string }> = {
-  menstrual: { bg: 'bg-red-600', text: 'text-red-600', light: 'bg-red-50' },
-  follicular: { bg: 'bg-blue-600', text: 'text-blue-600', light: 'bg-blue-50' },
-  ovulation: { bg: 'bg-amber-600', text: 'text-amber-600', light: 'bg-amber-50' },
-  luteal: { bg: 'bg-purple-600', text: 'text-purple-600', light: 'bg-purple-50' },
-  'extended-follicular': {
-    bg: 'bg-blue-500',
-    text: 'text-blue-500',
-    light: 'bg-blue-50',
-  },
-  pending: { bg: 'bg-gray-600', text: 'text-gray-600', light: 'bg-gray-50' },
+const PHASE_COLORS: Record<string, { bg: string; text: string; light: string; gradient: string }> = {
+  menstrual: { bg: 'bg-rose-400', text: 'text-rose-600', light: 'bg-rose-50', gradient: 'from-rose-100 to-rose-50' },
+  follicular: { bg: 'bg-sage-500', text: 'text-sage-700', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
+  ovulation: { bg: 'bg-amber-400', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-100 to-amber-50' },
+  luteal: { bg: 'bg-earth-500', text: 'text-earth-700', light: 'bg-earth-100', gradient: 'from-earth-200 to-earth-100' },
+  'extended-follicular': { bg: 'bg-sage-400', text: 'text-sage-600', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
+  pending: { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
 };
 
 const PHASE_LABELS: Record<string, string> = {
@@ -54,7 +52,6 @@ export function TrackerDashboard({
   const [todayScore, setTodayScore] = useState<number | null>(null);
 
   useEffect(() => {
-    // Set up real-time listener for cycle data
     const unsubscribe = onSnapshot(
       doc(db, 'cycleData', userId),
       (docSnap) => {
@@ -71,11 +68,9 @@ export function TrackerDashboard({
         setLoading(false);
       }
     );
-
     return () => unsubscribe();
   }, [userId]);
 
-  // Fetch tracker profile for cycle length
   useEffect(() => {
     const fetchTrackerProfile = async () => {
       try {
@@ -93,302 +88,302 @@ export function TrackerDashboard({
         console.error('Error fetching tracker profile:', error);
       }
     };
-
     fetchTrackerProfile();
   }, [userId]);
 
-  // Fetch recent symptom logs
   useEffect(() => {
     const fetchRecentLogs = async () => {
       try {
-        const logs = await cycleService.getRecentLogs(userId, 7); // Get last 7 days
+        const logs = await cycleService.getRecentLogs(userId, 7);
         setRecentLogs(logs);
-        
-        // Calculate today's score
         const today = new Date();
         const todayLog = logs.find(log => {
           const logDate = new Date(log.date);
           return logDate.toDateString() === today.toDateString();
         });
-        
         setTodayScore(todayLog ? todayLog.symptomScore : null);
       } catch (error) {
         console.error('Error fetching recent logs:', error);
       }
     };
-
     fetchRecentLogs();
   }, [userId]);
 
-  // Calculate day of cycle dynamically based on last period date
   const currentDayOfCycle = useMemo(() => {
     if (!cycleData?.lastPeriodDate) return 0;
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
-    // Calculate day of cycle: today - lastPeriod + 1
     const diffTime = today.getTime() - lastPeriod.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays + 1;
   }, [cycleData?.lastPeriodDate]);
 
-  // Calculate phase dynamically based on current date and cycle data
   const currentPhase = useMemo(() => {
     if (!cycleData) return 'pending';
-    
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
     const dayOfCycle = calculateDayOfCycle(lastPeriod);
-    
-    // Determine phase based on stored phase dates (same logic as calendar rendering)
     let phase = 'future';
-    
-    // Check menstrual phase (current cycle)
+
     if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
       const menstrualStart = normalizeDate(cycleData.menstrualPhaseStart);
       const menstrualEnd = normalizeDate(cycleData.menstrualPhaseEnd);
-      if (today >= menstrualStart && today <= menstrualEnd) {
-        phase = 'menstrual';
-      }
+      if (today >= menstrualStart && today <= menstrualEnd) phase = 'menstrual';
     }
-    
-    // Check menstrual phase (next cycle)
     if (cycleData.nextMenstrualPhaseStart && cycleData.nextMenstrualPhaseEnd) {
       const nextMenstrualStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
       const nextMenstrualEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) {
-        phase = 'menstrual';
-      }
+      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) phase = 'menstrual';
     }
-    
-    // Check follicular phase
     if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd) {
       const follicularStart = normalizeDate(cycleData.follicularPhaseStart);
       const follicularEnd = normalizeDate(cycleData.follicularPhaseEnd);
-      if (today >= follicularStart && today <= follicularEnd && phase === 'future') {
-        phase = 'follicular';
-      }
+      if (today >= follicularStart && today <= follicularEnd && phase === 'future') phase = 'follicular';
     }
-    
-    // Check ovulation phase
     if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd) {
       const ovulationStart = normalizeDate(cycleData.ovulationPhaseStart);
       const ovulationEnd = normalizeDate(cycleData.ovulationPhaseEnd);
-      if (today >= ovulationStart && today <= ovulationEnd && phase === 'future') {
-        phase = 'ovulation';
-      }
+      if (today >= ovulationStart && today <= ovulationEnd && phase === 'future') phase = 'ovulation';
     }
-    
-    // Check luteal phase
     if (cycleData.lutealPhaseStart && cycleData.lutealPhaseEnd) {
       const lutealStart = normalizeDate(cycleData.lutealPhaseStart);
       const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
-      if (today >= lutealStart && today <= lutealEnd && phase === 'future') {
-        phase = 'luteal';
-      }
+      if (today >= lutealStart && today <= lutealEnd && phase === 'future') phase = 'luteal';
     }
-    
-    // Check extended follicular phase
     if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
       const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
       const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-      if (today >= extendedStart && today <= extendedEnd && phase === 'future') {
-        phase = 'extended-follicular';
-      }
+      if (today >= extendedStart && today <= extendedEnd && phase === 'future') phase = 'extended-follicular';
     }
-    
-    // If no phase matched, calculate based on day of cycle and ovulation detection
+
     if (phase === 'future') {
       if (cycleData.ovulationDetectedDate) {
         const ovulationDate = normalizeDate(cycleData.ovulationDetectedDate);
         const ovDay = calculateDayOfCycleForDate(ovulationDate, lastPeriod);
-        
-        if (dayOfCycle <= 5) {
-          phase = 'menstrual';
-        } else if (dayOfCycle > 5 && dayOfCycle < ovDay) {
-          phase = 'follicular';
-        } else if (dayOfCycle >= ovDay && dayOfCycle < ovDay + 3) {
-          phase = 'ovulation';
-        } else if (dayOfCycle >= ovDay + 3) {
-          phase = 'luteal';
-        }
+        if (dayOfCycle <= 5) phase = 'menstrual';
+        else if (dayOfCycle > 5 && dayOfCycle < ovDay) phase = 'follicular';
+        else if (dayOfCycle >= ovDay && dayOfCycle < ovDay + 3) phase = 'ovulation';
+        else if (dayOfCycle >= ovDay + 3) phase = 'luteal';
       } else {
-        // No ovulation detected - use predicted phases
-        const expectedOvulationDay = Math.round(28 / 2); // Default cycle length
-        
-        if (dayOfCycle <= 5) {
-          phase = 'menstrual';
-        } else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) {
-          phase = 'follicular';
-        } else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) {
-          phase = 'ovulation';
-        } else if (dayOfCycle >= expectedOvulationDay + 3 && dayOfCycle <= expectedOvulationDay + 16) {
-          phase = 'luteal';
-        } else if (dayOfCycle > expectedOvulationDay + 16 && dayOfCycle >= 20) {
-          phase = 'extended-follicular';
-        } else if (dayOfCycle > expectedOvulationDay + 16) {
-          phase = 'follicular';
-        }
+        const expectedOvulationDay = Math.round(28 / 2);
+        if (dayOfCycle <= 5) phase = 'menstrual';
+        else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) phase = 'follicular';
+        else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) phase = 'ovulation';
+        else if (dayOfCycle >= expectedOvulationDay + 3 && dayOfCycle <= expectedOvulationDay + 16) phase = 'luteal';
+        else if (dayOfCycle > expectedOvulationDay + 16 && dayOfCycle >= 20) phase = 'extended-follicular';
+        else if (dayOfCycle > expectedOvulationDay + 16) phase = 'follicular';
       }
     }
-    
     return phase;
   }, [cycleData, cycleData?.lastPeriodDate, cycleData?.ovulationDetectedDate, cycleData?.nextMenstrualPhaseEnd]);
 
   const colors = PHASE_COLORS[currentPhase] || PHASE_COLORS.pending;
   const phaseLabel = PHASE_LABELS[currentPhase] || 'Unknown Phase';
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+  };
+  const buttonTap = { scale: 0.97 };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
+          <p className="text-earth-600 font-light">Loading...</p>
+        </div>
       </div>
     );
   }
 
   if (!cycleData) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-md mx-auto mt-12 bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">No cycle data available. Please start logging.</p>
+      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 p-4">
+        <div className="max-w-md mx-auto mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-soft-lg p-8 text-center">
+          <p className="text-earth-600">No cycle data available. Please start logging.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 p-4 pb-24">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50/50 to-earth-100 p-4 pb-28">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-md mx-auto"
+      >
         {/* Header */}
-        <div className="mb-6 mt-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Your Phase</h1>
-          <button
+        <motion.div variants={itemVariants} className="mb-6 mt-4 flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Your Phase</h1>
+          <motion.button
             onClick={() => setShowSettings(true)}
-            className="text-gray-600 hover:text-gray-800 text-xl"
-            title="Settings"
+            whileHover={{ scale: 1.05 }}
+            whileTap={buttonTap}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors shadow-soft"
           >
-            ⚙️
-          </button>
-        </div>
+            <SettingsIcon className="w-5 h-5" />
+          </motion.button>
+        </motion.div>
 
         {/* Current Phase Card */}
-        <div
+        <motion.div
+          variants={itemVariants}
           onClick={() => setShowCalendar(true)}
-          className={`${colors.light} border-2 ${colors.text.replace('text-', 'border-')} rounded-lg p-6 mb-6 text-center cursor-pointer hover:shadow-lg transition`}
+          whileHover={{ y: -2 }}
+          whileTap={buttonTap}
+          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300`}
         >
-          <div className="text-sm font-semibold text-gray-600 mb-2">Current Phase</div>
-          <div className={`text-3xl font-bold ${colors.text} mb-2`}>{phaseLabel}</div>
-          <div className="text-gray-600">Day {currentDayOfCycle} of your cycle</div>
-          <div className="text-xs text-gray-500 mt-3">Click to view cycle calendar 📅</div>
-        </div>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-earth-500">Current Phase</span>
+            <div className="flex items-center gap-1 text-earth-400">
+              <Calendar className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+          <div className={`text-3xl font-semibold ${colors.text} mb-2 tracking-tight`}>{phaseLabel}</div>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
+            <span className="text-earth-600">Day {currentDayOfCycle} of your cycle</span>
+          </div>
+        </motion.div>
 
         {/* Cycle Info Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3 mb-6">
           {cycleData.lastPeriodDate && (
-            <div 
+            <motion.div
               onClick={() => setShowEditPeriod(true)}
-              className="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition"
+              whileHover={{ y: -2 }}
+              whileTap={buttonTap}
+              className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft cursor-pointer hover:shadow-soft-lg transition-all border border-earth-100"
             >
-              <div className="text-xs text-gray-500 mb-1">Last Period Started</div>
-              <div className="font-semibold text-gray-800">
+              <div className="flex items-center gap-2 text-earth-400 mb-2">
+                <Droplets className="w-4 h-4" />
+                <span className="text-xs font-medium">Last Period</span>
+              </div>
+              <div className="font-semibold text-slate-800">
                 {formatDateForDisplay(cycleData.lastPeriodDate)}
               </div>
-              <div className="text-xs text-gray-400 mt-1">click to edit</div>
-            </div>
-          )}
-          {cycleData.periodEndDate && (
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-xs text-gray-500 mb-1">Period Ended</div>
-              <div className="font-semibold text-gray-800">
-                {formatDateForDisplay(cycleData.periodEndDate)}
+              <div className="flex items-center gap-1 text-xs text-sage-500 mt-1">
+                <Edit3 className="w-3 h-3" />
+                <span>tap to edit</span>
               </div>
-            </div>
+            </motion.div>
           )}
           {cycleData.nextPeriodDate ? (
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-xs text-gray-500 mb-1">Next Period</div>
-              <div className="font-semibold text-gray-800">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100">
+              <div className="flex items-center gap-2 text-earth-400 mb-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Next Period</span>
+              </div>
+              <div className="font-semibold text-slate-800">
                 {formatDateForDisplay(cycleData.nextPeriodDate)}
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-xs text-gray-500 mb-1">Next Period</div>
-              <div className="font-semibold text-gray-800">Pending</div>
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100">
+              <div className="flex items-center gap-2 text-earth-400 mb-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Next Period</span>
+              </div>
+              <div className="font-semibold text-earth-400">Pending</div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Partner Code Section */}
-        <div className="bg-white rounded-lg p-4 shadow-sm mb-6">
-          <div className="text-sm font-semibold text-gray-700 mb-2">Partner Code</div>
-          <div className="bg-pink-50 border border-pink-200 rounded p-3 text-center font-mono text-lg font-bold text-pink-600">
-            {partnerCode}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+            <Share2 className="w-4 h-4 text-sage-500" />
+            <span>Partner Code</span>
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Share this with your partner to connect
+          <div className="bg-gradient-to-r from-sage-50 to-earth-50 border border-sage-200 rounded-xl p-4 text-center">
+            <p className="text-3xl font-bold text-sage-700 tracking-widest font-mono">
+              {partnerCode}
+            </p>
+          </div>
+          <p className="text-xs text-earth-500 mt-3 text-center">
+            Share this code with your partner to connect
           </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <button
-            onClick={onLogSymptoms}
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-lg transition shadow-sm"
-          >
-            📝 Log Symptoms
-          </button>
-          <button
-            onClick={onLogPeriod}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition shadow-sm"
-          >
-            🩸 Log Period Start
-          </button>
-        </div>
+        </motion.div>
 
         {/* Recent Symptoms Section */}
-        <div className="bg-white rounded-lg p-4 shadow-sm mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Recent Symptoms</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Today's Score:</span>
-              <span className="font-medium">
-                {todayScore !== null ? `${todayScore}/10` : 'Not logged today'}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
+            <Activity className="w-4 h-4 text-sage-500" />
+            <span>Recent Activity</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-earth-100">
+              <span className="text-earth-600 text-sm">Today's Score</span>
+              <span className="font-semibold text-slate-800">
+                {todayScore !== null ? `${todayScore}/10` : 'Not logged'}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Last Logged:</span>
-              <span className="font-medium">
-                {recentLogs.length > 0 
-                  ? formatDateForDisplay(new Date(recentLogs[0].date))
-                  : 'Never'
-                }
+            <div className="flex justify-between items-center py-2 border-b border-earth-100">
+              <span className="text-earth-600 text-sm">Last Logged</span>
+              <span className="font-semibold text-slate-800">
+                {recentLogs.length > 0 ? formatDateForDisplay(new Date(recentLogs[0].date)) : 'Never'}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Ovulation Detected:</span>
-              <span className="font-medium">{cycleData.ovulationDetectedDate ? 'Yes' : 'No'}</span>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-earth-600 text-sm">Ovulation Detected</span>
+              <span className={`font-semibold ${cycleData.ovulationDetectedDate ? 'text-sage-600' : 'text-earth-400'}`}>
+                {cycleData.ovulationDetectedDate ? 'Yes' : 'No'}
+              </span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Cycle Calendar Modal */}
-        {showCalendar && cycleData && (
-          <CycleCalendar
-            cycleData={cycleData}
-            cycleLengthDays={cycleLengthDays}
-            onClose={() => setShowCalendar(false)}
-          />
-        )}
+        {/* Action Buttons */}
+        <motion.div variants={itemVariants} className="space-y-3">
+          <motion.button
+            onClick={onLogSymptoms}
+            whileHover={{ y: -2 }}
+            whileTap={buttonTap}
+            className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+          >
+            <Activity className="w-5 h-5" />
+            Log Symptoms
+          </motion.button>
+          <motion.button
+            onClick={onLogPeriod}
+            whileHover={{ y: -2 }}
+            whileTap={buttonTap}
+            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+          >
+            <Droplets className="w-5 h-5 text-rose-400" />
+            Log Period Start
+          </motion.button>
+        </motion.div>
 
-        {/* Settings Modal */}
+        {/* Modals */}
+        <AnimatePresence>
+          {showCalendar && cycleData && (
+            <CycleCalendar
+              cycleData={cycleData}
+              cycleLengthDays={cycleLengthDays}
+              onClose={() => setShowCalendar(false)}
+            />
+          )}
+        </AnimatePresence>
+
         {showSettings && (
-          <Settings
-            userId={userId}
-            onBack={() => setShowSettings(false)}
-          />
+          <Settings userId={userId} onBack={() => setShowSettings(false)} />
         )}
 
-        {/* Edit Period Modal */}
         {showEditPeriod && (
           <EditPeriod
             userId={userId}
@@ -396,7 +391,7 @@ export function TrackerDashboard({
             onCancel={() => setShowEditPeriod(false)}
           />
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

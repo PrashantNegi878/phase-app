@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Settings2, Info, Check } from 'lucide-react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { TrackerProfile } from '../types';
@@ -16,7 +18,6 @@ export function Settings({ userId, onBack }: SettingsProps) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Fetch current tracker profile
     const fetchProfile = async () => {
       try {
         const docSnap = await getDoc(doc(db, 'trackerProfiles', userId));
@@ -30,7 +31,6 @@ export function Settings({ userId, onBack }: SettingsProps) {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [userId]);
 
@@ -42,10 +42,8 @@ export function Settings({ userId, onBack }: SettingsProps) {
         cycleLengthDays,
         updatedAt: getToday(),
       });
-      setMessage('Cycle length updated successfully! ✓');
-      setTimeout(() => {
-        setMessage('');
-      }, 3000);
+      setMessage('Cycle length updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
       setMessage('Failed to update cycle length');
@@ -54,99 +52,136 @@ export function Settings({ userId, onBack }: SettingsProps) {
     }
   };
 
+  const buttonTap = { scale: 0.97 };
+
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg w-full max-w-md p-6">
-          <p className="text-gray-600">Loading settings...</p>
-        </div>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/90 backdrop-blur-xl rounded-3xl w-full max-w-md p-6 shadow-soft-lg"
+        >
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
+            <p className="text-earth-600">Loading settings...</p>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="bg-white/90 backdrop-blur-xl rounded-3xl w-full max-w-md shadow-soft-lg overflow-hidden"
+      >
         {/* Header */}
-        <div className="border-b flex items-center justify-between p-6">
-          <h2 className="text-2xl font-bold text-gray-800">Phase Settings</h2>
-          <button
+        <div className="border-b border-earth-100 flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
+              <Settings2 className="w-5 h-5 text-sage-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-800">Settings</h2>
+          </div>
+          <motion.button
             onClick={onBack}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            whileHover={{ scale: 1.05 }}
+            whileTap={buttonTap}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
           >
-            ×
-          </button>
+            <X className="w-5 h-5" />
+          </motion.button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Cycle Length Setting */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Typical Cycle Length (days)
+            <label className="block text-sm font-medium text-slate-700 mb-4">
+              Typical Cycle Length
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <input
                 type="range"
                 min="21"
                 max="40"
                 value={cycleLengthDays}
                 onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                className="flex-1 h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
               />
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">
+              <div className="text-center bg-sage-50 rounded-xl px-4 py-2 min-w-[80px]">
+                <div className="text-2xl font-bold text-sage-700">
                   {cycleLengthDays}
                 </div>
-                <div className="text-xs text-gray-500">days</div>
+                <div className="text-xs text-earth-500">days</div>
               </div>
             </div>
-            <div className="mt-2 text-sm text-gray-600">
-              <p>Set your typical cycle length to get accurate ovulation predictions.</p>
-              <p className="mt-1 text-xs text-gray-500">
-                Expected ovulation: Day {Math.round(cycleLengthDays / 2)}
-              </p>
-            </div>
+            <p className="mt-3 text-sm text-earth-600">
+              Expected ovulation: <span className="font-medium text-sage-600">Day {Math.round(cycleLengthDays / 2)}</span>
+            </p>
           </div>
 
           {/* Info box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-700">
-              <strong>💡 How this works:</strong> The calendar will show expected phases based on your cycle length. Once you log enough symptoms, we'll track your actual ovulation day.
+          <div className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3">
+            <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-sage-700">
+              The calendar will show expected phases based on your cycle length. Once you log enough symptoms, we'll track your actual ovulation day.
             </p>
           </div>
 
           {/* Message */}
-          {message && (
-            <div
-              className={`text-sm p-3 rounded-lg ${
-                message.includes('Failed')
-                  ? 'bg-red-50 text-red-700 border border-red-200'
-                  : 'bg-green-50 text-green-700 border border-green-200'
-              }`}
-            >
-              {message}
-            </div>
-          )}
+          <AnimatePresence>
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`text-sm p-4 rounded-2xl flex items-center gap-2 ${
+                  message.includes('Failed')
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-sage-50 text-sage-700 border border-sage-200'
+                }`}
+              >
+                {!message.includes('Failed') && <Check className="w-4 h-4" />}
+                {message}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Buttons */}
-          <div className="flex gap-3">
-            <button
+          <div className="flex gap-3 pt-2">
+            <motion.button
               onClick={onBack}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition"
+              whileHover={{ y: -2 }}
+              whileTap={buttonTap}
+              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+              whileHover={{ y: -2 }}
+              whileTap={buttonTap}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
