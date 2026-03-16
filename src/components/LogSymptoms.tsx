@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Activity, FileText } from 'lucide-react';
+import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { TrackerProfile } from '../types';
 import { getToday, formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
@@ -10,6 +10,106 @@ interface LogSymptomsProps {
   onLogComplete: () => void;
   onCancel: () => void;
 }
+
+interface OptionCardProps {
+  selected: boolean;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  label: string;
+  color?: string;
+}
+
+function OptionCard({ selected, onClick, icon, label, color = 'sage' }: OptionCardProps) {
+  const colorClasses = {
+    sage: {
+      selected: 'border-sage-400 bg-sage-50 ring-2 ring-sage-200',
+      icon: 'bg-sage-100 text-sage-600',
+      check: 'bg-sage-500',
+    },
+    amber: {
+      selected: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200',
+      icon: 'bg-amber-100 text-amber-600',
+      check: 'bg-amber-500',
+    },
+    rose: {
+      selected: 'border-rose-400 bg-rose-50 ring-2 ring-rose-200',
+      icon: 'bg-rose-100 text-rose-600',
+      check: 'bg-rose-500',
+    },
+    sky: {
+      selected: 'border-sky-400 bg-sky-50 ring-2 ring-sky-200',
+      icon: 'bg-sky-100 text-sky-600',
+      check: 'bg-sky-500',
+    },
+  };
+
+  const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.sage;
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      className={`relative p-3 rounded-xl border-2 transition-all text-left ${
+        selected
+          ? colors.selected
+          : 'border-earth-200 bg-white hover:border-earth-300 hover:bg-earth-50'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {icon && (
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+            selected ? colors.icon : 'bg-earth-100 text-earth-500'
+          }`}>
+            {icon}
+          </div>
+        )}
+        <span className={`text-sm font-medium ${selected ? 'text-slate-800' : 'text-slate-600'}`}>
+          {label}
+        </span>
+      </div>
+      
+      {selected && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className={`absolute -top-1.5 -right-1.5 w-5 h-5 ${colors.check} rounded-full flex items-center justify-center shadow-sm`}
+        >
+          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+        </motion.div>
+      )}
+    </motion.button>
+  );
+}
+
+// Cervical Fluid Options
+const cervicalFluidOptions = [
+  { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
+  { value: 'none', label: 'None / Dry', icon: <Droplets className="w-4 h-4" /> },
+  { value: 'sticky', label: 'Sticky', icon: <Droplets className="w-4 h-4" /> },
+  { value: 'creamy', label: 'Creamy', icon: <Droplets className="w-4 h-4" /> },
+  { value: 'egg-white', label: 'Egg-White', icon: <Droplets className="w-4 h-4" /> },
+];
+
+// Cramps Options
+const crampsOptions = [
+  { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
+  { value: 'none', label: 'None', icon: <Flame className="w-4 h-4" /> },
+  { value: 'mild', label: 'Mild', icon: <Flame className="w-4 h-4" /> },
+  { value: 'moderate', label: 'Moderate', icon: <Flame className="w-4 h-4" /> },
+  { value: 'severe', label: 'Severe', icon: <Flame className="w-4 h-4" /> },
+];
+
+// Mood Options
+const moodOptions = [
+  { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
+  { value: 'happy', label: 'Happy', icon: <Heart className="w-4 h-4" /> },
+  { value: 'neutral', label: 'Neutral', icon: <Heart className="w-4 h-4" /> },
+  { value: 'sad', label: 'Sad', icon: <Heart className="w-4 h-4" /> },
+  { value: 'anxious', label: 'Anxious', icon: <Heart className="w-4 h-4" /> },
+  { value: 'irritable', label: 'Irritable', icon: <Heart className="w-4 h-4" /> },
+];
 
 export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProps) {
   const [date, setDate] = useState(formatDateForInput(getToday()));
@@ -75,10 +175,10 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-soft-lg"
+        className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-soft-lg"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
               <Activity className="w-5 h-5 text-sage-600" />
@@ -95,7 +195,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           </motion.button>
         </div>
 
-        <form onSubmit={handleSaveSymptoms} className="p-6 space-y-5">
+        <form onSubmit={handleSaveSymptoms} className="p-6 space-y-6">
           <AnimatePresence>
             {error && (
               <motion.div
@@ -111,7 +211,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
           {/* Date */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
               <Calendar className="w-4 h-4 text-sage-500" />
               Date
             </label>
@@ -129,86 +229,95 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           {/* Cervical Fluid */}
           {trackerProfile?.trackedSymptoms?.includes('cervical-fluid') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <Droplets className="w-4 h-4 text-sky-500" />
                 Cervical Fluid
               </label>
-              <select
-                value={symptoms.cervicalFluid || ''}
-                onChange={(e) => setSymptoms({ ...symptoms, cervicalFluid: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
-              >
-                <option value="">Not tracked today</option>
-                <option value="none">None</option>
-                <option value="sticky">Sticky</option>
-                <option value="creamy">Creamy</option>
-                <option value="egg-white">Egg-White (Clear & Stretchy)</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {cervicalFluidOptions.map((option) => (
+                  <OptionCard
+                    key={option.value}
+                    selected={symptoms.cervicalFluid === option.value || (!symptoms.cervicalFluid && option.value === '')}
+                    onClick={() => setSymptoms({ ...symptoms, cervicalFluid: option.value })}
+                    icon={option.icon}
+                    label={option.label}
+                    color="sky"
+                  />
+                ))}
+              </div>
             </div>
           )}
 
           {/* Basal Body Temperature */}
           {trackerProfile?.trackedSymptoms?.includes('bbt') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Basal Body Temperature (C)
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <Thermometer className="w-4 h-4 text-amber-500" />
+                Basal Body Temperature
               </label>
-              <input
-                type="number"
-                step="0.1"
-                min="35"
-                max="39"
-                value={symptoms.bbt || ''}
-                onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
-                placeholder="36.5"
-                className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.1"
+                  min="35"
+                  max="39"
+                  value={symptoms.bbt || ''}
+                  onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
+                  placeholder="36.5"
+                  className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-all bg-white text-slate-700 pr-12"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-earth-400 font-medium">°C</span>
+              </div>
             </div>
           )}
 
           {/* Cramps */}
           {trackerProfile?.trackedSymptoms?.includes('cramps') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <Flame className="w-4 h-4 text-rose-500" />
                 Cramps
               </label>
-              <select
-                value={symptoms.cramps || ''}
-                onChange={(e) => setSymptoms({ ...symptoms, cramps: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
-              >
-                <option value="">Not tracked today</option>
-                <option value="none">None</option>
-                <option value="mild">Mild</option>
-                <option value="moderate">Moderate</option>
-                <option value="severe">Severe</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {crampsOptions.map((option) => (
+                  <OptionCard
+                    key={option.value}
+                    selected={symptoms.cramps === option.value || (!symptoms.cramps && option.value === '')}
+                    onClick={() => setSymptoms({ ...symptoms, cramps: option.value })}
+                    icon={option.icon}
+                    label={option.label}
+                    color="rose"
+                  />
+                ))}
+              </div>
             </div>
           )}
 
           {/* Mood */}
           {trackerProfile?.trackedSymptoms?.includes('mood') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <Heart className="w-4 h-4 text-sage-500" />
                 Mood
               </label>
-              <select
-                value={symptoms.mood || ''}
-                onChange={(e) => setSymptoms({ ...symptoms, mood: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
-              >
-                <option value="">Not tracked today</option>
-                <option value="happy">Happy</option>
-                <option value="neutral">Neutral</option>
-                <option value="sad">Sad</option>
-                <option value="anxious">Anxious</option>
-                <option value="irritable">Irritable</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {moodOptions.map((option) => (
+                  <OptionCard
+                    key={option.value}
+                    selected={symptoms.mood === option.value || (!symptoms.mood && option.value === '')}
+                    onClick={() => setSymptoms({ ...symptoms, mood: option.value })}
+                    icon={option.icon}
+                    label={option.label}
+                    color="sage"
+                  />
+                ))}
+              </div>
             </div>
           )}
 
           {/* Notes */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
               <FileText className="w-4 h-4 text-sage-500" />
               Notes (optional)
             </label>
@@ -228,7 +337,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               onClick={onCancel}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
+              className="flex-1 px-4 py-3.5 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
             >
               Cancel
             </motion.button>
@@ -237,7 +346,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               disabled={saving}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
