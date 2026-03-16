@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { authService } from '../services/auth';
-import { validatePartnerCode } from '../utils/codeGenerator';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;

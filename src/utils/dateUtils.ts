@@ -125,8 +125,6 @@ export function calculatePhaseDates(
     // Use actual ovulation date
     const ovulationDate = normalizeDate(ovulationDetectedDate);
     
-    // Calculate which day of cycle is the ovulation day
-    const ovulationDayOfCycle = Math.floor((ovulationDate.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     // Follicular phase ends before ovulation
     follicularPhaseEnd = new Date(ovulationDate);

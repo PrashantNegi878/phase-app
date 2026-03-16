@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
 import { authService } from '../services/auth';
 import { cycleService } from '../services/cycle';
-import { validatePartnerCode } from '../utils/codeGenerator';
-
+import { useState } from 'react';
 interface PartnerOnboardingProps {
   userId: string;
   onComplete: () => void;
@@ -17,7 +15,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
   const [loading, setLoading] = useState(false);
 
   const handleLinkAccount = async () => {
-    if (!validatePartnerCode(partnerCode)) {
+    if (!partnerCode || partnerCode.length !== 6) {
       setError('Please enter a valid 6-digit code');
       return;
     }

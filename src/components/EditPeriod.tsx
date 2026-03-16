@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
 import { CycleData } from '../types';
@@ -15,7 +15,6 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
   const [cycleData, setCycleData] = useState<CycleData | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [hasManuallyChangedEndDate, setHasManuallyChangedEndDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -137,13 +136,11 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
-                  // Auto-update end date to start date + 4 days if user hasn't manually changed it
-                  if (!hasManuallyChangedEndDate) {
+                  // Auto-update end date to start date + 4 days
                     const startDateObj = new Date(e.target.value);
                     const endDateObj = new Date(startDateObj);
                     endDateObj.setDate(startDateObj.getDate() + 4);
                     setEndDate(formatDateForInput(endDateObj));
-                  }
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
                 required

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { CycleData } from '../types';
 import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
 
@@ -244,8 +244,6 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
     return diffDays + 1;
   }, [cycleData.lastPeriodDate]);
   
-  // Use stored next period date from database
-  const nextPeriodDate = cycleData.nextPeriodDate;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

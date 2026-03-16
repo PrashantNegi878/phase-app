@@ -1,5 +1,5 @@
 import { DailyLog, CyclePhase } from '../types';
-import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate } from './dateUtils';
+import { calculateDayOfCycle, calculateDayOfCycleForDate } from './dateUtils';
 
 export interface CyclePhaseResult {
   phase: CyclePhase;

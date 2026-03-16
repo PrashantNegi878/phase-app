@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { cycleService } from '../services/cycle';
 import { CycleData, TrackerProfile } from '../types';
 import { CycleCalendar } from './CycleCalendar';
 import { Settings } from './Settings';

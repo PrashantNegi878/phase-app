@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { cycleService } from '../services/cycle';
 import { parseDateFromInput, formatDateForDisplay } from '../utils/dateUtils';
 

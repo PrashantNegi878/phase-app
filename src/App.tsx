@@ -49,7 +49,6 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('auth');
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
   const [loadingPartnerProfile, setLoadingPartnerProfile] = useState(false);
-  const [shouldRefetchProfile, setShouldRefetchProfile] = useState(false);
 
   React.useEffect(() => {
     const initializeApp = async () => {
