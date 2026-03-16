@@ -62,7 +62,28 @@ function App() {
         console.log('User data:', user);
 
         if (!user) {
-          console.warn('No user data found');
+          console.warn('No user data found - this is a new user');
+          // For new users, we need to wait for the user document to be created
+          // Retry fetching user data a few times with delays
+          let retryCount = 0;
+          const maxRetries = 5;
+          
+          while (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            const userData = await authService.getUserData(currentUser.uid);
+            console.log(`Retry ${retryCount + 1}: User data:`, userData);
+            
+            if (userData) {
+              // User data created, restart the initialization with the new data
+              console.log('User data created, restarting initialization');
+              initializeApp();
+              return;
+            }
+            retryCount++;
+          }
+          
+          // If we still don't have user data after retries, show error
+          console.error('User data not created after multiple retries');
           setCurrentView('auth');
           return;
         }
@@ -141,22 +162,25 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
+          <p className="text-earth-600 font-light">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-earth-50 min-h-screen">
       {/* Top Navigation */}
-      {currentUser && (
-        <div className="bg-white border-b sticky top-0 z-40">
-          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 className="font-bold text-gray-800">Phase</h1>
+      {currentUser && currentView !== 'auth' && (
+        <div className="bg-white/80 backdrop-blur-lg border-b border-earth-100 sticky top-0 z-40">
+          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 className="font-semibold text-slate-800 tracking-tight">Phase</h1>
             <button
               onClick={handleLogout}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              className="text-sm text-earth-500 hover:text-sage-600 transition-colors duration-200 font-medium"
             >
               Logout
             </button>
@@ -210,8 +234,11 @@ function App() {
       {(currentView === 'partner-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') && partnerProfile !== null && (
         <>
           {loadingPartnerProfile ? (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-gray-600">Loading partner data...</div>
+            <div className="min-h-screen bg-earth-50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
+                <p className="text-earth-600 font-light">Loading partner data...</p>
+              </div>
             </div>
           ) : (
             <PartnerDashboard
