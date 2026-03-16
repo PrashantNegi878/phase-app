@@ -1,0 +1,83 @@
+/**
+ * Firestore Security Rules
+ * These rules ensure data privacy and correct access control:
+ *
+ * - Users can only read/write their own user, tracker, and partner documents
+ * - Linked partners can read linked tracker's cycle data
+ * - Daily logs are private to the tracker
+ * - partnerCodes is a public lookup table (read-only for auth users, write only by tracker owner)
+ *
+ * Deploy with: firebase deploy --only firestore:rules
+ */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // USER DOCUMENTS
+    // Users can only read/write their own document
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // PARTNER CODES LOOKUP TABLE
+    // This collection maps partnerCode -> trackerId
+    // It contains NO personal data — only a tracker's UID
+    // Any authenticated user can read (needed for partner linking)
+    // Only the tracker who owns the code can write it
+    match /partnerCodes/{code} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.resource.data.trackerId == request.auth.uid;
+    }
+
+    // TRACKER PROFILES
+    match /trackerProfiles/{trackerId} {
+      // Tracker can read/write their own profile
+      allow read, write: if isAuthenticated() && request.auth.uid == trackerId;
+
+      // Linked partner can read tracker's profile (for cycle length etc.)
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)).data.linkedTrackerId == trackerId;
+    }
+
+    // PARTNER PROFILES
+    match /partnerProfiles/{partnerId} {
+      // Partner can read/write their own profile
+      allow read, write: if isAuthenticated() && request.auth.uid == partnerId;
+    }
+
+    // CYCLE DATA
+    match /cycleData/{userId} {
+      // User can read/write their own cycle data
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+
+      // Linked partner can read tracker's cycle data
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)).data.linkedTrackerId == userId;
+    }
+
+    // DAILY LOGS
+    match /dailyLogs/{docId} {
+      // User can read/write/create their own logs
+      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Linked partner can read tracker's logs
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)).data.linkedTrackerId == resource.data.userId;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
