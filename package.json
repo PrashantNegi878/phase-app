@@ -12,7 +12,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "firebase": "^10.7.0",
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.468.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
