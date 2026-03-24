@@ -274,7 +274,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
                 </div>
               ))}
 
-              {calendarDays.map((item, idx) => {
+              {calendarDays.map((item) => {
                 const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
                 const dayOfMonth = item.date.getDate();
 

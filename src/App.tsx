@@ -47,14 +47,19 @@ async function fetchPartnerProfileWithRetry(userId: string, maxRetries: number =
 function App() {
   const { currentUser, userData, loading } = useAuth();
   const [currentView, setCurrentView] = useState<View>('auth');
+  /** Set from Firestore in initializeApp — avoids blank dashboard when useAuth.userData lags behind auth. */
+  const [sessionRole, setSessionRole] = useState<'tracker' | 'partner' | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
   const [loadingPartnerProfile, setLoadingPartnerProfile] = useState(false);
   const [trackerProfile, setTrackerProfile] = useState<any>(null);
   const [loadingTrackerProfile, setLoadingTrackerProfile] = useState(false);
 
+  const trackerPartnerCode = userData?.partnerCode ?? trackerProfile?.partnerCode ?? '';
+
   React.useEffect(() => {
     const initializeApp = async () => {
       if (!currentUser) {
+        setSessionRole(null);
         setCurrentView('auth');
         return;
       }
@@ -86,9 +91,12 @@ function App() {
           
           // If we still don't have user data after retries, show error
           console.error('User data not created after multiple retries');
+          setSessionRole(null);
           setCurrentView('auth');
           return;
         }
+
+        setSessionRole(user.role);
 
         if (user.role === 'tracker') {
           setLoadingTrackerProfile(true);
@@ -107,6 +115,7 @@ function App() {
           } catch (err) {
             console.error('Error fetching tracker profile:', err);
             setTrackerProfile(null);
+            setSessionRole(null);
             setCurrentView('auth');
           } finally {
             setLoadingTrackerProfile(false);
@@ -132,6 +141,7 @@ function App() {
           } catch (err) {
             console.error('Error fetching partner profile:', err);
             setPartnerProfile(null);
+            setSessionRole(null);
             setCurrentView('auth');
           } finally {
             setLoadingPartnerProfile(false);
@@ -139,6 +149,7 @@ function App() {
         }
       } catch (err) {
         console.error('Error initializing app:', err);
+        setSessionRole(null);
         setCurrentView('auth');
       }
     };
@@ -214,6 +225,7 @@ function App() {
 
   const handleLogout = async () => {
     await authService.logout();
+    setSessionRole(null);
     setCurrentView('auth');
   };
 
@@ -250,10 +262,10 @@ function App() {
 
       {currentView === 'tracker-onboarding' && (
         <>
-          {console.log('Rendering tracker onboarding with partnerCode:', userData?.partnerCode)}
+          {console.log('Rendering tracker onboarding with partnerCode:', trackerPartnerCode)}
           <TrackerOnboarding
             userId={currentUser!.uid}
-            partnerCode={userData?.partnerCode || ''}
+            partnerCode={trackerPartnerCode}
             onComplete={() => setCurrentView('tracker-dashboard')}
           />
         </>
@@ -266,7 +278,9 @@ function App() {
         />
       )}
 
-      {(currentView === 'tracker-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') && userData && (
+      {(currentView === 'tracker-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') &&
+        currentUser &&
+        sessionRole === 'tracker' && (
         <>
           {loadingTrackerProfile ? (
             <div className="min-h-screen bg-earth-50 flex items-center justify-center">
@@ -277,22 +291,22 @@ function App() {
             </div>
           ) : (
             <TrackerDashboard
-              userId={currentUser!.uid}
-              partnerCode={userData.partnerCode || ''}
+              userId={currentUser.uid}
+              partnerCode={trackerPartnerCode}
               onLogSymptoms={() => setCurrentView('log-symptoms')}
               onLogPeriod={() => setCurrentView('log-period')}
             />
           )}
           {currentView === 'log-symptoms' && (
             <LogSymptoms
-              userId={currentUser!.uid}
+              userId={currentUser.uid}
               onLogComplete={() => setCurrentView('tracker-dashboard')}
               onCancel={() => setCurrentView('tracker-dashboard')}
             />
           )}
           {currentView === 'log-period' && (
             <LogPeriod
-              userId={currentUser!.uid}
+              userId={currentUser.uid}
               onLogComplete={() => setCurrentView('tracker-dashboard')}
               onCancel={() => setCurrentView('tracker-dashboard')}
             />
@@ -300,7 +314,10 @@ function App() {
         </>
       )}
 
-      {(currentView === 'partner-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') && partnerProfile !== null && (
+      {(currentView === 'partner-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') &&
+        currentUser &&
+        partnerProfile !== null &&
+        sessionRole === 'partner' && (
         <>
           {loadingPartnerProfile ? (
             <div className="min-h-screen bg-earth-50 flex items-center justify-center">
@@ -311,7 +328,7 @@ function App() {
             </div>
           ) : (
             <PartnerDashboard
-              userId={currentUser!.uid}
+              userId={currentUser.uid}
               linkedTrackerId={partnerProfile?.linkedTrackerId || undefined}
               isManualMode={!partnerProfile?.linkedTrackerId}
               onLogSymptoms={() => setCurrentView('log-symptoms')}
@@ -320,14 +337,14 @@ function App() {
           )}
           {currentView === 'log-symptoms' && (
             <LogSymptoms
-              userId={currentUser!.uid}
+              userId={currentUser.uid}
               onLogComplete={() => setCurrentView('partner-dashboard')}
               onCancel={() => setCurrentView('partner-dashboard')}
             />
           )}
           {currentView === 'log-period' && (
             <LogPeriod
-              userId={currentUser!.uid}
+              userId={currentUser.uid}
               onLogComplete={() => setCurrentView('partner-dashboard')}
               onCancel={() => setCurrentView('partner-dashboard')}
             />
