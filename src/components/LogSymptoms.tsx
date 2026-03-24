@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart } from 'lucide-react';
 import { cycleService } from '../services/cycle';
-import { TrackerProfile } from '../types';
 import { getToday, formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
 
 interface LogSymptomsProps {
@@ -114,24 +113,8 @@ const moodOptions = [
 export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProps) {
   const [date, setDate] = useState(formatDateForInput(getToday()));
   const [symptoms, setSymptoms] = useState<any>({});
-  const [trackerProfile, setTrackerProfile] = useState<TrackerProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const profile = await cycleService.getTrackerProfile(userId);
-        setTrackerProfile(profile);
-      } catch (err) {
-        setError('Failed to load tracker profile');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
-  }, [userId]);
 
   const handleSaveSymptoms = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,27 +139,9 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
   const buttonTap = { scale: 0.97 };
 
-  // Fallback: Ensure symptoms render even if profile is still syncing
-  const activeSymptoms = trackerProfile?.trackedSymptoms?.length 
-    ? trackerProfile.trackedSymptoms 
-    : ['cervical-fluid', 'bbt', 'cramps', 'mood'];
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-soft-lg"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-            <p className="text-earth-600">Loading...</p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
@@ -247,93 +212,85 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           </div>
 
           {/* Cervical Fluid */}
-          {activeSymptoms.includes('cervical-fluid') && (
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                <Droplets className="w-4 h-4 text-sky-500" />
-                Cervical Fluid
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {cervicalFluidOptions.map((option) => (
-                  <OptionCard
-                    key={option.value}
-                    selected={symptoms.cervicalFluid === option.value || (!symptoms.cervicalFluid && option.value === '')}
-                    onClick={() => setSymptoms({ ...symptoms, cervicalFluid: option.value })}
-                    icon={option.icon}
-                    label={option.label}
-                    color="sky"
-                  />
-                ))}
-              </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+              <Droplets className="w-4 h-4 text-sky-500" />
+              Cervical Fluid
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {cervicalFluidOptions.map((option) => (
+                <OptionCard
+                  key={option.value}
+                  selected={symptoms.cervicalFluid === option.value || (!symptoms.cervicalFluid && option.value === '')}
+                  onClick={() => setSymptoms({ ...symptoms, cervicalFluid: option.value })}
+                  icon={option.icon}
+                  label={option.label}
+                  color="sky"
+                />
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Basal Body Temperature */}
-          {activeSymptoms.includes('bbt') && (
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                <Thermometer className="w-4 h-4 text-amber-500" />
-                Basal Body Temperature
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.1"
-                  min="35"
-                  max="39"
-                  value={symptoms.bbt || ''}
-                  onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
-                  placeholder="36.5"
-                  className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-colors bg-white text-slate-700 pr-12"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-earth-400 font-medium">°C</span>
-              </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+              <Thermometer className="w-4 h-4 text-amber-500" />
+              Basal Body Temperature
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                step="0.1"
+                min="35"
+                max="39"
+                value={symptoms.bbt || ''}
+                onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
+                placeholder="36.5"
+                className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-colors bg-white text-slate-700 pr-12"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-earth-400 font-medium">°C</span>
             </div>
-          )}
+          </div>
 
           {/* Cramps */}
-          {activeSymptoms.includes('cramps') && (
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                <Flame className="w-4 h-4 text-rose-500" />
-                Cramps
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {crampsOptions.map((option) => (
-                  <OptionCard
-                    key={option.value}
-                    selected={symptoms.cramps === option.value || (!symptoms.cramps && option.value === '')}
-                    onClick={() => setSymptoms({ ...symptoms, cramps: option.value })}
-                    icon={option.icon}
-                    label={option.label}
-                    color="rose"
-                  />
-                ))}
-              </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+              <Flame className="w-4 h-4 text-rose-500" />
+              Cramps
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {crampsOptions.map((option) => (
+                <OptionCard
+                  key={option.value}
+                  selected={symptoms.cramps === option.value || (!symptoms.cramps && option.value === '')}
+                  onClick={() => setSymptoms({ ...symptoms, cramps: option.value })}
+                  icon={option.icon}
+                  label={option.label}
+                  color="rose"
+                />
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Mood */}
-          {activeSymptoms.includes('mood') && (
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                <Heart className="w-4 h-4 text-sage-500" />
-                Mood
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {moodOptions.map((option) => (
-                  <OptionCard
-                    key={option.value}
-                    selected={symptoms.mood === option.value || (!symptoms.mood && option.value === '')}
-                    onClick={() => setSymptoms({ ...symptoms, mood: option.value })}
-                    icon={option.icon}
-                    label={option.label}
-                    color="sage"
-                  />
-                ))}
-              </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+              <Heart className="w-4 h-4 text-sage-500" />
+              Mood
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {moodOptions.map((option) => (
+                <OptionCard
+                  key={option.value}
+                  selected={symptoms.mood === option.value || (!symptoms.mood && option.value === '')}
+                  onClick={() => setSymptoms({ ...symptoms, mood: option.value })}
+                  icon={option.icon}
+                  label={option.label}
+                  color="sage"
+                />
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Notes */}
           <div>

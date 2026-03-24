@@ -105,7 +105,7 @@ function App() {
             console.log('Tracker profile:', profile);
             setTrackerProfile(profile || null);
             
-            if (profile && profile.trackedSymptoms && profile.trackedSymptoms.length > 0) {
+            if (profile && profile.lastPeriodDate) {
               console.log('Going to tracker-dashboard');
               setCurrentView('tracker-dashboard');
             } else {
@@ -206,11 +206,11 @@ function App() {
         console.log('Real-time tracker profile update:', profile);
         setTrackerProfile(profile || null);
         
-        // If we're on tracker dashboard and profile has symptoms, stay on dashboard
-        // If we're on tracker onboarding and profile has symptoms, switch to dashboard
-        if (profile && profile.trackedSymptoms && profile.trackedSymptoms.length > 0) {
+        // If we're on tracker dashboard and profile has period date, stay on dashboard
+        // If we're on tracker onboarding and profile has period date, switch to dashboard
+        if (profile && profile.lastPeriodDate) {
           if (currentView === 'tracker-onboarding') {
-            console.log('Profile updated with symptoms, switching to tracker-dashboard');
+            console.log('Profile updated with period date, switching to tracker-dashboard');
             setCurrentView('tracker-dashboard');
           }
         }

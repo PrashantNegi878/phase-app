@@ -25,6 +25,12 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
     setSaving(true);
     setError('');
 
+    if (new Date(startDate) > getToday()) {
+      setError('Period start date cannot be in the future');
+      setSaving(false);
+      return;
+    }
+
     if (new Date(endDate) < new Date(startDate)) {
       setError('Period end date must be after start date');
       setSaving(false);
@@ -120,6 +126,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
             <input
               type="date"
               value={startDate}
+              max={formatDateForInput(today)}
               onChange={(e) => {
                 setStartDate(e.target.value);
                 if (!hasManuallyChangedEndDate) {
@@ -176,9 +183,9 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
             <motion.button
               type="submit"
               disabled={saving}
-              whileHover={{ y: -2 }}
-              whileTap={buttonTap}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 opacity-100 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              whileHover={saving ? {} : { y: -2 }}
+              whileTap={saving ? {} : buttonTap}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg disabled:from-slate-300 disabled:to-slate-400 disabled:text-slate-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
