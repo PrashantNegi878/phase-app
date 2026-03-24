@@ -52,20 +52,23 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
     setSaving(true);
     setError('');
 
-    if (new Date(startDate) > getToday()) {
+    const parsedStart = parseDateFromInput(startDate);
+    const parsedEnd = endDate ? parseDateFromInput(endDate) : undefined;
+
+    if (parsedStart > getToday()) {
       setError('Period start date cannot be in the future');
       setSaving(false);
       return;
     }
 
-    if (endDate && new Date(endDate) < new Date(startDate)) {
+    if (parsedEnd && parsedEnd < parsedStart) {
       setError('Period end date must be after start date');
       setSaving(false);
       return;
     }
 
     try {
-      await cycleService.recordPeriodStart(userId, parseDateFromInput(startDate), endDate ? parseDateFromInput(endDate) : undefined);
+      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
       onEditComplete();
     } catch (err) {
       console.error('Error updating period:', err);

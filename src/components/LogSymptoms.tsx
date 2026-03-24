@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart, Minus, GripHorizontal, Cloud, Smile, Zap, AlertTriangle, SmilePlus, Meh, Frown, Wind, CloudLightning } from 'lucide-react';
 import { cycleService } from '../services/cycle';
-import { getToday, formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
+import { getToday, formatDateForInput, formatDateForDisplay, parseDateFromInput } from '../utils/dateUtils';
 
 interface LogSymptomsProps {
   userId: string;
@@ -121,18 +121,14 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
     setSaving(true);
     setError('');
 
-    if (new Date(date) > getToday()) {
+    const parsedDate = parseDateFromInput(date);
+    if (parsedDate > getToday()) {
       setError('Cannot log symptoms for a future date');
       setSaving(false);
       return;
     }
 
     try {
-      const [year, month, day] = date.split('-').map(Number);
-      const parsedDate = new Date(year, month - 1, day); 
-      
-      parsedDate.setHours(0, 0, 0, 0);
-      
       await cycleService.logDailySymptoms(userId, parsedDate, symptoms);
       onLogComplete();
     } catch (err) {

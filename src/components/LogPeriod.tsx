@@ -25,20 +25,23 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
     setSaving(true);
     setError('');
 
-    if (new Date(startDate) > getToday()) {
+    const parsedStart = parseDateFromInput(startDate);
+    const parsedEnd = parseDateFromInput(endDate);
+
+    if (parsedStart > getToday()) {
       setError('Period start date cannot be in the future');
       setSaving(false);
       return;
     }
 
-    if (new Date(endDate) < new Date(startDate)) {
+    if (parsedEnd < parsedStart) {
       setError('Period end date must be after start date');
       setSaving(false);
       return;
     }
 
     try {
-      await cycleService.recordPeriodStart(userId, parseDateFromInput(startDate), parseDateFromInput(endDate));
+      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
       onLogComplete();
     } catch (err) {
       console.error('Error logging period:', err);

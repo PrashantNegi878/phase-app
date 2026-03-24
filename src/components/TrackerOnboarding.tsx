@@ -31,14 +31,15 @@ export function TrackerOnboarding({
         setError('Please enter your last period date');
         return;
       }
-      if (new Date(lastPeriodDate) > getToday()) {
+      const parsedStart = parseDateFromInput(lastPeriodDate);
+      if (parsedStart > getToday()) {
         setError('Period start date cannot be in the future');
         return;
       }
       setLoading(true);
       setError('');
       try {
-        await cycleService.recordPeriodStart(userId, parseDateFromInput(lastPeriodDate));
+        await cycleService.recordPeriodStart(userId, parsedStart);
         onComplete();
       } catch (err) {
         console.error('Onboarding error:', err);
