@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart } from 'lucide-react';
+import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart, Minus, GripHorizontal, Cloud, Smile, Zap, AlertTriangle, SmilePlus, Meh, Frown, Wind, CloudLightning } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { getToday, formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
 
@@ -85,29 +85,29 @@ function OptionCard({ selected, onClick, icon, label, color = 'sage' }: OptionCa
 // Cervical Fluid Options
 const cervicalFluidOptions = [
   { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
-  { value: 'none', label: 'None / Dry', icon: <Droplets className="w-4 h-4" /> },
-  { value: 'sticky', label: 'Sticky', icon: <Droplets className="w-4 h-4" /> },
-  { value: 'creamy', label: 'Creamy', icon: <Droplets className="w-4 h-4" /> },
+  { value: 'none', label: 'None / Dry', icon: <Minus className="w-4 h-4" /> },
+  { value: 'sticky', label: 'Sticky', icon: <GripHorizontal className="w-4 h-4" /> },
+  { value: 'creamy', label: 'Creamy', icon: <Cloud className="w-4 h-4" /> },
   { value: 'egg-white', label: 'Egg-White', icon: <Droplets className="w-4 h-4" /> },
 ];
 
 // Cramps Options
 const crampsOptions = [
   { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
-  { value: 'none', label: 'None', icon: <Flame className="w-4 h-4" /> },
-  { value: 'mild', label: 'Mild', icon: <Flame className="w-4 h-4" /> },
+  { value: 'none', label: 'None', icon: <Smile className="w-4 h-4" /> },
+  { value: 'mild', label: 'Mild', icon: <Zap className="w-4 h-4" /> },
   { value: 'moderate', label: 'Moderate', icon: <Flame className="w-4 h-4" /> },
-  { value: 'severe', label: 'Severe', icon: <Flame className="w-4 h-4" /> },
+  { value: 'severe', label: 'Severe', icon: <AlertTriangle className="w-4 h-4" /> },
 ];
 
 // Mood Options
 const moodOptions = [
   { value: '', label: 'Not tracked', icon: <X className="w-4 h-4" /> },
-  { value: 'happy', label: 'Happy', icon: <Heart className="w-4 h-4" /> },
-  { value: 'neutral', label: 'Neutral', icon: <Heart className="w-4 h-4" /> },
-  { value: 'sad', label: 'Sad', icon: <Heart className="w-4 h-4" /> },
-  { value: 'anxious', label: 'Anxious', icon: <Heart className="w-4 h-4" /> },
-  { value: 'irritable', label: 'Irritable', icon: <Heart className="w-4 h-4" /> },
+  { value: 'happy', label: 'Happy', icon: <SmilePlus className="w-4 h-4" /> },
+  { value: 'neutral', label: 'Neutral', icon: <Meh className="w-4 h-4" /> },
+  { value: 'sad', label: 'Sad', icon: <Frown className="w-4 h-4" /> },
+  { value: 'anxious', label: 'Anxious', icon: <Wind className="w-4 h-4" /> },
+  { value: 'irritable', label: 'Irritable', icon: <CloudLightning className="w-4 h-4" /> },
 ];
 
 export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProps) {
@@ -120,6 +120,13 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
     e.preventDefault();
     setSaving(true);
     setError('');
+
+    if (new Date(date) > getToday()) {
+      setError('Cannot log symptoms for a future date');
+      setSaving(false);
+      return;
+    }
+
     try {
       const [year, month, day] = date.split('-').map(Number);
       const parsedDate = new Date(year, month - 1, day); 
@@ -193,6 +200,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
             <input
               type="date"
               value={date}
+              max={formatDateForInput(getToday())}
               onChange={(e) => setDate(e.target.value)}
               className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors bg-white text-slate-700"
             />
