@@ -54,6 +54,32 @@ export function Settings({ userId, onBack }: SettingsProps) {
 
   const buttonTap = { scale: 0.97 };
 
+  // Animation Variants
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    },
+    exit: { opacity: 0, scale: 0.95, y: 20 }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } 
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -74,14 +100,14 @@ export function Settings({ userId, onBack }: SettingsProps) {
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="bg-white/90 backdrop-blur-xl rounded-3xl w-full max-w-md shadow-soft-lg overflow-hidden"
       >
         {/* Header */}
-        <div className="border-b border-earth-100 flex items-center justify-between p-6">
+        <motion.div variants={itemVariants} className="border-b border-earth-100 flex items-center justify-between p-6 z-10 relative">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
               <Settings2 className="w-5 h-5 text-sage-600" />
@@ -92,16 +118,16 @@ export function Settings({ userId, onBack }: SettingsProps) {
             onClick={onBack}
             whileHover={{ scale: 1.05 }}
             whileTap={buttonTap}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors duration-200 opacity-100"
           >
             <X className="w-5 h-5" />
           </motion.button>
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Cycle Length Setting */}
-          <div>
+          <motion.div variants={itemVariants}>
             <label className="block text-sm font-medium text-slate-700 mb-4">
               Typical Cycle Length
             </label>
@@ -124,24 +150,24 @@ export function Settings({ userId, onBack }: SettingsProps) {
             <p className="mt-3 text-sm text-earth-600">
               Expected ovulation: <span className="font-medium text-sage-600">Day {Math.round(cycleLengthDays / 2)}</span>
             </p>
-          </div>
+          </motion.div>
 
           {/* Info box */}
-          <div className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3">
+          <motion.div variants={itemVariants} className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3 opacity-100">
             <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-sage-700">
               The calendar will show expected phases based on your cycle length. Once you log enough symptoms, we'll track your actual ovulation day.
             </p>
-          </div>
+          </motion.div>
 
           {/* Message */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {message && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className={`text-sm p-4 rounded-2xl flex items-center gap-2 ${
+                className={`text-sm p-4 rounded-2xl flex items-center gap-2 opacity-100 ${
                   message.includes('Failed')
                     ? 'bg-red-50 text-red-700 border border-red-200'
                     : 'bg-sage-50 text-sage-700 border border-sage-200'
@@ -154,12 +180,12 @@ export function Settings({ userId, onBack }: SettingsProps) {
           </AnimatePresence>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <motion.div variants={itemVariants} className="flex gap-3 pt-2">
             <motion.button
               onClick={onBack}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
+              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200 opacity-100"
             >
               Cancel
             </motion.button>
@@ -168,7 +194,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
               disabled={saving}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 opacity-100 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -179,7 +205,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 'Save Changes'
               )}
             </motion.button>
-          </div>
+          </motion.div>
         </div>
       </motion.div>
     </div>

@@ -51,7 +51,7 @@ function OptionCard({ selected, onClick, icon, label, color = 'sage' }: OptionCa
       onClick={onClick}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.97 }}
-      className={`relative p-3 rounded-xl border-2 transition-all text-left ${
+      className={`relative p-3 rounded-xl border-2 transition-colors duration-200 text-left ${
         selected
           ? colors.selected
           : 'border-earth-200 bg-white hover:border-earth-300 hover:bg-earth-50'
@@ -138,12 +138,9 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
     setSaving(true);
     setError('');
     try {
-      // Parse date string properly to avoid timezone issues
-      // date is in format "YYYY-MM-DD", parse it as local date
       const [year, month, day] = date.split('-').map(Number);
-      const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
+      const parsedDate = new Date(year, month - 1, day); 
       
-      // Ensure the date is normalized to start of day (00:00:00)
       parsedDate.setHours(0, 0, 0, 0);
       
       await cycleService.logDailySymptoms(userId, parsedDate, symptoms);
@@ -158,6 +155,11 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
   };
 
   const buttonTap = { scale: 0.97 };
+
+  // Fallback: Ensure symptoms render even if profile is still syncing
+  const activeSymptoms = trackerProfile?.trackedSymptoms?.length 
+    ? trackerProfile.trackedSymptoms 
+    : ['cervical-fluid', 'bbt', 'cramps', 'mood'];
 
   if (loading) {
     return (
@@ -179,9 +181,9 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-soft-lg"
       >
@@ -227,18 +229,25 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
+              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors bg-white text-slate-700"
             />
             <p className="mt-2 text-sm text-earth-500">
               {(() => {
-                const [year, month, day] = date.split('-').map(Number);
-                return formatDateForDisplay(new Date(year, month - 1, day));
+                if (!date) return '';
+                try {
+                  const parts = date.split('-');
+                  if (parts.length !== 3) return '';
+                  const [year, month, day] = parts.map(Number);
+                  return formatDateForDisplay(new Date(year, month - 1, day));
+                } catch {
+                  return '';
+                }
               })()}
             </p>
           </div>
 
           {/* Cervical Fluid */}
-          {trackerProfile?.trackedSymptoms?.includes('cervical-fluid') && (
+          {activeSymptoms.includes('cervical-fluid') && (
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                 <Droplets className="w-4 h-4 text-sky-500" />
@@ -260,7 +269,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           )}
 
           {/* Basal Body Temperature */}
-          {trackerProfile?.trackedSymptoms?.includes('bbt') && (
+          {activeSymptoms.includes('bbt') && (
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                 <Thermometer className="w-4 h-4 text-amber-500" />
@@ -275,7 +284,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                   value={symptoms.bbt || ''}
                   onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
                   placeholder="36.5"
-                  className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-all bg-white text-slate-700 pr-12"
+                  className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-colors bg-white text-slate-700 pr-12"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-earth-400 font-medium">°C</span>
               </div>
@@ -283,7 +292,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           )}
 
           {/* Cramps */}
-          {trackerProfile?.trackedSymptoms?.includes('cramps') && (
+          {activeSymptoms.includes('cramps') && (
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                 <Flame className="w-4 h-4 text-rose-500" />
@@ -305,7 +314,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
           )}
 
           {/* Mood */}
-          {trackerProfile?.trackedSymptoms?.includes('mood') && (
+          {activeSymptoms.includes('mood') && (
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                 <Heart className="w-4 h-4 text-sage-500" />
@@ -337,7 +346,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               onChange={(e) => setSymptoms({ ...symptoms, notes: e.target.value })}
               placeholder="Any other observations..."
               rows={3}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700 resize-none"
+              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors bg-white text-slate-700 resize-none"
             />
           </div>
 
@@ -348,7 +357,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               onClick={onCancel}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3.5 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
+              className="flex-1 px-4 py-3.5 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200"
             >
               Cancel
             </motion.button>
@@ -357,7 +366,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               disabled={saving}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3.5 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>

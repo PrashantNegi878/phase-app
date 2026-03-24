@@ -169,19 +169,45 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
     return diffDays + 1;
   }, [cycleData.lastPeriodDate]);
 
+  // Animation Variants
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    },
+    exit: { opacity: 0, scale: 0.95, y: 20 }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } 
+    }
+  };
+
   const buttonTap = { scale: 0.97 };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-6 rounded-t-3xl">
+        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-6 rounded-t-3xl z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
               <Calendar className="w-5 h-5 text-sage-600" />
@@ -192,16 +218,16 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
             onClick={onClose}
             whileHover={{ scale: 1.05 }}
             whileTap={buttonTap}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors opacity-100"
           >
             <X className="w-5 h-5" />
           </motion.button>
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="p-6">
           {/* Legend */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
               { phase: 'menstrual', label: 'Menstrual' },
               { phase: 'follicular', label: 'Follicular' },
@@ -213,10 +239,10 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
                 <span className="text-sm text-slate-700">{label}</span>
               </div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Cycle Info */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
+          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
             <div className="bg-sage-50 rounded-xl p-4">
               <div className="text-xs text-earth-500 mb-1">Current Phase</div>
               <div className="text-lg font-semibold text-sage-700 capitalize">
@@ -237,49 +263,51 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-earth-500 py-2">
-                {day}
-              </div>
-            ))}
+          <motion.div variants={itemVariants}>
+            <div className="grid grid-cols-7 gap-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="text-center text-xs font-medium text-earth-500 py-2">
+                  {day}
+                </div>
+              ))}
 
-            {calendarDays.map((item, idx) => {
-              const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
-              const dayOfMonth = item.date.getDate();
+              {calendarDays.map((item, idx) => {
+                const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
+                const dayOfMonth = item.date.getDate();
 
-              return (
-                <motion.div
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  className={`
-                    aspect-square flex flex-col items-center justify-center rounded-xl border
-                    ${colors.bg} ${colors.border}
-                    ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2 shadow-soft' : ''}
-                    transition-all cursor-default
-                  `}
-                >
-                  <div className={`text-sm font-semibold ${colors.text}`}>
-                    {dayOfMonth}
-                  </div>
-                  <div className="text-[10px] text-earth-400 mt-0.5 hidden sm:block">
-                    {formatCalendarDate(item.date).split(' ')[1]}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                return (
+                  <motion.div
+                    key={item.date.toISOString()}
+                    whileHover={{ scale: 1.05 }}
+                    className={`
+                      aspect-square flex flex-col items-center justify-center rounded-xl border opacity-100
+                      ${colors.bg} ${colors.border}
+                      ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2 shadow-soft' : ''}
+                      transition-colors duration-200 cursor-default
+                    `}
+                  >
+                    <div className={`text-sm font-semibold ${colors.text}`}>
+                      {dayOfMonth}
+                    </div>
+                    <div className="text-[10px] text-earth-400 mt-0.5 hidden sm:block">
+                      {formatCalendarDate(item.date).split(' ')[1]}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
 
           {/* Today Indicator */}
-          <div className="mt-6 bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3">
+          <motion.div variants={itemVariants} className="mt-6 bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3">
             <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-sage-700">
               The day with a ring indicates today. Colors represent different cycle phases.
             </p>
-          </div>
+          </motion.div>
         </div>
       </motion.div>
     </div>

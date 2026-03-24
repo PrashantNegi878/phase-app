@@ -21,6 +21,9 @@ export function TrackerOnboarding({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Debug log to confirm component is rendering
+  console.log('TrackerOnboarding rendering with partnerCode:', partnerCode);
+
   const symptomOptions = [
     { id: 'cervical-fluid', label: 'Cervical Fluid', description: 'Track consistency changes' },
     { id: 'bbt', label: 'Basal Body Temperature', description: 'Track temperature patterns' },
@@ -90,8 +93,9 @@ export function TrackerOnboarding({
           {step === 'welcome' && (
             <motion.div
               key="welcome"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
@@ -128,7 +132,7 @@ export function TrackerOnboarding({
                 onClick={() => setStep('symptoms')}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
               >
                 Continue
                 <ArrowRight className="w-5 h-5" />
@@ -139,8 +143,9 @@ export function TrackerOnboarding({
           {step === 'symptoms' && (
             <motion.div
               key="symptoms"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
@@ -159,7 +164,7 @@ export function TrackerOnboarding({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm"
+                    className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
                   >
                     {error}
                   </motion.div>
@@ -172,13 +177,13 @@ export function TrackerOnboarding({
                     key={option.id}
                     whileHover={{ y: -2 }}
                     whileTap={buttonTap}
-                    className={`flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all ${
+                    className={`flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-colors duration-200 opacity-100 ${
                       selectedSymptoms.includes(option.id)
                         ? 'border-sage-400 bg-sage-50 shadow-soft'
                         : 'border-earth-200 hover:border-sage-300 bg-white/50'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-lg border-2 mr-4 flex items-center justify-center transition-all ${
+                    <div className={`w-6 h-6 rounded-lg border-2 mr-4 flex items-center justify-center transition-colors duration-200 opacity-100 ${
                       selectedSymptoms.includes(option.id)
                         ? 'bg-sage-500 border-sage-500'
                         : 'border-earth-300'
@@ -206,7 +211,7 @@ export function TrackerOnboarding({
                 onClick={handleContinue}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
               >
                 Next
                 <ArrowRight className="w-5 h-5" />
@@ -217,8 +222,9 @@ export function TrackerOnboarding({
           {step === 'period-date' && (
             <motion.div
               key="period-date"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
@@ -240,7 +246,7 @@ export function TrackerOnboarding({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm"
+                    className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
                   >
                     {error}
                   </motion.div>
@@ -252,7 +258,7 @@ export function TrackerOnboarding({
                   type="date"
                   value={lastPeriodDate}
                   onChange={(e) => setLastPeriodDate(e.target.value)}
-                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
+                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
                 />
                 {lastPeriodDate && (
                   <p className="text-sm text-earth-600">
@@ -267,7 +273,7 @@ export function TrackerOnboarding({
                 disabled={loading || !lastPeriodDate}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 opacity-100 shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

@@ -49,6 +49,8 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('auth');
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
   const [loadingPartnerProfile, setLoadingPartnerProfile] = useState(false);
+  const [trackerProfile, setTrackerProfile] = useState<any>(null);
+  const [loadingTrackerProfile, setLoadingTrackerProfile] = useState(false);
 
   React.useEffect(() => {
     const initializeApp = async () => {
@@ -89,15 +91,25 @@ function App() {
         }
 
         if (user.role === 'tracker') {
-          const profile = await cycleService.getTrackerProfile(currentUser.uid);
-          console.log('Tracker profile:', profile);
-          
-          if (profile && profile.trackedSymptoms && profile.trackedSymptoms.length > 0) {
-            console.log('Going to tracker-dashboard');
-            setCurrentView('tracker-dashboard');
-          } else {
-            console.log('Going to tracker-onboarding');
-            setCurrentView('tracker-onboarding');
+          setLoadingTrackerProfile(true);
+          try {
+            const profile = await cycleService.getTrackerProfile(currentUser.uid);
+            console.log('Tracker profile:', profile);
+            setTrackerProfile(profile || null);
+            
+            if (profile && profile.trackedSymptoms && profile.trackedSymptoms.length > 0) {
+              console.log('Going to tracker-dashboard');
+              setCurrentView('tracker-dashboard');
+            } else {
+              console.log('Going to tracker-onboarding');
+              setCurrentView('tracker-onboarding');
+            }
+          } catch (err) {
+            console.error('Error fetching tracker profile:', err);
+            setTrackerProfile(null);
+            setCurrentView('auth');
+          } finally {
+            setLoadingTrackerProfile(false);
           }
         } else {
           // Partner role
@@ -155,6 +167,51 @@ function App() {
     refetchPartnerProfile();
   }, [currentView, currentUser]);
 
+  // Effect to refetch tracker profile after onboarding completion
+  React.useEffect(() => {
+    const refetchTrackerProfile = async () => {
+      if (currentView === 'tracker-dashboard' && currentUser) {
+        setLoadingTrackerProfile(true);
+        try {
+          const profile = await cycleService.getTrackerProfile(currentUser.uid);
+          console.log('Refetched tracker profile:', profile);
+          setTrackerProfile(profile || null);
+        } catch (err) {
+          console.error('Error refetching tracker profile:', err);
+          setTrackerProfile(null);
+        } finally {
+          setLoadingTrackerProfile(false);
+        }
+      }
+    };
+
+    refetchTrackerProfile();
+  }, [currentView, currentUser]);
+
+  // Effect to listen for tracker profile changes in real-time
+  React.useEffect(() => {
+    if (currentUser) {
+      const unsubscribe = cycleService.onTrackerProfileChange(currentUser.uid, (profile) => {
+        console.log('Real-time tracker profile update:', profile);
+        setTrackerProfile(profile || null);
+        
+        // If we're on tracker dashboard and profile has symptoms, stay on dashboard
+        // If we're on tracker onboarding and profile has symptoms, switch to dashboard
+        if (profile && profile.trackedSymptoms && profile.trackedSymptoms.length > 0) {
+          if (currentView === 'tracker-onboarding') {
+            console.log('Profile updated with symptoms, switching to tracker-dashboard');
+            setCurrentView('tracker-dashboard');
+          }
+        }
+      });
+
+      return () => {
+        // Cleanup function - unsubscribe from real-time listener
+        unsubscribe();
+      };
+    }
+  }, [currentView, currentUser]);
+
   const handleLogout = async () => {
     await authService.logout();
     setCurrentView('auth');
@@ -191,12 +248,15 @@ function App() {
       {/* Main Content */}
       {currentView === 'auth' && <AuthPage onAuthSuccess={() => {}} />}
 
-      {currentView === 'tracker-onboarding' && userData && (
-        <TrackerOnboarding
-          userId={currentUser!.uid}
-          partnerCode={userData.partnerCode || ''}
-          onComplete={() => setCurrentView('tracker-dashboard')}
-        />
+      {currentView === 'tracker-onboarding' && (
+        <>
+          {console.log('Rendering tracker onboarding with partnerCode:', userData?.partnerCode)}
+          <TrackerOnboarding
+            userId={currentUser!.uid}
+            partnerCode={userData?.partnerCode || ''}
+            onComplete={() => setCurrentView('tracker-dashboard')}
+          />
+        </>
       )}
 
       {currentView === 'partner-onboarding' && (
@@ -208,12 +268,21 @@ function App() {
 
       {(currentView === 'tracker-dashboard' || currentView === 'log-symptoms' || currentView === 'log-period') && userData && (
         <>
-          <TrackerDashboard
-            userId={currentUser!.uid}
-            partnerCode={userData.partnerCode || ''}
-            onLogSymptoms={() => setCurrentView('log-symptoms')}
-            onLogPeriod={() => setCurrentView('log-period')}
-          />
+          {loadingTrackerProfile ? (
+            <div className="min-h-screen bg-earth-50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
+                <p className="text-earth-600 font-light">Loading tracker data...</p>
+              </div>
+            </div>
+          ) : (
+            <TrackerDashboard
+              userId={currentUser!.uid}
+              partnerCode={userData.partnerCode || ''}
+              onLogSymptoms={() => setCurrentView('log-symptoms')}
+              onLogPeriod={() => setCurrentView('log-period')}
+            />
+          )}
           {currentView === 'log-symptoms' && (
             <LogSymptoms
               userId={currentUser!.uid}

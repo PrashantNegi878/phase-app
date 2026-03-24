@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Sparkles, Heart, Users } from 'lucide-react';
 import { authService } from '../services/auth';
@@ -72,17 +72,30 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
     },
   };
 
@@ -104,7 +117,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       >
         {/* Main Card */}
         <motion.div
-          variants={itemVariants}
+          variants={cardVariants}
           className="bg-white/80 backdrop-blur-xl rounded-4xl shadow-soft-lg p-8 sm:p-10"
         >
           {/* Logo & Welcome Section */}
@@ -113,7 +126,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-sage-200 to-sage-300 mb-6 shadow-soft"
+              className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-sage-200 to-sage-300 mb-6 shadow-soft opacity-100"
             >
               <Sparkles className="w-8 h-8 text-sage-700" />
             </motion.div>
@@ -132,7 +145,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm"
+                className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
               >
                 {error}
               </motion.div>
@@ -146,7 +159,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-sage-50 border border-sage-200 text-sage-700 rounded-2xl text-sm"
+                className="mb-6 p-4 bg-sage-50 border border-sage-200 text-sage-700 rounded-2xl text-sm opacity-100"
               >
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 flex-shrink-0" />
@@ -179,7 +192,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                     type="button"
                     onClick={() => setRole('tracker')}
                     whileTap={buttonTap}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 opacity-100 ${
                       role === 'tracker'
                         ? 'text-sage-700'
                         : 'text-earth-500 hover:text-earth-700'
@@ -192,7 +205,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                     type="button"
                     onClick={() => setRole('partner')}
                     whileTap={buttonTap}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 opacity-100 ${
                       role === 'partner'
                         ? 'text-sage-700'
                         : 'text-earth-500 hover:text-earth-700'
@@ -217,7 +230,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               disabled={loading}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="w-full bg-white border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-medium py-4 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm hover:shadow-soft"
+              className="w-full bg-white border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-medium py-4 rounded-2xl transition-colors duration-200 opacity-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm hover:shadow-soft"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -241,7 +254,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
             </motion.button>
 
             {/* Divider */}
-            <motion.div variants={itemVariants} className="relative">
+            <motion.div variants={itemVariants} className="relative opacity-100">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-earth-200"></div>
               </div>
@@ -253,7 +266,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
             </motion.div>
 
             {/* Magic Link Form */}
-            <motion.form variants={itemVariants} onSubmit={handleMagicLink} className="space-y-4">
+            <motion.form variants={itemVariants} onSubmit={handleMagicLink} className="space-y-4 opacity-100">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Email Address
@@ -264,7 +277,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all duration-200 bg-white text-slate-700 placeholder-earth-400"
+                    className="w-full pl-12 pr-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700 placeholder-earth-400"
                     placeholder="hello@example.com"
                     required
                   />
@@ -275,7 +288,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                 disabled={loading || !email}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium py-4 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-soft-lg"
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium py-4 rounded-2xl transition-colors duration-200 opacity-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-soft-lg"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -295,7 +308,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               </motion.button>
             </motion.form>
 
-            <motion.p variants={itemVariants} className="text-center text-sm text-earth-500">
+            <motion.p variants={itemVariants} className="text-center text-sm text-earth-500 opacity-100">
               No password needed. We'll send a secure link to your inbox.
             </motion.p>
           </div>
@@ -304,7 +317,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
         {/* Footer tagline */}
         <motion.p
           variants={itemVariants}
-          className="text-center text-earth-400 text-sm mt-6"
+          className="text-center text-earth-400 text-sm mt-6 opacity-100"
         >
           Mindful tracking for couples
         </motion.p>

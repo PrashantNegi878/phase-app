@@ -103,7 +103,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setSupportStyle(style.id)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className={`relative p-3 rounded-xl border-2 text-left transition-all ${
+                className={`relative p-3 rounded-xl border-2 text-left transition-colors duration-200 opacity-100 ${
                   isSelected
                     ? 'border-sage-400 bg-sage-50 shadow-sm'
                     : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
@@ -150,7 +150,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setScheduleConstraints(schedule.id)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className={`relative p-3 rounded-xl border-2 text-left transition-all ${
+                className={`relative p-3 rounded-xl border-2 text-left transition-colors duration-200 opacity-100 ${
                   isSelected
                     ? 'border-sage-400 bg-sage-50 shadow-sm'
                     : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
@@ -212,7 +212,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm"
+              className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm opacity-100"
             >
               {error}
             </motion.div>
@@ -238,7 +238,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setStep('link-input')}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-all text-left flex items-start gap-3"
+                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-colors duration-200 opacity-100 text-left flex items-start gap-3"
               >
                 <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center flex-shrink-0">
                   <Link2 className="w-5 h-5 text-sage-600" />
@@ -254,7 +254,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setStep('manual-setup')}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-all text-left flex items-start gap-3"
+                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-colors duration-200 opacity-100 text-left flex items-start gap-3"
               >
                 <div className="w-10 h-10 rounded-xl bg-earth-100 flex items-center justify-center flex-shrink-0">
                   <Edit3 className="w-5 h-5 text-earth-600" />
@@ -296,7 +296,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                   onChange={(e) => setPartnerCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all text-center text-2xl tracking-[0.3em] font-mono bg-white text-slate-700"
+                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 text-center text-2xl tracking-[0.3em] font-mono bg-white text-slate-700"
                 />
               </motion.div>
 
@@ -308,7 +308,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 disabled={loading || partnerCode.length !== 6}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full mt-2 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full mt-2 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 opacity-100 shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -356,7 +356,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 disabled={loading}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full mt-2 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full mt-2 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 opacity-100 shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

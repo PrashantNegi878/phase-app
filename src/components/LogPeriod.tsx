@@ -45,17 +45,43 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
   const buttonTap = { scale: 0.97 };
   const periodDuration = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+  // Animation Variants
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    },
+    exit: { opacity: 0, scale: 0.95, y: 20 }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } 
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md shadow-soft-lg"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl">
+        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
               <Droplets className="w-5 h-5 text-rose-500" />
@@ -66,27 +92,27 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
             onClick={onCancel}
             whileHover={{ scale: 1.05 }}
             whileTap={buttonTap}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors duration-200 opacity-100"
           >
             <X className="w-5 h-5" />
           </motion.button>
-        </div>
+        </motion.div>
 
         <form onSubmit={handleSavePeriod} className="p-6 space-y-5">
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm"
+                className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
               >
                 {error}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div>
+          <motion.div variants={itemVariants}>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
               <Calendar className="w-4 h-4 text-rose-400" />
               Period Start Date
@@ -103,15 +129,15 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                   setEndDate(formatDateForInput(endDateObj));
                 }
               }}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
+              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
               required
             />
             <p className="mt-2 text-sm text-earth-500">
               {formatDateForDisplay(new Date(startDate))}
             </p>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={itemVariants}>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
               <Calendar className="w-4 h-4 text-rose-400" />
               Period End Date
@@ -123,7 +149,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                 setEndDate(e.target.value);
                 setHasManuallyChangedEndDate(true);
               }}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-all bg-white text-slate-700"
+              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
               required
             />
             <div className="mt-2 flex items-center justify-between">
@@ -134,16 +160,16 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                 {periodDuration} days
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <motion.div variants={itemVariants} className="flex gap-3 pt-2">
             <motion.button
               type="button"
               onClick={onCancel}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-all"
+              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200 opacity-100"
             >
               Cancel
             </motion.button>
@@ -152,7 +178,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
               disabled={saving}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 opacity-100 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -163,7 +189,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                 'Log Period'
               )}
             </motion.button>
-          </div>
+          </motion.div>
         </form>
       </motion.div>
     </div>

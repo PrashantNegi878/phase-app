@@ -226,7 +226,7 @@ export function TrackerDashboard({
             onClick={() => setShowSettings(true)}
             whileHover={{ scale: 1.05 }}
             whileTap={buttonTap}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors shadow-soft"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
           >
             <SettingsIcon className="w-5 h-5" />
           </motion.button>
@@ -238,7 +238,7 @@ export function TrackerDashboard({
           onClick={() => setShowCalendar(true)}
           whileHover={{ y: -2 }}
           whileTap={buttonTap}
-          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300`}
+          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300 opacity-100`}
         >
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-earth-500">Current Phase</span>
@@ -261,7 +261,7 @@ export function TrackerDashboard({
               onClick={() => setShowEditPeriod(true)}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft cursor-pointer hover:shadow-soft-lg transition-all border border-earth-100"
+              className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft cursor-pointer hover:shadow-soft-lg transition-all duration-300 opacity-100 border border-earth-100"
             >
               <div className="flex items-center gap-2 text-earth-400 mb-2">
                 <Droplets className="w-4 h-4" />
@@ -277,7 +277,7 @@ export function TrackerDashboard({
             </motion.div>
           )}
           {cycleData.nextPeriodDate ? (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100">
               <div className="flex items-center gap-2 text-earth-400 mb-2">
                 <Calendar className="w-4 h-4" />
                 <span className="text-xs font-medium">Next Period</span>
@@ -287,7 +287,7 @@ export function TrackerDashboard({
               </div>
             </div>
           ) : (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100">
               <div className="flex items-center gap-2 text-earth-400 mb-2">
                 <Calendar className="w-4 h-4" />
                 <span className="text-xs font-medium">Next Period</span>
@@ -300,7 +300,7 @@ export function TrackerDashboard({
         {/* Partner Code Section */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100"
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 opacity-100"
         >
           <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
             <Share2 className="w-4 h-4 text-sage-500" />
@@ -319,7 +319,7 @@ export function TrackerDashboard({
         {/* Recent Symptoms Section */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100"
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 opacity-100"
         >
           <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
             <Activity className="w-4 h-4 text-sage-500" />
@@ -353,7 +353,7 @@ export function TrackerDashboard({
             onClick={onLogSymptoms}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
           >
             <Activity className="w-5 h-5" />
             Log Symptoms
@@ -362,7 +362,7 @@ export function TrackerDashboard({
             onClick={onLogPeriod}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
           >
             <Droplets className="w-5 h-5 text-rose-400" />
             Log Period Start
