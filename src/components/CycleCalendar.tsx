@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Info } from 'lucide-react';
+import { X, Calendar } from 'lucide-react';
 import { CycleData } from '../types';
 import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
 
@@ -304,13 +304,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
             </div>
           </motion.div>
 
-          {/* Today Indicator */}
-          <motion.div variants={itemVariants} className="mt-6 bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3">
-            <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-sage-700">
-              The day with a ring indicates today. Colors represent different cycle phases.
-            </p>
-          </motion.div>
+
         </div>
       </motion.div>
     </div>
