@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight } from 'lucide-react';
+import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight, Heart } from 'lucide-react';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
 import { CycleData, TrackerProfile } from '../types';
@@ -50,6 +50,7 @@ export function TrackerDashboard({
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
   const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
   const [todayScore, setTodayScore] = useState<number | null>(null);
+  const [hasLinkedPartner, setHasLinkedPartner] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -89,6 +90,12 @@ export function TrackerDashboard({
       }
     };
     fetchTrackerProfile();
+
+    const unsubscribePartner = cycleService.onLinkedPartnersChange(userId, (hasPartner) => {
+      setHasLinkedPartner(hasPartner);
+    });
+
+    return () => unsubscribePartner();
   }, [userId]);
 
   useEffect(() => {
@@ -221,7 +228,18 @@ export function TrackerDashboard({
       >
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-6 mt-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Your Phase</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Your Phase</h1>
+            <div className="flex flex-col items-start gap-1 mt-1">
+              <p className="text-sm text-earth-500">Personal tracking mode</p>
+              {hasLinkedPartner && (
+                <div className="flex items-center gap-1.5 text-sage-600 bg-sage-50 px-2 py-0.5 rounded-full border border-sage-100">
+                  <Heart className="w-3 h-3 fill-current" />
+                  <span className="text-xs font-medium">Partner Connected</span>
+                </div>
+              )}
+            </div>
+          </div>
           <motion.button
             onClick={() => setShowSettings(true)}
             whileHover={{ scale: 1.05 }}
