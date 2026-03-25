@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { TrackerProfile } from '../types';
 import { getToday } from '../utils/dateUtils';
+import { cycleService } from '../services/cycle';
 
 interface SettingsProps {
   userId: string;
@@ -42,6 +43,9 @@ export function Settings({ userId, onBack }: SettingsProps) {
         cycleLengthDays,
         updatedAt: getToday(),
       });
+      
+      // Recalculate cycle data to apply the new cycle length directly
+      await cycleService.updateCyclePhaseRealTime(userId);
       setMessage('Cycle length updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
