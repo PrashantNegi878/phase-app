@@ -50,6 +50,9 @@ service cloud.firestore {
     match /partnerProfiles/{partnerId} {
       // Partner can read/write their own profile
       allow read, write: if isAuthenticated() && request.auth.uid == partnerId;
+      
+      // Tracker can read partner profiles that are linked to them
+      allow read: if isAuthenticated() && resource.data.linkedTrackerId == request.auth.uid;
     }
 
     // CYCLE DATA

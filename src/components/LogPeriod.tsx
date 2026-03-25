@@ -94,10 +94,10 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md shadow-soft-lg"
+        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-md shadow-soft-lg overflow-hidden"
       >
         {/* Header */}
-        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl z-10">
+        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
               <Droplets className="w-5 h-5 text-rose-500" />

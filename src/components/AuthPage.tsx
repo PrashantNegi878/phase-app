@@ -126,11 +126,11 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-sage-200 to-sage-300 mb-6 shadow-soft opacity-100"
+              className="flex justify-center mb-6"
             >
-              <Sparkles className="w-8 h-8 text-sage-700" />
+              <img src="/pwa-192x192.png" alt="Phase Logo" className="w-16 h-16 sm:w-24 sm:h-24 mix-blend-multiply hover:scale-105 transition-transform duration-300 drop-shadow-sm" />
             </motion.div>
-            <h1 className="text-3xl font-semibold text-slate-800 mb-2 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2 tracking-tight">
               Welcome to Phase
             </h1>
             <p className="text-earth-600 font-light">

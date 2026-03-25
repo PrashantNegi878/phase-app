@@ -137,8 +137,7 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md p-6 text-center shadow-soft-lg"
+          className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-md p-6 text-center shadow-soft-lg"
         >
           <p className="text-earth-600 mb-4">No period data to edit yet.</p>
           <motion.button
@@ -165,10 +164,10 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md shadow-soft-lg"
+        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-md shadow-soft-lg overflow-hidden"
       >
         {/* Header */}
-        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl z-10">
+        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
               <Edit3 className="w-5 h-5 text-sage-600" />

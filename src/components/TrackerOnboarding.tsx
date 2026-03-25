@@ -102,10 +102,10 @@ export function TrackerOnboarding({
               className="space-y-6"
             >
               <motion.div variants={itemVariants} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-sage-200 to-sage-300 mb-6 shadow-soft">
-                  <Sparkles className="w-8 h-8 text-sage-700" />
+                <div className="flex justify-center mb-6">
+                  <img src="/pwa-192x192.png" alt="Phase Logo" className="w-16 h-16 sm:w-24 sm:h-24 mix-blend-multiply hover:scale-105 transition-transform duration-300 drop-shadow-sm" />
                 </div>
-                <h1 className="text-2xl font-semibold text-slate-800 mb-2 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 tracking-tight">
                   Welcome to Phase!
                 </h1>
                 <p className="text-earth-600 font-light">

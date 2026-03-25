@@ -249,6 +249,20 @@ export const cycleService = {
     return this.getCycleData(partnerProfile.linkedTrackerId);
   },
 
+  // Listen for linked partners in real-time
+  onLinkedPartnersChange(trackerId: string, callback: (hasPartner: boolean) => void): () => void {
+    const q = query(
+      collection(db, 'partnerProfiles'),
+      where('linkedTrackerId', '==', trackerId)
+    );
+    return onSnapshot(q, (snapshot) => {
+      callback(!snapshot.empty);
+    }, (error) => {
+      console.error("Error listening to linked partners:", error);
+      callback(false);
+    });
+  },
+
   // Get partner profile (helper)
   async getPartnerProfile(uid: string): Promise<PartnerProfile | null> {
     const docSnap = await getDoc(doc(db, 'partnerProfiles', uid));

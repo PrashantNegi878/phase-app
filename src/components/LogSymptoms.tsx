@@ -153,10 +153,10 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-white/95 backdrop-blur-xl rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-soft-lg"
+        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-soft-lg"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 sm:rounded-t-3xl z-10">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
               <Activity className="w-5 h-5 text-sage-600" />
