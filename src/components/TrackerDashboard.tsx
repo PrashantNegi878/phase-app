@@ -338,18 +338,18 @@ export function TrackerDashboard({
                 {recentLogs.length > 0 ? formatDateForDisplay(new Date(recentLogs[0].date)) : 'Never'}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-earth-600 text-sm">Ovulation Status</span>
+            <div className="flex justify-between items-center py-2 gap-4">
+              <span className="text-earth-600 text-sm flex-shrink-0">Ovulation Status</span>
               {(() => {
                 const today = getToday();
                 if (cycleData.ovulationDetectedDate) {
-                  return <span className="font-semibold text-sage-600">Confirmed via Symptoms</span>;
+                  return <span className="font-semibold text-sage-600 text-right leading-tight">Confirmed via Symptoms</span>;
                 } else if (cycleData.ovulationPhaseEnd && today > normalizeDate(cycleData.ovulationPhaseEnd)) {
-                  return <span className="font-semibold text-amber-500">Past Predicted Window</span>;
+                  return <span className="font-semibold text-amber-500 text-right leading-tight">Past Predicted Window</span>;
                 } else if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd && today >= normalizeDate(cycleData.ovulationPhaseStart) && today <= normalizeDate(cycleData.ovulationPhaseEnd)) {
-                  return <span className="font-semibold text-rose-400">In Fertile Window</span>;
+                  return <span className="font-semibold text-rose-400 text-right leading-tight">In Fertile Window</span>;
                 } else {
-                  return <span className="font-semibold text-earth-400">Awaiting</span>;
+                  return <span className="font-semibold text-earth-400 text-right leading-tight">Awaiting</span>;
                 }
               })()}
             </div>
