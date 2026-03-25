@@ -76,6 +76,9 @@ export const cycleService = {
     const trackerProfile = await this.getTrackerProfile(userId);
     if (!trackerProfile) return;
 
+    const existingCycleData = await this.getCycleData(userId);
+    const periodEndDate = existingCycleData?.periodEndDate || null;
+
     const lastPeriod = normalizeDate(trackerProfile.lastPeriodDate);
     const dayOfCycle = calculateDayOfCycle(lastPeriod);
     
@@ -103,7 +106,8 @@ export const cycleService = {
       trackerProfile.lastPeriodDate,
       cyclePhase.ovulationDetectedDate || null,
       trackerProfile.cycleLengthDays,
-      nextPeriodDate // Pass nextPeriodDate to ensure luteal phase ends correctly
+      nextPeriodDate, // Pass nextPeriodDate to ensure luteal phase ends correctly
+      periodEndDate
     );
 
     // Ensure all dates are properly normalized before saving
@@ -170,7 +174,8 @@ export const cycleService = {
       normalizedStartDate,
       null, // No ovulation detected yet when period starts
       cycleLengthDays,
-      predictedNextPeriodDate // Pass predicted next period date to ensure luteal phase ends correctly
+      predictedNextPeriodDate, // Pass predicted next period date to ensure luteal phase ends correctly
+      normalizedEndDate
     );
 
     // Ensure all dates are properly normalized before saving

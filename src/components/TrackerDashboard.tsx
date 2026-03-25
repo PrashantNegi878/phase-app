@@ -339,10 +339,19 @@ export function TrackerDashboard({
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-earth-600 text-sm">Ovulation Detected</span>
-              <span className={`font-semibold ${cycleData.ovulationDetectedDate ? 'text-sage-600' : 'text-earth-400'}`}>
-                {cycleData.ovulationDetectedDate ? 'Yes' : 'No'}
-              </span>
+              <span className="text-earth-600 text-sm">Ovulation Status</span>
+              {(() => {
+                const today = getToday();
+                if (cycleData.ovulationDetectedDate) {
+                  return <span className="font-semibold text-sage-600">Confirmed via Symptoms</span>;
+                } else if (cycleData.ovulationPhaseEnd && today > normalizeDate(cycleData.ovulationPhaseEnd)) {
+                  return <span className="font-semibold text-amber-500">Past Predicted Window</span>;
+                } else if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd && today >= normalizeDate(cycleData.ovulationPhaseStart) && today <= normalizeDate(cycleData.ovulationPhaseEnd)) {
+                  return <span className="font-semibold text-rose-400">In Fertile Window</span>;
+                } else {
+                  return <span className="font-semibold text-earth-400">Awaiting</span>;
+                }
+              })()}
             </div>
           </div>
         </motion.div>

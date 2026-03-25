@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Calendar, ArrowRight, Share2 } from 'lucide-react';
 import { cycleService } from '../services/cycle';
-import { parseDateFromInput, formatDateForDisplay, getToday, formatDateForInput } from '../utils/dateUtils';
+import { parseDateFromInput, getToday, formatDateForInput } from '../utils/dateUtils';
 
 interface TrackerOnboardingProps {
   userId: string;
@@ -17,6 +17,8 @@ export function TrackerOnboarding({
 }: TrackerOnboardingProps) {
   const [step, setStep] = useState<'welcome' | 'period-date'>('welcome');
   const [lastPeriodDate, setLastPeriodDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [hasManuallyChangedEndDate, setHasManuallyChangedEndDate] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,14 +34,30 @@ export function TrackerOnboarding({
         return;
       }
       const parsedStart = parseDateFromInput(lastPeriodDate);
+      const parsedEnd = endDate ? parseDateFromInput(endDate) : undefined;
+
       if (parsedStart > getToday()) {
         setError('Period start date cannot be in the future');
         return;
       }
+
+      if (parsedEnd && parsedEnd < parsedStart) {
+        setError('Period end date must be after start date');
+        return;
+      }
+
+      if (parsedEnd) {
+        const durationDays = Math.ceil((parsedEnd.getTime() - parsedStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (durationDays > 10) {
+          setError('Period duration cannot exceed 10 days. Please check your dates.');
+          return;
+        }
+      }
+
       setLoading(true);
       setError('');
       try {
-        await cycleService.recordPeriodStart(userId, parsedStart);
+        await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
         onComplete();
       } catch (err) {
         console.error('Onboarding error:', err);
@@ -160,19 +178,44 @@ export function TrackerOnboarding({
                 )}
               </AnimatePresence>
 
-              <motion.div variants={itemVariants} className="space-y-3">
-                <input
-                  type="date"
-                  value={lastPeriodDate}
-                  max={formatDateForInput(getToday())}
-                  onChange={(e) => setLastPeriodDate(e.target.value)}
-                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
-                />
-                {lastPeriodDate && (
-                  <p className="text-sm text-earth-600">
-                    Selected: {formatDateForDisplay(new Date(lastPeriodDate))}
-                  </p>
-                )}
+              <motion.div variants={itemVariants} className="space-y-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <Calendar className="w-4 h-4 text-rose-400" />
+                    Period Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={lastPeriodDate}
+                    max={formatDateForInput(getToday())}
+                    onChange={(e) => {
+                      setLastPeriodDate(e.target.value);
+                      if (!hasManuallyChangedEndDate) {
+                        const startDateObj = new Date(e.target.value);
+                        const endDateObj = new Date(startDateObj);
+                        endDateObj.setDate(startDateObj.getDate() + 4);
+                        setEndDate(formatDateForInput(endDateObj));
+                      }
+                    }}
+                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <Calendar className="w-4 h-4 text-rose-400" />
+                    Period End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setHasManuallyChangedEndDate(true);
+                    }}
+                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+                  />
+                </div>
               </motion.div>
 
               <motion.button
