@@ -248,7 +248,10 @@ function App() {
       {currentUser && currentView !== 'auth' && (
         <div className="bg-white/80 backdrop-blur-lg border-b border-earth-100 sticky top-0 z-40">
           <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 className="font-semibold text-slate-800 tracking-tight">Phase</h1>
+            <div className="flex items-center gap-2">
+              <img src="/pwa-192x192.png" alt="Phase" className="w-6 h-6 rounded-md shadow-sm" />
+              <h1 className="font-semibold text-slate-800 tracking-tight text-lg">Phase</h1>
+            </div>
             <button
               onClick={handleLogout}
               className="text-sm text-earth-500 hover:text-sage-600 transition-colors duration-200 font-medium"
