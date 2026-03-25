@@ -274,27 +274,30 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
                 </div>
               ))}
 
-              {calendarDays.map((item) => {
+              {calendarDays.map((item, index) => {
                 const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
                 const dayOfMonth = item.date.getDate();
+                const showMonth = dayOfMonth === 1 || index === 0;
 
                 return (
                   <motion.div
                     key={item.date.toISOString()}
                     whileHover={{ scale: 1.05 }}
                     className={`
-                      aspect-square flex flex-col items-center justify-center rounded-xl border opacity-100
+                      relative aspect-square flex flex-col items-center justify-center rounded-xl border opacity-100
                       ${colors.bg} ${colors.border}
                       ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2 shadow-soft' : ''}
                       transition-colors duration-200 cursor-default
                     `}
                   >
-                    <div className={`text-sm font-semibold ${colors.text}`}>
+                    <div className={`text-xs sm:text-sm font-semibold ${colors.text} z-10 ${showMonth ? '-mt-2 sm:-mt-1.5' : ''}`}>
                       {dayOfMonth}
                     </div>
-                    <div className="text-[10px] text-earth-400 mt-0.5 hidden sm:block">
-                      {formatCalendarDate(item.date).split(' ')[1]}
-                    </div>
+                    {showMonth && (
+                      <div className="absolute bottom-1 sm:bottom-1.5 text-[7px] sm:text-[9px] text-earth-600 font-bold leading-none uppercase tracking-normal sm:tracking-widest opacity-80 whitespace-nowrap">
+                        {formatCalendarDate(item.date).split(' ')[1]}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
