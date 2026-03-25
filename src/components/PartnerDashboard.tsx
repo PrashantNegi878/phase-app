@@ -234,7 +234,7 @@ export function PartnerDashboard({
                 onClick={onLogPeriod}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl mb-3 transition-all shadow-soft flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl mb-3 transition-colors duration-200 opacity-100 shadow-soft flex items-center justify-center gap-2"
               >
                 <Droplets className="w-5 h-5" />
                 Log Period Start
@@ -277,7 +277,7 @@ export function PartnerDashboard({
               onClick={() => setShowSettings(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={buttonTap}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors shadow-soft"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
             >
               <SettingsIcon className="w-5 h-5" />
             </motion.button>
@@ -290,7 +290,7 @@ export function PartnerDashboard({
           onClick={() => setShowCalendar(true)}
           whileHover={{ y: -2 }}
           whileTap={buttonTap}
-          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300`}
+          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300 opacity-100`}
         >
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-earth-500">Current Phase</span>
@@ -315,7 +315,7 @@ export function PartnerDashboard({
             onClick={() => setShowEditPeriod(true)}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 cursor-pointer hover:shadow-soft-lg transition-all border border-earth-100"
+            className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 cursor-pointer hover:shadow-soft-lg transition-all duration-300 opacity-100 border border-earth-100"
           >
             <div className="flex items-center gap-2 text-earth-400 mb-2">
               <Droplets className="w-4 h-4" />
@@ -377,7 +377,7 @@ export function PartnerDashboard({
             disabled={loadingSuggestions}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-semibold py-3 rounded-xl transition-all shadow-soft disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-semibold py-3 rounded-xl transition-colors duration-200 opacity-100 shadow-soft disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loadingSuggestions ? (
               <>
@@ -400,7 +400,7 @@ export function PartnerDashboard({
             onClick={onLogSymptoms}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all duration-200 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
           >
             <Activity className="w-5 h-5 text-sage-500" />
             Log Symptoms
