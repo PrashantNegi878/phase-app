@@ -9,6 +9,8 @@ import { TrackerDashboard } from './components/TrackerDashboard';
 import { PartnerDashboard } from './components/PartnerDashboard';
 import { LogSymptoms } from './components/LogSymptoms';
 import { LogPeriod } from './components/LogPeriod';
+import { ReloadPrompt } from './components/ReloadPrompt';
+import { InstallPrompt } from './components/InstallPrompt';
 import { authService } from './services/auth';
 import { cycleService } from './services/cycle';
 
@@ -351,6 +353,8 @@ function App() {
           )}
         </>
       )}
+      <InstallPrompt />
+      <ReloadPrompt />
     </div>
   );
 }

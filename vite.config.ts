@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
         name: 'Phase - Period & Cycle Tracker',
         short_name: 'Phase',
@@ -46,6 +46,13 @@ export default defineConfig({
             src: 'screenshot1.png',
             sizes: '540x720',
             type: 'image/png',
+            form_factor: 'narrow',
+          },
+          {
+            src: 'screenshot2.png',
+            sizes: '540x720',
+            type: 'image/png',
+            form_factor: 'narrow',
           },
         ],
         categories: ['health', 'productivity'],
