@@ -266,7 +266,7 @@ export function PartnerDashboard({
         <motion.div variants={itemVariants} className="mb-6 mt-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
-              {isManualMode ? 'Your Phase' : "Partner's Phase"}
+              Overview
             </h1>
             <p className="text-sm text-earth-500">
               {isManualMode ? 'Manual tracking mode' : 'Linked to partner'}

@@ -229,7 +229,7 @@ export function TrackerDashboard({
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-6 mt-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Your Phase</h1>
+            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">Overview</h1>
             <div className="flex flex-col items-start gap-1 mt-1">
               <p className="text-sm text-earth-500">Personal tracking mode</p>
               {hasLinkedPartner && (
