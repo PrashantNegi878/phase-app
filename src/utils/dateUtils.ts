@@ -59,7 +59,8 @@ export function calculatePhaseDates(
   lastPeriodDate: Date | null,
   ovulationDetectedDate: Date | null,
   cycleLengthDays: number = 28,
-  nextPeriodDate?: Date | null
+  nextPeriodDate?: Date | null,
+  periodEndDate?: Date | null
 ): {
   menstrualPhaseStart: Date | null;
   menstrualPhaseEnd: Date | null;
@@ -93,10 +94,12 @@ export function calculatePhaseDates(
 
   const lastPeriod = normalizeDate(lastPeriodDate);
   
-  // Default: days 1-5 are menstrual
+  // Menstrual phase
   const menstrualPhaseStart = new Date(lastPeriod);
-  const menstrualPhaseEnd = new Date(lastPeriod);
-  menstrualPhaseEnd.setDate(menstrualPhaseEnd.getDate() + 4); // Day 5
+  const menstrualPhaseEnd = periodEndDate ? new Date(normalizeDate(periodEndDate)) : new Date(lastPeriod);
+  if (!periodEndDate) {
+    menstrualPhaseEnd.setDate(menstrualPhaseEnd.getDate() + 4); // Default to Day 5 (Start + 4) if no end date
+  }
   
   // If nextPeriodDate is provided, also calculate the next menstrual phase
   let nextMenstrualPhaseStart: Date | null = null;
@@ -110,8 +113,8 @@ export function calculatePhaseDates(
   }
 
   // Follicular phase starts after menstrual
-  let follicularPhaseStart: Date | null = new Date(lastPeriod);
-  follicularPhaseStart.setDate(follicularPhaseStart.getDate() + 5); // Day 6
+  let follicularPhaseStart: Date | null = new Date(menstrualPhaseEnd);
+  follicularPhaseStart.setDate(follicularPhaseStart.getDate() + 1); // Day after period ends
 
   let follicularPhaseEnd: Date | null = null;
   let ovulationPhaseStart: Date;

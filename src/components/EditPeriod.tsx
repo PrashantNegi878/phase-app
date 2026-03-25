@@ -67,6 +67,15 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
       return;
     }
 
+    if (parsedEnd) {
+      const durationDays = Math.ceil((parsedEnd.getTime() - parsedStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      if (durationDays > 10) {
+        setError('Period duration cannot exceed 10 days. Please check your dates.');
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
       await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
       onEditComplete();
