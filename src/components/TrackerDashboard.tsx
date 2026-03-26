@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight, Heart } from 'lucide-react';
+import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight, Heart, Lightbulb } from 'lucide-react';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
 import { CycleData, TrackerProfile } from '../types';
@@ -10,6 +10,7 @@ import { Settings } from './Settings';
 import { EditPeriod } from './EditPeriod';
 import { DailyLog } from '../types';
 import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
+import { getSelfSuggestions } from '../data/suggestions';
 
 interface TrackerDashboardProps {
   userId: string;
@@ -51,6 +52,8 @@ export function TrackerDashboard({
   const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
   const [todayScore, setTodayScore] = useState<number | null>(null);
   const [hasLinkedPartner, setHasLinkedPartner] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [trackerProfile, setTrackerProfile] = useState<TrackerProfile | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -80,6 +83,7 @@ export function TrackerDashboard({
           (docSnap) => {
             if (docSnap.exists()) {
               const profile = docSnap.data() as TrackerProfile;
+              setTrackerProfile(profile);
               setCycleLengthDays(profile.cycleLengthDays || 28);
             }
           }
@@ -197,6 +201,16 @@ export function TrackerDashboard({
   };
   const buttonTap = { scale: 0.97 };
 
+  // Auto-load suggestions whenever phase or profile is ready
+  useEffect(() => {
+    if (!cycleData || currentPhase === 'pending') return;
+    // Use an interface cast to ensure TS recognizes the property we just added to the type
+    const profile = trackerProfile as TrackerProfile;
+    const schedule = profile?.dailyScheduleConstraints || 'flexible';
+    const newSuggestions = getSelfSuggestions(currentPhase, schedule);
+    setSuggestions(newSuggestions);
+  }, [currentPhase, trackerProfile, cycleData]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center">
@@ -311,6 +325,33 @@ export function TrackerDashboard({
                 <span className="text-xs font-medium">Next Period</span>
               </div>
               <div className="font-semibold text-earth-400">Pending</div>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Daily Suggestions */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 opacity-100"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
+            <Lightbulb className="w-5 h-5 text-amber-500" />
+            <span>Daily Suggestions</span>
+          </div>
+
+          {suggestions.length > 0 && (
+            <div className="space-y-3">
+              {suggestions.map((suggestion, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-gradient-to-r from-sage-50 to-earth-50 border border-sage-200 rounded-xl p-4"
+                >
+                  <p className="text-slate-700 text-sm leading-relaxed">{suggestion}</p>
+                </motion.div>
+              ))}
             </div>
           )}
         </motion.div>

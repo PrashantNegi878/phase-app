@@ -142,7 +142,7 @@ export const cycleService = {
   },
 
   // Record period start and end
-  async recordPeriodStart(userId: string, startDate: Date, endDate?: Date): Promise<void> {
+  async recordPeriodStart(userId: string, startDate: Date, endDate?: Date, schedule?: string): Promise<void> {
     // Get tracker profile to access cycle length
     const trackerProfile = await this.getTrackerProfile(userId);
     const cycleLengthDays = trackerProfile?.cycleLengthDays || 28;
@@ -159,8 +159,11 @@ export const cycleService = {
 
     await updateDoc(doc(db, 'trackerProfiles', userId), {
       lastPeriodDate: normalizedStartDate,
+      periodEndDate: normalizedEndDate || null,
+      ...(schedule && { dailyScheduleConstraints: schedule }),
       updatedAt: new Date(),
     });
+
 
     // Calculate correct day of cycle using centralized helper function
     const dayOfCycle = calculateDayOfCycle(normalizedStartDate);
@@ -272,15 +275,13 @@ export const cycleService = {
   // Update partner profile with support style and schedule
   async updatePartnerProfile(
     userId: string,
-    supportStyle: string,
+    supportStyles: string[],
     scheduleConstraints: string
   ): Promise<void> {
     const partnerDocRef = doc(db, 'partnerProfiles', userId);
-    
-    // Merge to ensure document exists or create if needed
     await setDoc(partnerDocRef, {
       userId: userId,
-      supportStyle,
+      supportStyles,
       dailyScheduleConstraints: scheduleConstraints,
       updatedAt: new Date(),
     }, { merge: true });

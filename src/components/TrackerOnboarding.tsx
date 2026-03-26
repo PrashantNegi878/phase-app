@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Calendar, ArrowRight, Share2 } from 'lucide-react';
+import { Sparkles, Calendar, ArrowRight, Share2, Clock, Briefcase, GraduationCap, Dumbbell, Check, ArrowLeft } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { parseDateFromInput, getToday, formatDateForInput } from '../utils/dateUtils';
 
@@ -10,14 +10,22 @@ interface TrackerOnboardingProps {
   onComplete: () => void;
 }
 
+const scheduleTypes = [
+  { id: 'flexible', label: 'Flexible', icon: Calendar, description: 'Open schedule' },
+  { id: 'busy-student', label: 'Busy Student', icon: GraduationCap, description: 'Classes & studying' },
+  { id: 'strict-gym-routine', label: 'Gym Routine', icon: Dumbbell, description: 'Fitness focused' },
+  { id: 'business-professional', label: 'Professional', icon: Briefcase, description: 'Work commitments' },
+];
+
 export function TrackerOnboarding({
   userId,
   partnerCode,
   onComplete,
 }: TrackerOnboardingProps) {
-  const [step, setStep] = useState<'welcome' | 'period-date'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'period-date' | 'schedule'>('welcome');
   const [lastPeriodDate, setLastPeriodDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [scheduleConstraints, setScheduleConstraints] = useState('flexible');
   const [hasManuallyChangedEndDate, setHasManuallyChangedEndDate] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,17 +62,32 @@ export function TrackerOnboarding({
         }
       }
 
-      setLoading(true);
       setError('');
-      try {
-        await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
-        onComplete();
-      } catch (err) {
-        console.error('Onboarding error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
-      } finally {
-        setLoading(false);
-      }
+      setStep('schedule');
+    } else if (step === 'schedule') {
+      handleComplete();
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!lastPeriodDate) {
+      setError('Please enter your last period date');
+      setStep('period-date');
+      return;
+    }
+    const parsedStart = parseDateFromInput(lastPeriodDate);
+    const parsedEnd = endDate ? parseDateFromInput(endDate) : undefined;
+
+    setLoading(true);
+    setError('');
+    try {
+      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd, scheduleConstraints);
+      onComplete();
+    } catch (err) {
+      console.error('Onboarding error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,7 +257,101 @@ export function TrackerOnboarding({
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Start Tracking
+                    Next
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+          )}
+
+          {step === 'schedule' && (
+            <motion.div
+              key="schedule"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <motion.div variants={itemVariants}>
+                <motion.button
+                  type="button"
+                  onClick={() => setStep('period-date')}
+                  className="flex items-center gap-2 text-sage-600 hover:text-sage-700 text-sm font-medium mb-4 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </motion.button>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 mb-4 shadow-soft">
+                  <Clock className="w-6 h-6 text-amber-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 mb-2 tracking-tight">
+                  Your Daily Schedule
+                </h2>
+                <p className="text-sm text-earth-600">
+                  We'll tailor wellness tips to your routine
+                </p>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
+                {scheduleTypes.map((schedule) => {
+                  const Icon = schedule.icon;
+                  const isSelected = scheduleConstraints === schedule.id;
+                  return (
+                    <motion.button
+                      key={schedule.id}
+                      type="button"
+                      onClick={() => setScheduleConstraints(schedule.id)}
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`relative p-4 rounded-2xl border-2 text-left transition-all duration-200 opacity-100 ${
+                        isSelected
+                          ? 'border-sage-400 bg-sage-50 shadow-sm'
+                          : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
+                      }`}
+                    >
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-2 right-2 w-5 h-5 rounded-full bg-sage-500 flex items-center justify-center shadow-sm"
+                        >
+                          <Check className="w-3 h-3 text-white" />
+                        </motion.div>
+                      )}
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                        isSelected ? 'bg-sage-200' : 'bg-earth-100'
+                      }`}>
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-sage-700' : 'text-earth-500'}`} />
+                      </div>
+                      <div className={`text-sm font-medium ${isSelected ? 'text-sage-800' : 'text-slate-700'}`}>
+                        {schedule.label}
+                      </div>
+                      <div className="text-xs text-earth-500 mt-1 leading-tight">
+                        {schedule.description}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+
+              <motion.button
+                variants={itemVariants}
+                onClick={handleComplete}
+                disabled={loading}
+                whileHover={loading ? {} : { y: -2 }}
+                whileTap={loading ? {} : buttonTap}
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Completing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Complete Setup
                   </>
                 )}
               </motion.button>
