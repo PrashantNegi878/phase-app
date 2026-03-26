@@ -16,6 +16,7 @@ export interface TrackerProfile {
   lastPeriodDate: Date | null;
   nextPeriodDate: Date | null;
   cycleLengthDays: number; // Default 28, user can set 21-40
+  dailyScheduleConstraints?: 'busy-student' | 'flexible' | 'strict-gym-routine' | 'business-professional';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,7 +24,7 @@ export interface TrackerProfile {
 export interface PartnerProfile {
   userId: string;
   linkedTrackerId?: string;
-  supportStyle?: 'acts-of-service' | 'gifts' | 'emotional-support' | 'quality-time' | 'physical-touch';
+  supportStyles?: string[];
   dailyScheduleConstraints?: 'busy-student' | 'flexible' | 'strict-gym-routine' | 'business-professional';
   createdAt: Date;
   updatedAt: Date;

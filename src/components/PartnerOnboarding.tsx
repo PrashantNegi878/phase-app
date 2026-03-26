@@ -9,7 +9,7 @@ interface PartnerOnboardingProps {
   onComplete: () => void;
 }
 
-const supportStyles = [
+const supportStyleOptions = [
   { id: 'acts-of-service', label: 'Acts of Service', icon: Sparkles, description: 'Helping with tasks' },
   { id: 'gifts', label: 'Thoughtful Gifts', icon: Gift, description: 'Meaningful presents' },
   { id: 'emotional-support', label: 'Emotional Support', icon: MessageCircleHeart, description: 'Being there to listen' },
@@ -27,10 +27,16 @@ const scheduleTypes = [
 export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps) {
   const [step, setStep] = useState<'link-choice' | 'link-input' | 'manual-setup'>('link-choice');
   const [partnerCode, setPartnerCode] = useState('');
-  const [supportStyle, setSupportStyle] = useState('acts-of-service');
+  const [supportStyles, setSupportStyles] = useState<string[]>(supportStyleOptions.map(s => s.id));
   const [scheduleConstraints, setScheduleConstraints] = useState('flexible');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const toggleSupportStyle = (id: string) => {
+    setSupportStyles(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
 
   const handleLinkAccount = async () => {
     if (!partnerCode || partnerCode.length !== 6) {
@@ -41,7 +47,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
     setError('');
     try {
       await authService.linkPartnerToTracker(userId, partnerCode);
-      await cycleService.updatePartnerProfile(userId, supportStyle, scheduleConstraints);
+      await cycleService.updatePartnerProfile(userId, supportStyles, scheduleConstraints);
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to link account');
@@ -54,7 +60,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
     setLoading(true);
     setError('');
     try {
-      await cycleService.updatePartnerProfile(userId, supportStyle, scheduleConstraints);
+      await cycleService.updatePartnerProfile(userId, supportStyles, scheduleConstraints);
       onComplete();
     } catch (err) {
       console.error('Error in handleManualMode:', err);
@@ -89,18 +95,19 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
   const PreferencesForm = () => (
     <div className="space-y-6">
       <motion.div variants={itemVariants} className="space-y-3">
-        <label className="block text-sm font-medium text-slate-700">
-          Your Support Style
-        </label>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Your Support Style</label>
+          <p className="text-xs text-earth-400 mt-0.5">Pick one or more</p>
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          {supportStyles.map((style) => {
+          {supportStyleOptions.map((style) => {
             const Icon = style.icon;
-            const isSelected = supportStyle === style.id;
+            const isSelected = supportStyles.includes(style.id);
             return (
               <motion.button
                 key={style.id}
                 type="button"
-                onClick={() => setSupportStyle(style.id)}
+                onClick={() => toggleSupportStyle(style.id)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 className={`relative p-3 rounded-xl border-2 text-left transition-colors duration-200 opacity-100 ${

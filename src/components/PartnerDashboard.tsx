@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Settings as SettingsIcon, Lightbulb, Heart, ChevronRight, Activity, Droplets, Sparkles } from 'lucide-react';
+import { Calendar, Settings as SettingsIcon, Lightbulb, Heart, ChevronRight, Activity, Droplets } from 'lucide-react';
 import { db } from '../services/firebase';
-import { CycleData, TrackerProfile } from '../types';
+import { CycleData, TrackerProfile, PartnerProfile } from '../types';
 import { CycleCalendar } from './CycleCalendar';
 import { Settings } from './Settings';
 import { EditPeriod } from './EditPeriod';
-import axios from 'axios';
+import { getPartnerSuggestions } from '../data/suggestions';
 import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
 
 interface PartnerDashboardProps {
@@ -44,9 +44,9 @@ export function PartnerDashboard({
   onLogPeriod,
 }: PartnerDashboardProps) {
   const [cycleData, setCycleData] = useState<CycleData | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<PartnerProfile | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingCycle, setLoadingCycle] = useState(true);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [error, setError] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -106,25 +106,18 @@ export function PartnerDashboard({
       }
     };
     fetchTrackerProfile();
-  }, [userId, linkedTrackerId]);
 
-  const handleGetSuggestions = async () => {
-    if (!cycleData) return;
-    setLoadingSuggestions(true);
-    setError('');
-    try {
-      const response = await axios.post('/api/suggestion', {
-        cyclePhase: currentPhase,
-        userId: userId,
-      });
-      setSuggestions(response.data.suggestions);
-    } catch (err) {
-      setError('This feature is currently unavailable. Please try again later.');
-      console.error(err);
-    } finally {
-      setLoadingSuggestions(false);
-    }
-  };
+    // Fetch the logged-in partner's own profile for preferences
+    const fetchPartnerProfile = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'partnerProfiles', userId));
+        if (snap.exists()) setPartnerProfile(snap.data() as PartnerProfile);
+      } catch (err) {
+        console.error('Error fetching partner profile:', err);
+      }
+    };
+    fetchPartnerProfile();
+  }, [userId, linkedTrackerId]);
 
   const currentPhase = useMemo(() => {
     if (!cycleData) return 'pending';
@@ -184,6 +177,17 @@ export function PartnerDashboard({
     }
     return phase;
   }, [cycleData, cycleData?.lastPeriodDate, cycleData?.ovulationDetectedDate, cycleData?.nextMenstrualPhaseEnd]);
+
+  // Auto-load suggestions whenever phase or profile is ready
+  useEffect(() => {
+    if (!cycleData || currentPhase === 'pending') return;
+    const supportStyles = partnerProfile?.supportStyles || ['emotional-support'];
+    const schedule = partnerProfile?.dailyScheduleConstraints || 'flexible';
+    
+    // Partners ALWAYS get partner suggestions (support perspective)
+    const newSuggestions = getPartnerSuggestions(currentPhase, supportStyles, schedule);
+    setSuggestions(newSuggestions);
+  }, [currentPhase, partnerProfile, isManualMode]);
 
   const colors = PHASE_COLORS[currentPhase] || PHASE_COLORS.pending;
   const phaseLabel = PHASE_LABELS[currentPhase] || 'Unknown Phase';
@@ -352,8 +356,8 @@ export function PartnerDashboard({
             <span>Daily Suggestions</span>
           </div>
 
-          {suggestions.length > 0 ? (
-            <div className="space-y-3 mb-4">
+          {suggestions.length > 0 && (
+            <div className="space-y-3">
               {suggestions.map((suggestion, idx) => (
                 <motion.div
                   key={idx}
@@ -366,31 +370,7 @@ export function PartnerDashboard({
                 </motion.div>
               ))}
             </div>
-          ) : (
-            <p className="text-earth-600 text-sm mb-4">
-              Get personalized suggestions based on the current cycle phase.
-            </p>
           )}
-
-          <motion.button
-            onClick={handleGetSuggestions}
-            disabled={loadingSuggestions}
-            whileHover={{ y: -2 }}
-            whileTap={buttonTap}
-            className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-semibold py-3 rounded-xl transition-colors duration-200 opacity-100 shadow-soft disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loadingSuggestions ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Getting suggestions...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                Get Suggestions
-              </>
-            )}
-          </motion.button>
         </motion.div>
 
         {/* Manual Mode: Log Symptoms */}

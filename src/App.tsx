@@ -133,7 +133,7 @@ function App() {
             // Set partnerProfile state - use null if no profile exists
             setPartnerProfile(profile || null);
 
-            if (profile?.supportStyle) {
+            if (profile?.supportStyles?.length) {
               console.log('Going to partner-dashboard (completed onboarding)');
               setCurrentView('partner-dashboard');
             } else {
