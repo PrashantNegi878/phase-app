@@ -5,6 +5,7 @@ import { Calendar, Settings as SettingsIcon, Lightbulb, Heart, ChevronRight, Act
 import { db } from '../services/firebase';
 import { CycleData, TrackerProfile, PartnerProfile } from '../types';
 import { CycleCalendar } from './CycleCalendar';
+import { CycleHistory } from './CycleHistory';
 import { Settings } from './Settings';
 import { EditPeriod } from './EditPeriod';
 import { getPartnerSuggestions } from '../data/suggestions';
@@ -50,6 +51,7 @@ export function PartnerDashboard({
   const [error, setError] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [showEditPeriod, setShowEditPeriod] = useState(false);
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
 
@@ -330,7 +332,25 @@ export function PartnerDashboard({
             <div className="font-semibold text-slate-800 text-lg">
               {formatDateForDisplay(cycleData.lastPeriodDate)}
             </div>
-            {isManualMode && <p className="text-xs text-sage-500 mt-1">tap to edit</p>}
+            
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-earth-100/50">
+              <motion.button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowHistory(true);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={buttonTap}
+                className="flex items-center gap-1.5 text-xs font-semibold text-sage-600 bg-sage-50 px-2 py-1 rounded-md"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                View History
+              </motion.button>
+              
+              {isManualMode && (
+                <p className="text-xs text-sage-500">tap to edit period</p>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -396,6 +416,13 @@ export function PartnerDashboard({
               cycleData={cycleData}
               cycleLengthDays={cycleLengthDays}
               onClose={() => setShowCalendar(false)}
+            />
+          )}
+
+          {showHistory && (
+            <CycleHistory 
+              userId={linkedTrackerId || userId} 
+              onClose={() => setShowHistory(false)} 
             />
           )}
         </AnimatePresence>

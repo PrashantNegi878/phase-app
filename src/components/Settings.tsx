@@ -6,6 +6,7 @@ import { db } from '../services/firebase';
 import { TrackerProfile } from '../types';
 import { getToday, normalizeDate } from '../utils/dateUtils';
 import { cycleService } from '../services/cycle';
+import { MIN_TYPICAL_CYCLE_LENGTH, MAX_TYPICAL_CYCLE_LENGTH } from '../constants/cycle';
 
 interface SettingsProps {
   userId: string;
@@ -185,8 +186,8 @@ export function Settings({ userId, onBack }: SettingsProps) {
                   <div className="flex items-center gap-6">
                     <input
                       type="range"
-                      min="21"
-                      max="50"
+                      min={MIN_TYPICAL_CYCLE_LENGTH}
+                      max={MAX_TYPICAL_CYCLE_LENGTH}
                       value={cycleLengthDays}
                       onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
                       className="flex-1 h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"

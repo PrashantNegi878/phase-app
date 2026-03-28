@@ -15,9 +15,10 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { DailyLog, CycleData, TrackerProfile, PartnerProfile } from '../types';
+import { DailyLog, CycleData, TrackerProfile, PartnerProfile, CycleHistory } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
-import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays } from '../utils/dateUtils';
+import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays, daysBetween, formatDateForDisplay } from '../utils/dateUtils';
+import { MIN_CYCLE_LENGTH_FOR_ARCHIVE } from '../constants/cycle';
 
 export const cycleService = {
   // Delete all logs for the current cycle
@@ -193,10 +194,69 @@ export const cycleService = {
       ovulationDetectedDate: effectiveOvulationDate
     };
   },
+  
+  // Internal helper to archive the outgoing cycle before starting a new one
+  async archiveCurrentCycle(userId: string, nextCycleStartDate: Date): Promise<void> {
+    const currentCycle = await this.getCycleData(userId);
+    if (!currentCycle || !currentCycle.lastPeriodDate) return;
+
+    const startDate = normalizeDate(currentCycle.lastPeriodDate);
+    const endDate = normalizeDate(nextCycleStartDate);
+    const length = daysBetween(startDate, endDate);
+
+    // Only archive if it's a valid completed cycle (prevents duplicates or accidental logs)
+    if (length < MIN_CYCLE_LENGTH_FOR_ARCHIVE) return;
+
+    // 1. Get tracker profile for typical cycle length
+    const trackerProfile = await this.getTrackerProfile(userId);
+    const typicalLength = trackerProfile?.cycleLengthDays || 28;
+
+    // 2. Perform a FULL RECONSTRUCTION of the outgoing cycle using the actual next period start date.
+    // This correctly identifies "Extended Follicular" phases if the cycle was long.
+    const reconstructedPhases = calculatePhaseDates(
+      startDate,
+      currentCycle.ovulationDetectedDate ? normalizeDate(currentCycle.ovulationDetectedDate) : null,
+      typicalLength,
+      endDate,
+      currentCycle.periodEndDate ? normalizeDate(currentCycle.periodEndDate) : null
+    );
+
+    const historyEntry: CycleHistory = {
+      userId,
+      startDate: Timestamp.fromDate(startDate) as any,
+      endDate: Timestamp.fromDate(endDate) as any,
+      ovulationDate: currentCycle.ovulationDetectedDate 
+        ? Timestamp.fromDate(normalizeDate(currentCycle.ovulationDetectedDate)) as any 
+        : (reconstructedPhases.ovulationPhaseStart ? Timestamp.fromDate(reconstructedPhases.ovulationPhaseStart) as any : null),
+      cycleLength: length,
+      dayOvulationOccurred: (currentCycle.ovulationDetectedDate || reconstructedPhases.ovulationPhaseStart)
+        ? Math.round((normalizeDate(currentCycle.ovulationDetectedDate || reconstructedPhases.ovulationPhaseStart!).getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        : null,
+      
+      // Frozen reconstructed phase dates for "Time Machine" accuracy
+      menstrualPhaseStart: reconstructedPhases.menstrualPhaseStart ? Timestamp.fromDate(reconstructedPhases.menstrualPhaseStart) as any : null,
+      menstrualPhaseEnd: reconstructedPhases.menstrualPhaseEnd ? Timestamp.fromDate(reconstructedPhases.menstrualPhaseEnd) as any : null,
+      follicularPhaseStart: reconstructedPhases.follicularPhaseStart ? Timestamp.fromDate(reconstructedPhases.follicularPhaseStart) as any : null,
+      follicularPhaseEnd: reconstructedPhases.follicularPhaseEnd ? Timestamp.fromDate(reconstructedPhases.follicularPhaseEnd) as any : null,
+      ovulationPhaseStart: reconstructedPhases.ovulationPhaseStart ? Timestamp.fromDate(reconstructedPhases.ovulationPhaseStart) as any : null,
+      ovulationPhaseEnd: reconstructedPhases.ovulationPhaseEnd ? Timestamp.fromDate(reconstructedPhases.ovulationPhaseEnd) as any : null,
+      lutealPhaseStart: reconstructedPhases.lutealPhaseStart ? Timestamp.fromDate(reconstructedPhases.lutealPhaseStart) as any : null,
+      lutealPhaseEnd: reconstructedPhases.lutealPhaseEnd ? Timestamp.fromDate(reconstructedPhases.lutealPhaseEnd) as any : null,
+      nextMenstrualPhaseStart: reconstructedPhases.nextMenstrualPhaseStart ? Timestamp.fromDate(reconstructedPhases.nextMenstrualPhaseStart) as any : null,
+      nextMenstrualPhaseEnd: reconstructedPhases.nextMenstrualPhaseEnd ? Timestamp.fromDate(reconstructedPhases.nextMenstrualPhaseEnd) as any : null,
+
+      createdAt: Timestamp.now() as any,
+    };
+
+    await addDoc(collection(db, 'cycleHistory'), historyEntry);
+  },
 
   // Record period start and end
   async recordPeriodStart(userId: string, startDate: Date, endDate?: Date, schedule?: string): Promise<void> {
-    // Get tracker profile to access cycle length
+    // 1. Archive the current cycle before we overwrite it
+    await this.archiveCurrentCycle(userId, startDate);
+
+    // 2. Get tracker profile to access typical cycle length
     const trackerProfile = await this.getTrackerProfile(userId);
     const cycleLengthDays = trackerProfile?.cycleLengthDays || 28;
     
@@ -314,6 +374,27 @@ export const cycleService = {
     }, (error) => {
       console.error("Error listening to linked partners:", error);
       callback(false);
+    });
+  },
+
+  // Listen for cycle history
+  onCycleHistoryChange(userId: string, callback: (history: CycleHistory[]) => void): () => void {
+    const q = query(
+      collection(db, 'cycleHistory'),
+      where('userId', '==', userId),
+      orderBy('startDate', 'desc'),
+      limit(12) // Keep last year of cycles
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const history = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as any[] as CycleHistory[];
+      callback(history);
+    }, (error) => {
+      console.error("Error listening to cycle history:", error);
+      callback([]);
     });
   },
 

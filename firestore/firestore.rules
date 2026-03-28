@@ -78,6 +78,18 @@ service cloud.firestore {
         get(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)).data.linkedTrackerId == resource.data.userId;
     }
 
+    // CYCLE HISTORY
+    match /cycleHistory/{docId} {
+      // User can read/write their own history
+      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Linked partner can read tracker's history
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/partnerProfiles/$(request.auth.uid)).data.linkedTrackerId == resource.data.userId;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar as CalendarIcon } from 'lucide-react';
 import { CycleData } from '../types';
 import { getToday, normalizeDate, formatDateForDisplay, addDays } from '../utils/dateUtils';
+import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 
 interface CycleCalendarProps {
   cycleData: CycleData;
   cycleLengthDays?: number;
   onClose: () => void;
+  isHistory?: boolean;
 }
 
 const PHASE_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
@@ -16,6 +18,7 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; border: string; d
   ovulation: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-400' },
   luteal: { bg: 'bg-earth-200', text: 'text-earth-700', border: 'border-earth-300', dot: 'bg-earth-500' },
   'extended-follicular': { bg: 'bg-sage-50', text: 'text-sage-600', border: 'border-sage-200', dot: 'bg-sage-400' },
+  'out-of-cycle': { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
   future: { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
 };
 
@@ -25,15 +28,16 @@ const PHASE_LABELS: Record<string, string> = {
   ovulation: 'Ovulation',
   luteal: 'Luteal',
   'extended-follicular': 'Delayed Phase',
+  'out-of-cycle': 'Awaiting Log',
   future: 'Future',
 };
 
 
 
-export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: CycleCalendarProps) {
+export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHistory = false }: CycleCalendarProps) {
   // 1. Current Day Calculation
   const currentDayOfCycle = useMemo(() => {
-    if (!cycleData?.lastPeriodDate) return 0;
+    if (isHistory || !cycleData?.lastPeriodDate) return 0;
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
     const diffTime = today.getTime() - lastPeriod.getTime();
@@ -51,6 +55,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
     }> = [];
 
     const today = getToday();
+    const isHistoryOverride = isHistory;
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
     
     // Define phase boundaries purely from synced DB fields
@@ -59,23 +64,38 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
       { start: cycleData.follicularPhaseStart, end: cycleData.follicularPhaseEnd, type: 'follicular' },
       { start: cycleData.ovulationPhaseStart, end: cycleData.ovulationPhaseEnd, type: 'ovulation' },
       { start: cycleData.lutealPhaseStart, end: cycleData.lutealPhaseEnd, type: 'luteal' },
-      { start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'menstrual' }
     ];
+
+    // Only show next predicted period if NOT in history mode
+    if (!isHistory) {
+      phases.push({ start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'menstrual' });
+    }
 
     let endDate;
 
-    if (cycleData.nextMenstrualPhaseEnd) {
+    if (isHistory && cycleData.nextPeriodDate) {
+      // In history, we stop exactly at the end of the luteal phase (one day before next period)
+      endDate = addDays(normalizeDate(cycleData.nextPeriodDate), -1);
+    } else if (cycleData.nextMenstrualPhaseEnd) {
       endDate = normalizeDate(cycleData.nextMenstrualPhaseEnd);
     } else {
       // Default fallback: current cycle + early bleeding of next cycle
       endDate = addDays(lastPeriod, cycleLengthDays + 4);
     }
 
+    console.log('[DEBUG] Calendar Render Logic:', {
+      isHistory,
+      lastPeriod: formatDateForDisplay(lastPeriod),
+      endDate: formatDateForDisplay(endDate),
+      phases: phases.map(p => ({ type: p.type, start: p.start ? formatDateForDisplay(normalizeDate(p.start)) : 'null' })),
+      cycleData
+    });
+
     let currentDate = new Date(lastPeriod);
     let dayNum = 1;
 
     while (currentDate <= endDate) {
-      const isToday = currentDate.toDateString() === today.toDateString();
+      const isToday = !isHistoryOverride && currentDate.toDateString() === today.toDateString();
       let phase = 'future';
 
       // Match current date to one of the defined phases
@@ -92,7 +112,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
 
       // Handle extended state for PCOD: past typical cycle length but no bleed started
       if (phase === 'future' && dayNum > cycleLengthDays) {
-        phase = 'extended-follicular';
+        phase = dayNum > STALE_CYCLE_THRESHOLD_DAYS ? 'out-of-cycle' : 'extended-follicular';
       }
 
       days.push({
@@ -110,10 +130,20 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
 
   // 3. Current Phase Label for Display
   const currentPhase = useMemo(() => {
+    if (isHistory) return 'future';
     const todayStr = getToday().toDateString();
     const todayCell = calendarDays.find(d => d.date.toDateString() === todayStr);
+    
+    // Explicit stale check
+    if (!todayCell || todayCell.phase === 'future') {
+      const today = getToday();
+      const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
+      const diffDays = Math.floor((today.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays + 1 > 55) return 'out-of-cycle';
+    }
+
     return todayCell?.phase || 'future';
-  }, [calendarDays]);
+  }, [calendarDays, isHistory, cycleData.lastPeriodDate]);
 
   // Animation Variants
   const modalVariants = {
@@ -169,29 +199,31 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
               ))}
             </motion.div>
 
-            {/* Cycle Stats */}
-            <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
-              <div className="bg-sage-50 rounded-xl p-4">
-                <div className="text-xs text-earth-500 mb-1">Current Phase</div>
-                <div className="text-lg font-semibold text-sage-700 truncate">
-                  {PHASE_LABELS[currentPhase] || 'Pending'}
-                </div>
-              </div>
-              <div className="bg-sage-50 rounded-xl p-4">
-                <div className="text-xs text-earth-500 mb-1">Day of Cycle</div>
-                <div className="text-lg font-semibold text-sage-700 font-outfit">
-                  Day {currentDayOfCycle}
-                </div>
-              </div>
-              {cycleData.nextPeriodDate && (
-                <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-                  <div className="text-xs text-earth-500 mb-1">Next Period</div>
-                  <div className="text-lg font-semibold text-rose-600">
-                    {formatDateForDisplay(cycleData.nextPeriodDate)}
+            {/* Cycle Stats (Only for current cycle) */}
+            {!isHistory && (
+              <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
+                <div className="bg-sage-50 rounded-xl p-4">
+                  <div className="text-xs text-earth-500 mb-1">Current Phase</div>
+                  <div className="text-lg font-semibold text-sage-700 truncate">
+                    {PHASE_LABELS[currentPhase] || 'Pending'}
                   </div>
                 </div>
-              )}
-            </motion.div>
+                <div className="bg-sage-50 rounded-xl p-4">
+                <div className="text-xs text-earth-500 mb-1">Day of Cycle</div>
+                <div className="text-lg font-semibold text-sage-700 font-outfit">
+                  {isHistory || currentPhase !== 'out-of-cycle' ? `Day ${currentDayOfCycle}` : 'Sync Needed'}
+                </div>
+              </div>
+                {cycleData.nextPeriodDate && (
+                  <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
+                    <div className="text-xs text-earth-500 mb-1">Next Period</div>
+                    <div className="text-lg font-semibold text-rose-600">
+                      {formatDateForDisplay(cycleData.nextPeriodDate)}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Calendar Grid */}
             <motion.div variants={itemVariants}>

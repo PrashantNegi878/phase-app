@@ -1,16 +1,28 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Settings as SettingsIcon, Droplets, Edit3, Share2, Activity, ChevronRight, Heart, Lightbulb } from 'lucide-react';
+import { 
+  Calendar, 
+  Settings as SettingsIcon, 
+  Droplets, 
+  Edit3, 
+  Share2, 
+  Activity, 
+  ChevronRight, 
+  Heart, 
+  Lightbulb,
+  History 
+} from 'lucide-react';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
-import { CycleData, TrackerProfile } from '../types';
+import { CycleData, TrackerProfile, DailyLog } from '../types';
 import { CycleCalendar } from './CycleCalendar';
 import { Settings } from './Settings';
+import { CycleHistory } from './CycleHistory';
 import { EditPeriod } from './EditPeriod';
-import { DailyLog } from '../types';
 import { getToday, normalizeDate, formatDateForDisplay } from '../utils/dateUtils';
 import { getSelfSuggestions } from '../data/suggestions';
+import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 
 interface TrackerDashboardProps {
   userId: string;
@@ -25,6 +37,7 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; light: string; gr
   ovulation: { bg: 'bg-amber-400', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-100 to-amber-50' },
   luteal: { bg: 'bg-earth-500', text: 'text-earth-700', light: 'bg-earth-100', gradient: 'from-earth-200 to-earth-100' },
   'extended-follicular': { bg: 'bg-sage-400', text: 'text-sage-600', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
+  'out-of-cycle': { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
   pending: { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
 };
 
@@ -34,6 +47,7 @@ const PHASE_LABELS: Record<string, string> = {
   ovulation: 'Ovulation',
   luteal: 'Luteal Phase',
   'extended-follicular': 'Extended Follicular',
+  'out-of-cycle': 'Awaiting Log',
   pending: 'Pending Data',
 };
 
@@ -47,6 +61,7 @@ export function TrackerDashboard({
   const [loading, setLoading] = useState(true);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [showEditPeriod, setShowEditPeriod] = useState(false);
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
   const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
@@ -128,6 +143,10 @@ export function TrackerDashboard({
   const currentPhase = useMemo(() => {
     if (!cycleData) return 'pending';
     const today = getToday();
+    
+    // High-priority Stale Check (Freeze at Day 56+)
+    if (currentDayOfCycle > 55) return 'out-of-cycle';
+
     let phase = 'future';
 
     if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
@@ -178,7 +197,7 @@ export function TrackerDashboard({
                  today >= normalizeDate(cycleData.lutealPhaseStart) && today <= normalizeDate(cycleData.lutealPhaseEnd)) {
         phase = 'luteal';
       } else if (currentDayOfCycle > cycleLengthDays) {
-        phase = 'extended-follicular';
+        phase = currentDayOfCycle > STALE_CYCLE_THRESHOLD_DAYS ? 'out-of-cycle' : 'extended-follicular';
       }
     }
     return phase;
@@ -250,14 +269,24 @@ export function TrackerDashboard({
               )}
             </div>
           </div>
-          <motion.button
-            onClick={() => setShowSettings(true)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={buttonTap}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
-          >
-            <SettingsIcon className="w-5 h-5" />
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button
+              onClick={() => setShowHistory(true)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={buttonTap}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
+            >
+              <History className="w-5 h-5" />
+            </motion.button>
+            <motion.button
+              onClick={() => setShowSettings(true)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={buttonTap}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
+            >
+              <SettingsIcon className="w-5 h-5" />
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Current Phase Card */}
@@ -278,7 +307,9 @@ export function TrackerDashboard({
           <div className={`text-3xl font-semibold ${colors.text} mb-2 tracking-tight`}>{phaseLabel}</div>
           <div className="flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
-            <span className="text-earth-600">Day {currentDayOfCycle} of your cycle</span>
+            <span className="text-earth-600">
+              {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : `Day ${currentDayOfCycle} of your cycle`}
+            </span>
           </div>
         </motion.div>
 
@@ -447,6 +478,12 @@ export function TrackerDashboard({
         {showSettings && (
           <Settings userId={userId} onBack={() => setShowSettings(false)} />
         )}
+
+        <AnimatePresence>
+          {showHistory && (
+            <CycleHistory userId={userId} onClose={() => setShowHistory(false)} />
+          )}
+        </AnimatePresence>
 
         {showEditPeriod && (
           <EditPeriod
