@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { X, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Calendar as CalendarIcon } from 'lucide-react';
 import { CycleData } from '../types';
-import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
+import { getToday, normalizeDate, formatDateForDisplay, addDays } from '../utils/dateUtils';
 
 interface CycleCalendarProps {
   cycleData: CycleData;
@@ -19,155 +19,101 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; border: string; d
   future: { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
 };
 
-const formatCalendarDate = (date: Date): string => {
-  const day = date.getDate();
-  const month = date.toLocaleDateString('en-US', { month: 'short' });
-  return `${day} ${month}`;
+const PHASE_LABELS: Record<string, string> = {
+  menstrual: 'Menstrual',
+  follicular: 'Follicular',
+  ovulation: 'Ovulation',
+  luteal: 'Luteal',
+  'extended-follicular': 'Delayed Phase',
+  future: 'Future',
 };
 
+
+
 export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: CycleCalendarProps) {
-  const todayPhase = useMemo(() => {
+  // 1. Current Day Calculation
+  const currentDayOfCycle = useMemo(() => {
+    if (!cycleData?.lastPeriodDate) return 0;
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
-    const dayOfCycle = calculateDayOfCycle(lastPeriod);
-    let phase = 'future';
+    const diffTime = today.getTime() - lastPeriod.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 1;
+  }, [cycleData?.lastPeriodDate]);
 
-    if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
-      const menstrualStart = normalizeDate(cycleData.menstrualPhaseStart);
-      const menstrualEnd = normalizeDate(cycleData.menstrualPhaseEnd);
-      if (today >= menstrualStart && today <= menstrualEnd) phase = 'menstrual';
-    }
-    if (cycleData.nextMenstrualPhaseStart && cycleData.nextMenstrualPhaseEnd) {
-      const nextMenstrualStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
-      const nextMenstrualEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) phase = 'menstrual';
-    }
-    if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd) {
-      const follicularStart = normalizeDate(cycleData.follicularPhaseStart);
-      const follicularEnd = normalizeDate(cycleData.follicularPhaseEnd);
-      if (today >= follicularStart && today <= follicularEnd && phase === 'future') phase = 'follicular';
-    }
-    if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd) {
-      const ovulationStart = normalizeDate(cycleData.ovulationPhaseStart);
-      const ovulationEnd = normalizeDate(cycleData.ovulationPhaseEnd);
-      if (today >= ovulationStart && today <= ovulationEnd && phase === 'future') phase = 'ovulation';
-    }
-    if (cycleData.lutealPhaseStart && cycleData.lutealPhaseEnd) {
-      const lutealStart = normalizeDate(cycleData.lutealPhaseStart);
-      const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
-      if (today >= lutealStart && today <= lutealEnd && phase === 'future') phase = 'luteal';
-    }
-    if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
-      const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
-      const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-      if (today >= extendedStart && today <= extendedEnd && phase === 'future') phase = 'extended-follicular';
-    }
-
-    if (phase === 'future') {
-      if (cycleData.ovulationDetectedDate) {
-        const ovulationDate = normalizeDate(cycleData.ovulationDetectedDate);
-        const ovDay = calculateDayOfCycleForDate(ovulationDate, lastPeriod);
-        if (dayOfCycle <= 5) phase = 'menstrual';
-        else if (dayOfCycle > 5 && dayOfCycle < ovDay) phase = 'follicular';
-        else if (dayOfCycle >= ovDay && dayOfCycle < ovDay + 3) phase = 'ovulation';
-        else if (dayOfCycle >= ovDay + 3) phase = 'luteal';
-      } else {
-        const expectedOvulationDay = Math.round(28 / 2);
-        if (dayOfCycle <= 5) phase = 'menstrual';
-        else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) phase = 'follicular';
-        else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) phase = 'ovulation';
-        else if (dayOfCycle >= expectedOvulationDay + 3 && dayOfCycle <= expectedOvulationDay + 16) phase = 'luteal';
-        else if (dayOfCycle > expectedOvulationDay + 16 && dayOfCycle >= 20) phase = 'extended-follicular';
-        else if (dayOfCycle > expectedOvulationDay + 16) phase = 'follicular';
-      }
-    }
-    return phase;
-  }, [cycleData, cycleData.lastPeriodDate, cycleData.ovulationDetectedDate, cycleData.nextMenstrualPhaseEnd]);
-
+  // 2. Comprehensive Calendar Grid Data
   const calendarDays = useMemo(() => {
     const days: Array<{
       day: number;
       phase: string;
       isToday: boolean;
-      isPastCycle: boolean;
       date: Date;
     }> = [];
 
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
-    const nextPeriod = cycleData.nextPeriodDate ? normalizeDate(cycleData.nextPeriodDate) : null;
+    
+    // Define phase boundaries purely from synced DB fields
+    const phases = [
+      { start: cycleData.menstrualPhaseStart, end: cycleData.menstrualPhaseEnd, type: 'menstrual' },
+      { start: cycleData.follicularPhaseStart, end: cycleData.follicularPhaseEnd, type: 'follicular' },
+      { start: cycleData.ovulationPhaseStart, end: cycleData.ovulationPhaseEnd, type: 'ovulation' },
+      { start: cycleData.lutealPhaseStart, end: cycleData.lutealPhaseEnd, type: 'luteal' },
+      { start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'menstrual' }
+    ];
 
-    let endDate: Date;
+    let endDate;
+
     if (cycleData.nextMenstrualPhaseEnd) {
       endDate = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-    } else if (nextPeriod) {
-      endDate = nextPeriod;
     } else {
-      endDate = new Date(lastPeriod);
-      endDate.setDate(endDate.getDate() + Math.ceil(cycleLengthDays * 1.5));
+      // Default fallback: current cycle + early bleeding of next cycle
+      endDate = addDays(lastPeriod, cycleLengthDays + 4);
     }
 
     let currentDate = new Date(lastPeriod);
-    let day = 1;
+    let dayNum = 1;
 
     while (currentDate <= endDate) {
       const isToday = currentDate.toDateString() === today.toDateString();
       let phase = 'future';
 
-      if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
-        const menstrualStart = normalizeDate(cycleData.menstrualPhaseStart);
-        const menstrualEnd = normalizeDate(cycleData.menstrualPhaseEnd);
-        if (currentDate >= menstrualStart && currentDate <= menstrualEnd) phase = 'menstrual';
+      // Match current date to one of the defined phases
+      for (const p of phases) {
+        if (p.start && p.end) {
+          const start = normalizeDate(p.start);
+          const end = normalizeDate(p.end);
+          if (currentDate >= start && currentDate <= end) {
+            phase = p.type;
+            break;
+          }
+        }
       }
-      if (cycleData.nextMenstrualPhaseStart && cycleData.nextMenstrualPhaseEnd) {
-        const nextMenstrualStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
-        const nextMenstrualEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-        if (currentDate >= nextMenstrualStart && currentDate <= nextMenstrualEnd) phase = 'menstrual';
-      }
-      if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd) {
-        const follicularStart = normalizeDate(cycleData.follicularPhaseStart);
-        const follicularEnd = normalizeDate(cycleData.follicularPhaseEnd);
-        if (currentDate >= follicularStart && currentDate <= follicularEnd) phase = 'follicular';
-      }
-      if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd) {
-        const ovulationStart = normalizeDate(cycleData.ovulationPhaseStart);
-        const ovulationEnd = normalizeDate(cycleData.ovulationPhaseEnd);
-        if (currentDate >= ovulationStart && currentDate <= ovulationEnd) phase = 'ovulation';
-      }
-      if (cycleData.lutealPhaseStart && cycleData.lutealPhaseEnd) {
-        const lutealStart = normalizeDate(cycleData.lutealPhaseStart);
-        const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
-        if (currentDate >= lutealStart && currentDate <= lutealEnd) phase = 'luteal';
-      }
-      if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
-        const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
-        const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-        if (currentDate >= extendedStart && currentDate <= extendedEnd) phase = 'extended-follicular';
+
+      // Handle extended state for PCOD: past typical cycle length but no bleed started
+      if (phase === 'future' && dayNum > cycleLengthDays) {
+        phase = 'extended-follicular';
       }
 
       days.push({
-        day,
+        day: dayNum,
         phase,
         isToday,
-        isPastCycle: currentDate < today,
         date: new Date(currentDate),
       });
 
-      currentDate = new Date(currentDate);
       currentDate.setDate(currentDate.getDate() + 1);
-      day++;
+      dayNum++;
     }
     return days;
-  }, [cycleData, cycleData.lastPeriodDate, cycleData.ovulationDetectedDate, cycleData.nextPeriodDate, cycleLengthDays]);
+  }, [cycleData, cycleLengthDays]);
 
-  const currentDayOfCycle = useMemo(() => {
-    if (!cycleData.lastPeriodDate) return 0;
-    const today = getToday();
-    const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
-    const diffTime = today.getTime() - lastPeriod.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays + 1;
-  }, [cycleData.lastPeriodDate]);
+  // 3. Current Phase Label for Display
+  const currentPhase = useMemo(() => {
+    const todayStr = getToday().toDateString();
+    const todayCell = calendarDays.find(d => d.date.toDateString() === todayStr);
+    return todayCell?.phase || 'future';
+  }, [calendarDays]);
 
   // Animation Variants
   const modalVariants = {
@@ -176,137 +122,117 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose }: Cycl
       opacity: 1, 
       scale: 1, 
       y: 0,
-      transition: {
-        duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
+      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], staggerChildren: 0.05 }
     },
     exit: { opacity: 0, scale: 0.95, y: 20 }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } 
-    }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
   };
-
-  const buttonTap = { scale: 0.97 };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <motion.div
-        variants={modalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg"
-      >
-        {/* Header */}
-        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-6 rounded-t-3xl z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-sage-600" />
+      <AnimatePresence>
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg"
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-6 z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-sage-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Cycle Calendar</h2>
             </div>
-            <h2 className="text-xl font-semibold text-slate-800">Cycle Calendar</h2>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <motion.button
-            onClick={onClose}
-            whileHover={{ scale: 1.05 }}
-            whileTap={buttonTap}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors opacity-100"
-          >
-            <X className="w-5 h-5" />
-          </motion.button>
-        </motion.div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* Legend */}
-          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            {[
-              { phase: 'menstrual', label: 'Menstrual' },
-              { phase: 'follicular', label: 'Follicular' },
-              { phase: 'ovulation', label: 'Ovulation' },
-              { phase: 'luteal', label: 'Luteal' },
-            ].map(({ phase, label }) => (
-              <div key={phase} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${PHASE_COLORS[phase].dot}`} />
-                <span className="text-sm text-slate-700">{label}</span>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Cycle Info */}
-          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
-            <div className="bg-sage-50 rounded-xl p-4">
-              <div className="text-xs text-earth-500 mb-1">Current Phase</div>
-              <div className="text-lg font-semibold text-sage-700 capitalize">
-                {todayPhase.replace('-', ' ')}
-              </div>
-            </div>
-            <div className="bg-sage-50 rounded-xl p-4">
-              <div className="text-xs text-earth-500 mb-1">Day of Cycle</div>
-              <div className="text-lg font-semibold text-sage-700">
-                Day {currentDayOfCycle}
-              </div>
-            </div>
-            {cycleData.nextPeriodDate && (
-              <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-                <div className="text-xs text-earth-500 mb-1">Next Period</div>
-                <div className="text-lg font-semibold text-rose-600">
-                  {formatDateForDisplay(cycleData.nextPeriodDate)}
-                </div>
-              </div>
-            )}
-          </motion.div>
-
-          {/* Calendar Grid */}
-          <motion.div variants={itemVariants}>
-            <div className="grid grid-cols-7 gap-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="text-center text-xs font-medium text-earth-500 py-2">
-                  {day}
+          <div className="p-6">
+            {/* Phase Legend */}
+            <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              {['menstrual', 'follicular', 'ovulation', 'luteal'].map((p) => (
+                <div key={p} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${PHASE_COLORS[p].dot}`} />
+                  <span className="text-sm text-slate-700">{PHASE_LABELS[p]}</span>
                 </div>
               ))}
+            </motion.div>
 
-              {calendarDays.map((item, index) => {
-                const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
-                const dayOfMonth = item.date.getDate();
-                const showMonth = dayOfMonth === 1 || index === 0;
+            {/* Cycle Stats */}
+            <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
+              <div className="bg-sage-50 rounded-xl p-4">
+                <div className="text-xs text-earth-500 mb-1">Current Phase</div>
+                <div className="text-lg font-semibold text-sage-700 truncate">
+                  {PHASE_LABELS[currentPhase] || 'Pending'}
+                </div>
+              </div>
+              <div className="bg-sage-50 rounded-xl p-4">
+                <div className="text-xs text-earth-500 mb-1">Day of Cycle</div>
+                <div className="text-lg font-semibold text-sage-700 font-outfit">
+                  Day {currentDayOfCycle}
+                </div>
+              </div>
+              {cycleData.nextPeriodDate && (
+                <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
+                  <div className="text-xs text-earth-500 mb-1">Next Period</div>
+                  <div className="text-lg font-semibold text-rose-600">
+                    {formatDateForDisplay(cycleData.nextPeriodDate)}
+                  </div>
+                </div>
+              )}
+            </motion.div>
 
-                return (
-                  <motion.div
-                    key={item.date.toISOString()}
-                    whileHover={{ scale: 1.05 }}
-                    className={`
-                      relative aspect-square flex flex-col items-center justify-center rounded-xl border opacity-100
-                      ${colors.bg} ${colors.border}
-                      ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2 shadow-soft' : ''}
-                      transition-colors duration-200 cursor-default
-                    `}
-                  >
-                    <div className={`text-xs sm:text-sm font-semibold ${colors.text} z-10 ${showMonth ? '-mt-2 sm:-mt-1.5' : ''}`}>
-                      {dayOfMonth}
-                    </div>
-                    {showMonth && (
-                      <div className="absolute bottom-1 sm:bottom-1.5 text-[7px] sm:text-[9px] text-earth-600 font-bold leading-none uppercase tracking-normal sm:tracking-widest opacity-80 whitespace-nowrap">
-                        {formatCalendarDate(item.date).split(' ')[1]}
+            {/* Calendar Grid */}
+            <motion.div variants={itemVariants}>
+              <div className="grid grid-cols-7 gap-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-center text-xs font-bold text-earth-400 py-2 uppercase tracking-tight">
+                    {day}
+                  </div>
+                ))}
+
+                {calendarDays.map((item, index) => {
+                  const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
+                  const dayOfMonth = item.date.getDate();
+                  const showMonth = dayOfMonth === 1 || index === 0;
+
+                  return (
+                    <div
+                      key={item.date.toISOString()}
+                      className={`
+                        relative aspect-square flex flex-col items-center justify-center rounded-xl border
+                        ${colors.bg} ${colors.border}
+                        ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2' : ''}
+                        transition-all duration-200
+                      `}
+                    >
+                      <div className={`text-xs sm:text-sm font-semibold ${colors.text} z-10 ${showMonth ? '-mt-1' : ''}`}>
+                        {dayOfMonth}
                       </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-
-        </div>
-      </motion.div>
+                      {showMonth && (
+                        <div className="absolute bottom-1 text-[8px] text-earth-500 font-bold uppercase tracking-tighter">
+                          {item.date.toLocaleDateString('en-US', { month: 'short' })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

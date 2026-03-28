@@ -1,11 +1,12 @@
 import { DailyLog, CyclePhase } from '../types';
-import { calculateDayOfCycle, calculateDayOfCycleForDate } from './dateUtils';
+import { calculateDayOfCycle, calculateDayOfCycleForDate, normalizeDate } from './dateUtils';
 
 export interface CyclePhaseResult {
   phase: CyclePhase;
   ovulationDetectedDate?: Date;
   nextPeriodDate: Date | null;
   dayOfCycle: number;
+  additionalMessage?: string; // Message to show user after symptom logging
 }
 
 /**
@@ -53,7 +54,17 @@ export function calculateCyclePhase(
   }
 
   // Sort logs by date
-  const sortedLogs = logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const sortedLogs = logs.sort((a, b) => normalizeDate(a.date).getTime() - normalizeDate(b.date).getTime());
+
+  // Filter logs to only include those from the current cycle or very recent past
+  // This prevents old logs from interfering with current cycle predictions
+  const today = new Date();
+  const recentLogs = sortedLogs.filter(log => {
+    const logDate = normalizeDate(log.date);
+    // Include logs from the current cycle (on or after lastPeriodDate)
+    // and logs up to 60 days before today (to catch potential late ovulation from previous cycle if lastPeriodDate is very recent)
+    return logDate >= lastPeriodDate || (today.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24) <= 60;
+  });
 
   // Calculate day of cycle using the centralized helper function
   const dayOfCycle = calculateDayOfCycle(lastPeriodDate);
@@ -61,40 +72,24 @@ export function calculateCyclePhase(
   // Check for ovulation detection (score >= 6)
   let ovulationDetectedDate: Date | undefined;
   let nextPeriodDate: Date | null = null;
+  let highScoreOutsideWindow = false; // score >=7 but outside 10-35
 
-  for (let i = 0; i < sortedLogs.length; i++) {
-    const log = sortedLogs[i];
-    
+  // Check for ovulation in recent logs
+  for (const log of recentLogs) {
     if (log.symptomScore >= 6 && !ovulationDetectedDate) {
-      // Calculate which day of cycle this log represents
-      // Use the log date as "today" and lastPeriodDate as the start
       const logDayOfCycle = calculateDayOfCycleForDate(log.date, lastPeriodDate);
       
-      console.log('🔍 Checking ovulation detection:', {
-        logDate: log.date,
-        logDayOfCycle,
-        symptomScore: log.symptomScore,
-        lastPeriodDate
-      });
-      
-      // Only consider ovulation detection if it's in the appropriate timeframe
-      // Typically ovulation happens between days 10-21 of the cycle
-      if (logDayOfCycle >= 10 && logDayOfCycle <= 21) {
-        ovulationDetectedDate = log.date;
+      // ONLY consider symptoms from the CURRENT cycle (logDayOfCycle > 0)
+      // and within the reasonable ovulation window for PCOD
+      if (logDayOfCycle >= 10 && logDayOfCycle <= 35) {
+        ovulationDetectedDate = normalizeDate(log.date);
         // Forecast next period exactly 14 days after ovulation
-        nextPeriodDate = new Date(log.date);
+        nextPeriodDate = new Date(ovulationDetectedDate);
         nextPeriodDate.setDate(nextPeriodDate.getDate() + 14);
-        console.log('✅ Ovulation detected:', {
-          date: ovulationDetectedDate,
-          dayOfCycle: logDayOfCycle,
-          nextPeriodDate
-        });
         break;
-      } else {
-        console.log('❌ Ovulation not in valid timeframe:', {
-          dayOfCycle: logDayOfCycle,
-          validRange: '10-21'
-        });
+      } else if (log.symptomScore >= 6) {
+        // High confidence score but outside the expected window
+        highScoreOutsideWindow = true;
       }
     }
   }
@@ -119,10 +114,16 @@ export function calculateCyclePhase(
     nextPeriodDate = null;
   }
 
+  // Build an optional message for the logging UI
+  const additionalMessage = highScoreOutsideWindow
+    ? `Your symptoms are strong (Day ${dayOfCycle}), but outside the typical ovulation window (Days 10–35). Keep logging!`
+    : undefined;
+
   return {
     phase,
     ovulationDetectedDate,
     nextPeriodDate,
     dayOfCycle,
+    additionalMessage,
   };
 }

@@ -93,153 +93,50 @@ export function calculatePhaseDates(
   }
 
   const lastPeriod = normalizeDate(lastPeriodDate);
+  const nextPeriod = nextPeriodDate ? normalizeDate(nextPeriodDate) : addDays(lastPeriod, cycleLengthDays);
   
-  // Menstrual phase
+  // 1. Menstrual Phase (Day 1 to End of bleeding)
   const menstrualPhaseStart = new Date(lastPeriod);
-  const menstrualPhaseEnd = periodEndDate ? new Date(normalizeDate(periodEndDate)) : new Date(lastPeriod);
-  if (!periodEndDate) {
-    menstrualPhaseEnd.setDate(menstrualPhaseEnd.getDate() + 4); // Default to Day 5 (Start + 4) if no end date
-  }
-  
-  // If nextPeriodDate is provided, also calculate the next menstrual phase
-  let nextMenstrualPhaseStart: Date | null = null;
-  let nextMenstrualPhaseEnd: Date | null = null;
-  
-  if (nextPeriodDate) {
-    const nextPeriod = normalizeDate(nextPeriodDate);
-    nextMenstrualPhaseStart = new Date(nextPeriod);
-    nextMenstrualPhaseEnd = new Date(nextPeriod);
-    nextMenstrualPhaseEnd.setDate(nextMenstrualPhaseEnd.getDate() + 4); // Day 5 of next cycle
-  }
+  const menstrualPhaseEnd = periodEndDate ? normalizeDate(periodEndDate) : addDays(lastPeriod, 4);
 
-  // Follicular phase starts after menstrual
-  let follicularPhaseStart: Date | null = new Date(menstrualPhaseEnd);
-  follicularPhaseStart.setDate(follicularPhaseStart.getDate() + 1); // Day after period ends
-
-  let follicularPhaseEnd: Date | null = null;
-  let ovulationPhaseStart: Date;
-  let ovulationPhaseEnd: Date;
-  let lutealPhaseStart: Date;
-  let lutealPhaseEnd: Date;
-  let extendedFollicularPhaseStart: Date | null = null;
-  let extendedFollicularPhaseEnd: Date | null = null;
-
+  // 2. Determine Ovulation Point
+  let ovulationDate: Date;
   if (ovulationDetectedDate) {
-    // Use actual ovulation date
-    const ovulationDate = normalizeDate(ovulationDetectedDate);
-    
-
-    // Follicular phase ends before ovulation
-    follicularPhaseEnd = new Date(ovulationDate);
-    follicularPhaseEnd.setDate(follicularPhaseEnd.getDate() - 1); // Day before ovulation
-
-    // Ovulation phase: 3 days (ovulation day + 2 days after)
-    ovulationPhaseStart = new Date(ovulationDate);
-    ovulationPhaseEnd = new Date(ovulationDate);
-    ovulationPhaseEnd.setDate(ovulationPhaseEnd.getDate() + 2); // 3 days total
-
-    // Luteal phase: starts from day 3 after ovulation
-    lutealPhaseStart = new Date(ovulationDate);
-    lutealPhaseStart.setDate(lutealPhaseStart.getDate() + 3); // Day 3 after ovulation
-
-    // Luteal phase should end when next period starts, or 14 days after ovulation if no next period date
-    if (nextPeriodDate) {
-      const nextPeriod = normalizeDate(nextPeriodDate);
-      // Luteal phase ends the day before next period
-      lutealPhaseEnd = new Date(nextPeriod);
-      lutealPhaseEnd.setDate(lutealPhaseEnd.getDate() - 1);
-    } else {
-      // Default: 14 days after ovulation
-      lutealPhaseEnd = new Date(ovulationDate);
-      lutealPhaseEnd.setDate(lutealPhaseEnd.getDate() + 16); // 14 days total
-    }
-
-    // Check for extended follicular phase (when cycle is longer than normal)
-    // Extended follicular phase replaces normal follicular phase in long cycles
-    const nextCycleStart = nextPeriodDate ? normalizeDate(nextPeriodDate) : new Date(lastPeriod);
-    if (!nextPeriodDate) {
-      nextCycleStart.setDate(nextCycleStart.getDate() + cycleLengthDays);
-    }
-    
-    // Calculate if we need extended follicular phase instead of normal follicular phase
-    const cycleLength = Math.floor((nextCycleStart.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const expectedCycleLength = cycleLengthDays;
-    
-    if (cycleLength > expectedCycleLength + 5) { // If cycle is significantly longer than expected
-      // Use extended follicular phase instead of normal follicular phase
-      extendedFollicularPhaseStart = new Date(follicularPhaseStart);
-      extendedFollicularPhaseEnd = new Date(lutealPhaseStart);
-      extendedFollicularPhaseEnd.setDate(extendedFollicularPhaseEnd.getDate() - 1);
-      
-      // Normal follicular phase doesn't exist in extended cycles
-      follicularPhaseStart = null;
-      follicularPhaseEnd = null;
-    }
+    ovulationDate = normalizeDate(ovulationDetectedDate);
   } else {
-    // Use predicted ovulation (middle of cycle)
+    // Predicted ovulation: approx middle of cycle
     const expectedOvulationDay = Math.round(cycleLengthDays / 2);
-    const expectedOvulationDate = new Date(lastPeriod);
-    expectedOvulationDate.setDate(expectedOvulationDate.getDate() + expectedOvulationDay - 1); // -1 because day 1 is lastPeriod
-
-    // Follicular phase ends before predicted ovulation
-    follicularPhaseEnd = new Date(expectedOvulationDate);
-    follicularPhaseEnd.setDate(follicularPhaseEnd.getDate() - 1); // Day before ovulation
-
-    // Ovulation phase: 3 days (expected ovulation day + 2 days after)
-    ovulationPhaseStart = new Date(expectedOvulationDate);
-    ovulationPhaseEnd = new Date(expectedOvulationDate);
-    ovulationPhaseEnd.setDate(ovulationPhaseEnd.getDate() + 2); // 3 days total
-
-    // Luteal phase: starts from day 3 after expected ovulation
-    lutealPhaseStart = new Date(expectedOvulationDate);
-    lutealPhaseStart.setDate(lutealPhaseStart.getDate() + 3); // Day 3 after ovulation
-
-    // Luteal phase should end when next period starts, or 14 days after ovulation if no next period date
-    if (nextPeriodDate) {
-      const nextPeriod = normalizeDate(nextPeriodDate);
-      // Luteal phase ends the day before next period
-      lutealPhaseEnd = new Date(nextPeriod);
-      lutealPhaseEnd.setDate(lutealPhaseEnd.getDate() - 1);
-    } else {
-      // Default: 14 days after ovulation
-      lutealPhaseEnd = new Date(expectedOvulationDate);
-      lutealPhaseEnd.setDate(lutealPhaseEnd.getDate() + 16); // 14 days total
-    }
-
-    // Check for extended follicular phase (when cycle is longer than normal)
-    // Extended follicular phase replaces normal follicular phase in long cycles
-    const nextCycleStart = nextPeriodDate ? normalizeDate(nextPeriodDate) : new Date(lastPeriod);
-    if (!nextPeriodDate) {
-      nextCycleStart.setDate(nextCycleStart.getDate() + cycleLengthDays);
-    }
-    
-    // Calculate if we need extended follicular phase instead of normal follicular phase
-    const cycleLength = Math.floor((nextCycleStart.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const expectedCycleLength = cycleLengthDays;
-    
-    if (cycleLength > expectedCycleLength + 5) { // If cycle is significantly longer than expected
-      // Use extended follicular phase instead of normal follicular phase
-      extendedFollicularPhaseStart = new Date(follicularPhaseStart);
-      extendedFollicularPhaseEnd = new Date(lutealPhaseStart);
-      extendedFollicularPhaseEnd.setDate(extendedFollicularPhaseEnd.getDate() - 1);
-      
-      // Normal follicular phase doesn't exist in extended cycles
-      follicularPhaseStart = null;
-      follicularPhaseEnd = null;
-    }
+    ovulationDate = addDays(lastPeriod, expectedOvulationDay - 1);
   }
 
+  // 3. Ovulation Phase (3 days: Ovulation Day + 2 days after)
+  const ovulationPhaseStart = new Date(ovulationDate);
+  const ovulationPhaseEnd = addDays(ovulationDate, 2);
+
+  // 4. Follicular Phase (Starts after period, ends before ovulation)
+  const follicularPhaseStart = addDays(menstrualPhaseEnd, 1);
+  const follicularPhaseEnd = addDays(ovulationPhaseStart, -1);
+
+  // 5. Luteal Phase (Starts after ovulation, ends at next period)
+  const lutealPhaseStart = addDays(ovulationPhaseEnd, 1);
+  const lutealPhaseEnd = addDays(nextPeriod, -1);
+
+  // 6. Next Menstrual Phase
+  const nextMenstrualPhaseStart = new Date(nextPeriod);
+  const nextMenstrualPhaseEnd = addDays(nextPeriod, 4);
+
+  // Return all phases (keeping legacy field names for DB compatibility)
   return {
     menstrualPhaseStart,
     menstrualPhaseEnd,
-    follicularPhaseStart,
-    follicularPhaseEnd,
+    follicularPhaseStart: follicularPhaseStart > follicularPhaseEnd ? null : follicularPhaseStart,
+    follicularPhaseEnd: follicularPhaseStart > follicularPhaseEnd ? null : follicularPhaseEnd,
     ovulationPhaseStart,
     ovulationPhaseEnd,
     lutealPhaseStart,
     lutealPhaseEnd,
-    extendedFollicularPhaseStart,
-    extendedFollicularPhaseEnd,
+    extendedFollicularPhaseStart: null, // Simplified: no longer used
+    extendedFollicularPhaseEnd: null,
     nextMenstrualPhaseStart,
     nextMenstrualPhaseEnd,
   };

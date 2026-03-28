@@ -9,7 +9,7 @@ import { CycleCalendar } from './CycleCalendar';
 import { Settings } from './Settings';
 import { EditPeriod } from './EditPeriod';
 import { DailyLog } from '../types';
-import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
+import { getToday, normalizeDate, formatDateForDisplay } from '../utils/dateUtils';
 import { getSelfSuggestions } from '../data/suggestions';
 
 interface TrackerDashboardProps {
@@ -103,21 +103,17 @@ export function TrackerDashboard({
   }, [userId]);
 
   useEffect(() => {
-    const fetchRecentLogs = async () => {
-      try {
-        const logs = await cycleService.getRecentLogs(userId, 7);
-        setRecentLogs(logs);
-        const today = new Date();
-        const todayLog = logs.find(log => {
-          const logDate = new Date(log.date);
-          return logDate.toDateString() === today.toDateString();
-        });
-        setTodayScore(todayLog ? todayLog.symptomScore : null);
-      } catch (error) {
-        console.error('Error fetching recent logs:', error);
-      }
-    };
-    fetchRecentLogs();
+    const unsubscribe = cycleService.onRecentLogsChange(userId, 7, (logs) => {
+      setRecentLogs(logs);
+      const today = new Date();
+      const todayLog = logs.find(log => {
+        const logDate = normalizeDate(log.date);
+        return logDate.toDateString() === today.toDateString();
+      });
+      setTodayScore(todayLog ? todayLog.symptomScore : null);
+    });
+    
+    return () => unsubscribe();
   }, [userId]);
 
   const currentDayOfCycle = useMemo(() => {
@@ -132,8 +128,6 @@ export function TrackerDashboard({
   const currentPhase = useMemo(() => {
     if (!cycleData) return 'pending';
     const today = getToday();
-    const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
-    const dayOfCycle = calculateDayOfCycle(lastPeriod);
     let phase = 'future';
 
     if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
@@ -168,25 +162,27 @@ export function TrackerDashboard({
     }
 
     if (phase === 'future') {
-      if (cycleData.ovulationDetectedDate) {
-        const ovulationDate = normalizeDate(cycleData.ovulationDetectedDate);
-        const ovDay = calculateDayOfCycleForDate(ovulationDate, lastPeriod);
-        if (dayOfCycle <= 5) phase = 'menstrual';
-        else if (dayOfCycle > 5 && dayOfCycle < ovDay) phase = 'follicular';
-        else if (dayOfCycle >= ovDay && dayOfCycle < ovDay + 3) phase = 'ovulation';
-        else if (dayOfCycle >= ovDay + 3) phase = 'luteal';
-      } else {
-        const expectedOvulationDay = Math.round(28 / 2);
-        if (dayOfCycle <= 5) phase = 'menstrual';
-        else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) phase = 'follicular';
-        else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) phase = 'ovulation';
-        else if (dayOfCycle >= expectedOvulationDay + 3 && dayOfCycle <= expectedOvulationDay + 16) phase = 'luteal';
-        else if (dayOfCycle > expectedOvulationDay + 16 && dayOfCycle >= 20) phase = 'extended-follicular';
-        else if (dayOfCycle > expectedOvulationDay + 16) phase = 'follicular';
+      const today = getToday();
+      
+      // Check against synchronized DB fields
+      if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd && 
+          today >= normalizeDate(cycleData.menstrualPhaseStart) && today <= normalizeDate(cycleData.menstrualPhaseEnd)) {
+        phase = 'menstrual';
+      } else if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd && 
+                 today >= normalizeDate(cycleData.follicularPhaseStart) && today <= normalizeDate(cycleData.follicularPhaseEnd)) {
+        phase = 'follicular';
+      } else if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd && 
+                 today >= normalizeDate(cycleData.ovulationPhaseStart) && today <= normalizeDate(cycleData.ovulationPhaseEnd)) {
+        phase = 'ovulation';
+      } else if (cycleData.lutealPhaseStart && cycleData.lutealPhaseEnd && 
+                 today >= normalizeDate(cycleData.lutealPhaseStart) && today <= normalizeDate(cycleData.lutealPhaseEnd)) {
+        phase = 'luteal';
+      } else if (currentDayOfCycle > cycleLengthDays) {
+        phase = 'extended-follicular';
       }
     }
     return phase;
-  }, [cycleData, cycleData?.lastPeriodDate, cycleData?.ovulationDetectedDate, cycleData?.nextMenstrualPhaseEnd]);
+  }, [cycleData, currentDayOfCycle, cycleLengthDays]);
 
   const colors = PHASE_COLORS[currentPhase] || PHASE_COLORS.pending;
   const phaseLabel = PHASE_LABELS[currentPhase] || 'Unknown Phase';
@@ -394,7 +390,7 @@ export function TrackerDashboard({
             <div className="flex justify-between items-center py-2 border-b border-earth-100">
               <span className="text-earth-600 text-sm">Last Logged</span>
               <span className="font-semibold text-slate-800">
-                {recentLogs.length > 0 ? formatDateForDisplay(new Date(recentLogs[0].date)) : 'Never'}
+                {recentLogs.length > 0 ? formatDateForDisplay(normalizeDate(recentLogs[0].date)) : 'Never'}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 gap-4">
