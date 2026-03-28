@@ -16,6 +16,7 @@ export interface TrackerProfile {
   lastPeriodDate: Date | null;
   nextPeriodDate: Date | null;
   cycleLengthDays: number; // Default 28, user can set 21-50
+  typicalPeriodLengthDays: number; // Default 5, user can set 2-10
   dailyScheduleConstraints?: 'busy-student' | 'flexible' | 'strict-gym-routine' | 'business-professional';
   createdAt: Date;
   updatedAt: Date;

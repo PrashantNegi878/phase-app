@@ -312,6 +312,7 @@ function App() {
           {currentView === 'log-period' && (
             <LogPeriod
               userId={currentUser.uid}
+              trackerProfile={trackerProfile}
               onLogComplete={() => setCurrentView('tracker-dashboard')}
               onCancel={() => setCurrentView('tracker-dashboard')}
             />
@@ -350,6 +351,7 @@ function App() {
           {currentView === 'log-period' && (
             <LogPeriod
               userId={currentUser.uid}
+              trackerProfile={trackerProfile}
               onLogComplete={() => setCurrentView('partner-dashboard')}
               onCancel={() => setCurrentView('partner-dashboard')}
             />

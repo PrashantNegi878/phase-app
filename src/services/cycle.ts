@@ -17,7 +17,7 @@ import {
 import { db } from './firebase';
 import { DailyLog, CycleData, TrackerProfile, PartnerProfile, CycleHistory } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
-import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays, daysBetween, formatDateForDisplay } from '../utils/dateUtils';
+import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays, daysBetween } from '../utils/dateUtils';
 import { MIN_CYCLE_LENGTH_FOR_ARCHIVE } from '../constants/cycle';
 
 export const cycleService = {
@@ -252,9 +252,25 @@ export const cycleService = {
   },
 
   // Record period start and end
-  async recordPeriodStart(userId: string, startDate: Date, endDate?: Date, schedule?: string): Promise<void> {
+  async recordPeriodStart(
+    userId: string, 
+    startDate: Date, 
+    endDate?: Date, 
+    schedule?: string,
+    cycleLength?: number,
+    typicalPeriodLength?: number
+  ): Promise<void> {
     // 1. Archive the current cycle before we overwrite it
     await this.archiveCurrentCycle(userId, startDate);
+
+    // Update Profile with preferences if provided
+    if (cycleLength || typicalPeriodLength) {
+      await updateDoc(doc(db, 'trackerProfiles', userId), {
+        ...(cycleLength && { cycleLengthDays: cycleLength }),
+        ...(typicalPeriodLength && { typicalPeriodLengthDays: typicalPeriodLength }),
+        updatedAt: new Date(),
+      });
+    }
 
     // 2. Get tracker profile to access typical cycle length
     const trackerProfile = await this.getTrackerProfile(userId);
@@ -323,7 +339,83 @@ export const cycleService = {
     });
   },
 
-  // Get recent logs
+  // Update current cycle dates WITHOUT archiving (Linked Correction)
+  async updateCurrentCyclePeriod(userId: string, newStartDate: Date, newEndDate?: Date): Promise<void> {
+    const trackerProfile = await this.getTrackerProfile(userId);
+    const cycleLengthDays = trackerProfile?.cycleLengthDays || 28;
+    
+    // 1. Normalize and update current cycle
+    const normalizedStartDate = normalizeDate(newStartDate);
+    normalizedStartDate.setHours(0, 0, 0, 0);
+    
+    let normalizedEndDate: Date | null = null;
+    if (newEndDate) {
+      normalizedEndDate = normalizeDate(newEndDate);
+      normalizedEndDate.setHours(0, 0, 0, 0);
+    }
+
+    const predictedNextPeriodDate = addDays(normalizedStartDate, cycleLengthDays);
+    const phaseDates = calculatePhaseDates(
+      normalizedStartDate,
+      null, // Assume ovulation needs re-evaluation if start date changed significantly
+      cycleLengthDays,
+      predictedNextPeriodDate,
+      normalizedEndDate || undefined
+    );
+
+    // Update Profile
+    await updateDoc(doc(db, 'trackerProfiles', userId), {
+      lastPeriodDate: normalizedStartDate,
+      periodEndDate: normalizedEndDate,
+      nextPeriodDate: predictedNextPeriodDate,
+      updatedAt: new Date(),
+    });
+
+    // Update Current Cycle Data
+    const updatedCycleData: Partial<CycleData> = {
+      lastPeriodDate: normalizedStartDate,
+      periodEndDate: normalizedEndDate,
+      nextPeriodDate: normalizeDate(predictedNextPeriodDate),
+      dayOfCycle: calculateDayOfCycle(normalizedStartDate),
+      ...phaseDates,
+      updatedAt: new Date(),
+    };
+    await updateDoc(doc(db, 'cycleData', userId), updatedCycleData);
+
+    // 2. LINKED HISTORY CORRECTION: Update preceding cycle's end date
+    const q = query(
+      collection(db, 'cycleHistory'),
+      where('userId', '==', userId),
+      orderBy('startDate', 'desc'),
+      limit(1)
+    );
+    const historySnap = await getDocs(q);
+    
+    if (!historySnap.empty) {
+      const lastHistoryDoc = historySnap.docs[0];
+      const lastHistoryData = lastHistoryDoc.data() as CycleHistory;
+      
+      const prevStartDate = normalizeDate(lastHistoryData.startDate);
+      const newPrevEndDate = normalizedStartDate;
+      const newPrevLength = daysBetween(prevStartDate, newPrevEndDate);
+
+      // Re-reconstruct phases for the past cycle with the updated end date
+      const historicalPhases = calculatePhaseDates(
+        prevStartDate,
+        lastHistoryData.ovulationDate ? normalizeDate(lastHistoryData.ovulationDate) : null,
+        cycleLengthDays,
+        newPrevEndDate,
+        null // We don't store historical period end dates in same field usually
+      );
+
+      await updateDoc(lastHistoryDoc.ref, {
+        endDate: Timestamp.fromDate(newPrevEndDate),
+        cycleLength: newPrevLength,
+        ...historicalPhases,
+        updatedAt: Timestamp.now()
+      });
+    }
+  },
   async getRecentLogs(userId: string, days: number = 40): Promise<DailyLog[]> {
     const startDate = getToday();
     startDate.setDate(startDate.getDate() - days);

@@ -488,6 +488,7 @@ export function TrackerDashboard({
         {showEditPeriod && (
           <EditPeriod
             userId={userId}
+            trackerProfile={trackerProfile}
             onEditComplete={() => setShowEditPeriod(false)}
             onCancel={() => setShowEditPeriod(false)}
           />

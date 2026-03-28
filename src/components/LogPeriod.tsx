@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Droplets, Calendar } from 'lucide-react';
 import { cycleService } from '../services/cycle';
+import { TrackerProfile } from '../types';
 import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay } from '../utils/dateUtils';
 
 interface LogPeriodProps {
   userId: string;
+  trackerProfile?: TrackerProfile | null;
   onLogComplete: () => void;
   onCancel: () => void;
 }
 
-export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
+export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: LogPeriodProps) {
   const today = getToday();
-  const defaultEndDate = addDays(today, 4);
+  const typicalPeriodLength = trackerProfile?.typicalPeriodLengthDays || 5;
+  const defaultEndDate = addDays(today, typicalPeriodLength - 1);
 
   const [startDate, setStartDate] = useState(formatDateForInput(today));
   const [endDate, setEndDate] = useState(formatDateForInput(defaultEndDate));
@@ -142,7 +145,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                 if (!hasManuallyChangedEndDate) {
                   const startDateObj = new Date(e.target.value);
                   const endDateObj = new Date(startDateObj);
-                  endDateObj.setDate(startDateObj.getDate() + 4);
+                  endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLength - 1));
                   setEndDate(formatDateForInput(endDateObj));
                 }
               }}

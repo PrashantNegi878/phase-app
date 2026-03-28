@@ -4,16 +4,17 @@ import { X, Edit3, Calendar, Info } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
-import { CycleData } from '../types';
+import { CycleData, TrackerProfile } from '../types';
 import { normalizeDate, formatDateForInput, parseDateFromInput, formatDateForDisplay, getToday } from '../utils/dateUtils';
 
 interface EditPeriodProps {
   userId: string;
+  trackerProfile?: TrackerProfile | null;
   onEditComplete: () => void;
   onCancel: () => void;
 }
 
-export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps) {
+export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }: EditPeriodProps) {
   const [cycleData, setCycleData] = useState<CycleData | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -77,7 +78,7 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
     }
 
     try {
-      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
+      await cycleService.updateCurrentCyclePeriod(userId, parsedStart, parsedEnd);
       onEditComplete();
     } catch (err) {
       console.error('Error updating period:', err);
@@ -211,7 +212,8 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
                 setStartDate(e.target.value);
                 const startDateObj = new Date(e.target.value);
                 const endDateObj = new Date(startDateObj);
-                endDateObj.setDate(startDateObj.getDate() + 4);
+                const typicalPeriodLength = trackerProfile?.typicalPeriodLengthDays || 5;
+                endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLength - 1));
                 setEndDate(formatDateForInput(endDateObj));
               }}
               className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
