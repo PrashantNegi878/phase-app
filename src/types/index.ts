@@ -15,7 +15,7 @@ export interface TrackerProfile {
   trackedSymptoms: SymptomType[];
   lastPeriodDate: Date | null;
   nextPeriodDate: Date | null;
-  cycleLengthDays: number; // Default 28, user can set 21-40
+  cycleLengthDays: number; // Default 28, user can set 21-50
   dailyScheduleConstraints?: 'busy-student' | 'flexible' | 'strict-gym-routine' | 'business-professional';
   createdAt: Date;
   updatedAt: Date;

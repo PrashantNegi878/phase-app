@@ -9,15 +9,55 @@ import {
   addDoc,
   updateDoc,
   onSnapshot,
+  deleteDoc,
+  Timestamp,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { DailyLog, CycleData, TrackerProfile, PartnerProfile } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
-import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates } from '../utils/dateUtils';
+import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays } from '../utils/dateUtils';
 
 export const cycleService = {
+  // Delete all logs for the current cycle
+  async deleteCurrentCycleLogs(userId: string, lastPeriodDate: Date): Promise<void> {
+    const q = query(
+      collection(db, 'dailyLogs'),
+      where('userId', '==', userId),
+      where('date', '>=', Timestamp.fromDate(normalizeDate(lastPeriodDate)))
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const deletePromises = querySnapshot.docs.map(document => deleteDoc(document.ref));
+    await Promise.all(deletePromises);
+  },
+
+  // Listen for recent logs
+  onRecentLogsChange(userId: string, count: number, callback: (logs: DailyLog[]) => void): () => void {
+    const q = query(
+      collection(db, 'dailyLogs'),
+      where('userId', '==', userId),
+      orderBy('date', 'desc'),
+      limit(count)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const logs = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as any[] as DailyLog[];
+      callback(logs);
+    });
+  },
+
   // Log daily symptoms
-  async logDailySymptoms(userId: string, date: Date, symptoms: any): Promise<string> {
+  async logDailySymptoms(userId: string, date: Date, symptoms: any): Promise<{ 
+    id: string; 
+    additionalMessage?: string;
+    newCycleLength?: number | null;
+    ovulationDetectedDate?: Date | null;
+  }> {
     // Ensure date is normalized to start of day
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
@@ -34,9 +74,13 @@ export const cycleService = {
     const docRef = await addDoc(collection(db, 'dailyLogs'), logData);
     
     // Update cycle data after logging with real-time calculation
-    await this.updateCyclePhaseRealTime(userId);
-    
-    return docRef.id;
+    const result = await this.updateCyclePhaseRealTime(userId);
+    return { 
+      id: docRef.id, 
+      additionalMessage: result?.additionalMessage,
+      newCycleLength: result?.newCycleLength,
+      ovulationDetectedDate: result?.ovulationDetectedDate
+    };
   },
 
   // Get cycle data
@@ -45,36 +89,15 @@ export const cycleService = {
     return docSnap.exists() ? (docSnap.data() as CycleData) : null;
   },
 
-  // Update cycle phase based on symptoms and algorithm
-  async updateCyclePhase(userId: string): Promise<void> {
-    const trackerProfile = await this.getTrackerProfile(userId);
-    if (!trackerProfile) return;
-
-    const logs = await this.getRecentLogs(userId, 40); // Get last 40 days
-    const cyclePhase = calculateCyclePhase(logs, trackerProfile.lastPeriodDate);
-
-    const cycleData: CycleData = {
-      userId,
-      lastPeriodDate: normalizeDate(trackerProfile.lastPeriodDate),
-      ...(cyclePhase.ovulationDetectedDate && { ovulationDetectedDate: normalizeDate(cyclePhase.ovulationDetectedDate as Date) }),
-      nextPeriodDate: cyclePhase.nextPeriodDate ? normalizeDate(cyclePhase.nextPeriodDate) : null,
-      dayOfCycle: cyclePhase.dayOfCycle,
-      updatedAt: new Date(),
-    };
-
-    await setDoc(doc(db, 'cycleData', userId), cycleData);
-
-    // Update tracker profile
-    await updateDoc(doc(db, 'trackerProfiles', userId), {
-      nextPeriodDate: cyclePhase.nextPeriodDate ? normalizeDate(cyclePhase.nextPeriodDate) : null,
-      updatedAt: new Date(),
-    });
-  },
-
   // Update cycle phase dynamically (real-time calculation)
-  async updateCyclePhaseRealTime(userId: string): Promise<void> {
+  // manualCycleLength: Optional new length to use (e.g. just changed in Settings)
+  async updateCyclePhaseRealTime(userId: string, manualCycleLength?: number): Promise<{ 
+    additionalMessage?: string, 
+    newCycleLength?: number | null,
+    ovulationDetectedDate?: Date | null
+  } | null> {
     const trackerProfile = await this.getTrackerProfile(userId);
-    if (!trackerProfile) return;
+    if (!trackerProfile) return null;
 
     const existingCycleData = await this.getCycleData(userId);
     const periodEndDate = existingCycleData?.periodEndDate || null;
@@ -82,41 +105,51 @@ export const cycleService = {
     const lastPeriod = normalizeDate(trackerProfile.lastPeriodDate);
     const dayOfCycle = calculateDayOfCycle(lastPeriod);
     
-    // Check if ovulation detected from recent logs
-    const logs = await this.getRecentLogs(userId, 40);
+    // 1. Determine Cycle Length to use
+    // Preference: 1. Manual override, 2. Current profile setting, 3. Default 28
+    const currentCycleLength = manualCycleLength || trackerProfile.cycleLengthDays || 28;
+
+    // 2. Check for symptoms (Ovulation Detection)
+    const logs = await this.getRecentLogs(userId, 50); // Increased to 50 days
     const cyclePhase = calculateCyclePhase(logs, trackerProfile.lastPeriodDate);
     
+    // 3. Determine Next Period Date & Ovulation Priority
+    // If manual length is provided, it takes ABSOLUTE priority and clears symptom detection for this month.
+    let nextPeriodDate: Date | null = null;
+    let effectiveOvulationDate: Date | null = null;
 
-    // Calculate predicted next period date if ovulation not detected
-    let nextPeriodDate: Date | null = cyclePhase.nextPeriodDate;
-    if (!nextPeriodDate && cyclePhase.ovulationDetectedDate) {
-      // If ovulation detected, predict next period based on ovulation + 14 days (luteal phase)
-      const ovulationDate = normalizeDate(cyclePhase.ovulationDetectedDate as Date);
-      nextPeriodDate = new Date(ovulationDate);
-      nextPeriodDate.setDate(nextPeriodDate.getDate() + 16); // 14 days luteal + 2 days ovulation
-    } else if (!nextPeriodDate && trackerProfile.lastPeriodDate) {
-      // If no ovulation detected, predict next period based on cycle length
-      const lastPeriodDate = normalizeDate(trackerProfile.lastPeriodDate);
-      nextPeriodDate = new Date(lastPeriodDate);
-      nextPeriodDate.setDate(nextPeriodDate.getDate() + trackerProfile.cycleLengthDays);
+    if (manualCycleLength) {
+      nextPeriodDate = addDays(lastPeriod, manualCycleLength);
+      effectiveOvulationDate = null; // Ignore symptoms for manual override
+    } else {
+      nextPeriodDate = cyclePhase.nextPeriodDate;
+      effectiveOvulationDate = cyclePhase.ovulationDetectedDate ? normalizeDate(cyclePhase.ovulationDetectedDate) : null;
+      
+      if (!nextPeriodDate && trackerProfile.lastPeriodDate) {
+        nextPeriodDate = addDays(lastPeriod, currentCycleLength);
+      } else if (!nextPeriodDate) {
+        nextPeriodDate = existingCycleData?.nextPeriodDate || null;
+      }
     }
 
-    // Calculate phase dates for UI rendering
+    // 4. Calculate ALL Phase Dates using the authoritative utility
     const phaseDates = calculatePhaseDates(
-      trackerProfile.lastPeriodDate,
-      cyclePhase.ovulationDetectedDate || null,
-      trackerProfile.cycleLengthDays,
-      nextPeriodDate, // Pass nextPeriodDate to ensure luteal phase ends correctly
+      lastPeriod,
+      effectiveOvulationDate,
+      currentCycleLength,
+      nextPeriodDate,
       periodEndDate
     );
 
-    // Ensure all dates are properly normalized before saving
+    // 5. Save EVERYTHING to CycleData (Full Sync)
     const normalizedCycleData: CycleData = {
       userId,
       lastPeriodDate: lastPeriod,
-      ...(cyclePhase.ovulationDetectedDate && { ovulationDetectedDate: normalizeDate(cyclePhase.ovulationDetectedDate as Date) }),
+      periodEndDate: periodEndDate ? normalizeDate(periodEndDate) : null,
+      ovulationDetectedDate: effectiveOvulationDate,
       nextPeriodDate: nextPeriodDate ? normalizeDate(nextPeriodDate) : null,
       dayOfCycle: dayOfCycle,
+      // Comprehensive phase storage
       menstrualPhaseStart: phaseDates.menstrualPhaseStart ? normalizeDate(phaseDates.menstrualPhaseStart) : null,
       menstrualPhaseEnd: phaseDates.menstrualPhaseEnd ? normalizeDate(phaseDates.menstrualPhaseEnd) : null,
       follicularPhaseStart: phaseDates.follicularPhaseStart ? normalizeDate(phaseDates.follicularPhaseStart) : null,
@@ -125,8 +158,6 @@ export const cycleService = {
       ovulationPhaseEnd: phaseDates.ovulationPhaseEnd ? normalizeDate(phaseDates.ovulationPhaseEnd) : null,
       lutealPhaseStart: phaseDates.lutealPhaseStart ? normalizeDate(phaseDates.lutealPhaseStart) : null,
       lutealPhaseEnd: phaseDates.lutealPhaseEnd ? normalizeDate(phaseDates.lutealPhaseEnd) : null,
-      extendedFollicularPhaseStart: phaseDates.extendedFollicularPhaseStart ? normalizeDate(phaseDates.extendedFollicularPhaseStart) : null,
-      extendedFollicularPhaseEnd: phaseDates.extendedFollicularPhaseEnd ? normalizeDate(phaseDates.extendedFollicularPhaseEnd) : null,
       nextMenstrualPhaseStart: phaseDates.nextMenstrualPhaseStart ? normalizeDate(phaseDates.nextMenstrualPhaseStart) : null,
       nextMenstrualPhaseEnd: phaseDates.nextMenstrualPhaseEnd ? normalizeDate(phaseDates.nextMenstrualPhaseEnd) : null,
       updatedAt: new Date(),
@@ -134,11 +165,33 @@ export const cycleService = {
 
     await setDoc(doc(db, 'cycleData', userId), normalizedCycleData);
 
-    // Update tracker profile
-    await updateDoc(doc(db, 'trackerProfiles', userId), {
+    // 6. Sync Tracker Profile
+    const profileUpdates: any = {
       nextPeriodDate: nextPeriodDate ? normalizeDate(nextPeriodDate) : null,
       updatedAt: new Date(),
-    });
+    };
+
+    // SMART SYNC: Update typical cycle length ONLY if no manual override is active
+    let wasSmartSyncApplied = false;
+    let newCalculatedLength = currentCycleLength;
+
+    if (!manualCycleLength && effectiveOvulationDate && nextPeriodDate) {
+      const actualLength = Math.round((nextPeriodDate.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24));
+      // Only sync if within realistic PCOD bounds (21-50 days)
+      if (actualLength >= 21 && actualLength <= 50) {
+        profileUpdates.cycleLengthDays = actualLength;
+        newCalculatedLength = actualLength;
+        wasSmartSyncApplied = true;
+      }
+    }
+
+    await updateDoc(doc(db, 'trackerProfiles', userId), profileUpdates);
+
+    return { 
+      additionalMessage: cyclePhase.additionalMessage,
+      newCycleLength: wasSmartSyncApplied ? newCalculatedLength : null,
+      ovulationDetectedDate: effectiveOvulationDate
+    };
   },
 
   // Record period start and end
@@ -168,26 +221,26 @@ export const cycleService = {
     // Calculate correct day of cycle using centralized helper function
     const dayOfCycle = calculateDayOfCycle(normalizedStartDate);
     
-    // Calculate predicted next period date based on cycle length
-    const predictedNextPeriodDate = new Date(normalizedStartDate);
-    predictedNextPeriodDate.setDate(predictedNextPeriodDate.getDate() + cycleLengthDays);
+    // 4. Calculate predicted next period date based on cycle length
+    const predictedNextPeriodDate = addDays(normalizedStartDate, cycleLengthDays);
 
-    // Calculate phase dates for UI rendering
+    // 5. Calculate phase dates for UI rendering using the authoritative utility
     const phaseDates = calculatePhaseDates(
       normalizedStartDate,
       null, // No ovulation detected yet when period starts
       cycleLengthDays,
-      predictedNextPeriodDate, // Pass predicted next period date to ensure luteal phase ends correctly
+      predictedNextPeriodDate,
       normalizedEndDate
     );
 
-    // Ensure all dates are properly normalized before saving
+    // 6. Save EVERYTHING to CycleData (Full Sync)
     const normalizedCycleData: CycleData = {
       userId,
       lastPeriodDate: normalizedStartDate,
-      ...(normalizedEndDate && { periodEndDate: normalizedEndDate }),
+      periodEndDate: normalizedEndDate || null,
       nextPeriodDate: normalizeDate(predictedNextPeriodDate),
       dayOfCycle: dayOfCycle,
+      // Comprehensive phase storage
       menstrualPhaseStart: phaseDates.menstrualPhaseStart ? normalizeDate(phaseDates.menstrualPhaseStart) : null,
       menstrualPhaseEnd: phaseDates.menstrualPhaseEnd ? normalizeDate(phaseDates.menstrualPhaseEnd) : null,
       follicularPhaseStart: phaseDates.follicularPhaseStart ? normalizeDate(phaseDates.follicularPhaseStart) : null,
@@ -196,8 +249,6 @@ export const cycleService = {
       ovulationPhaseEnd: phaseDates.ovulationPhaseEnd ? normalizeDate(phaseDates.ovulationPhaseEnd) : null,
       lutealPhaseStart: phaseDates.lutealPhaseStart ? normalizeDate(phaseDates.lutealPhaseStart) : null,
       lutealPhaseEnd: phaseDates.lutealPhaseEnd ? normalizeDate(phaseDates.lutealPhaseEnd) : null,
-      extendedFollicularPhaseStart: phaseDates.extendedFollicularPhaseStart ? normalizeDate(phaseDates.extendedFollicularPhaseStart) : null,
-      extendedFollicularPhaseEnd: phaseDates.extendedFollicularPhaseEnd ? normalizeDate(phaseDates.extendedFollicularPhaseEnd) : null,
       nextMenstrualPhaseStart: phaseDates.nextMenstrualPhaseStart ? normalizeDate(phaseDates.nextMenstrualPhaseStart) : null,
       nextMenstrualPhaseEnd: phaseDates.nextMenstrualPhaseEnd ? normalizeDate(phaseDates.nextMenstrualPhaseEnd) : null,
       updatedAt: new Date(),
@@ -205,7 +256,7 @@ export const cycleService = {
 
     await setDoc(doc(db, 'cycleData', userId), normalizedCycleData);
 
-    // Update tracker profile
+    // 7. Update tracker profile
     await updateDoc(doc(db, 'trackerProfiles', userId), {
       nextPeriodDate: normalizeDate(predictedNextPeriodDate),
       updatedAt: new Date(),

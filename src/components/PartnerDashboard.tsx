@@ -316,10 +316,12 @@ export function PartnerDashboard({
         {cycleData.lastPeriodDate && (
           <motion.div
             variants={itemVariants}
-            onClick={() => setShowEditPeriod(true)}
-            whileHover={{ y: -2 }}
-            whileTap={buttonTap}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 cursor-pointer hover:shadow-soft-lg transition-all duration-300 opacity-100 border border-earth-100"
+            onClick={() => isManualMode && setShowEditPeriod(true)}
+            whileHover={isManualMode ? { y: -2 } : {}}
+            whileTap={isManualMode ? buttonTap : {}}
+            className={`bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 transition-all duration-300 opacity-100 ${
+              isManualMode ? 'cursor-pointer hover:shadow-soft-lg' : 'cursor-default'
+            }`}
           >
             <div className="flex items-center gap-2 text-earth-400 mb-2">
               <Droplets className="w-4 h-4" />
@@ -328,7 +330,7 @@ export function PartnerDashboard({
             <div className="font-semibold text-slate-800 text-lg">
               {formatDateForDisplay(cycleData.lastPeriodDate)}
             </div>
-            <p className="text-xs text-sage-500 mt-1">tap to edit</p>
+            {isManualMode && <p className="text-xs text-sage-500 mt-1">tap to edit</p>}
           </motion.div>
         )}
 
