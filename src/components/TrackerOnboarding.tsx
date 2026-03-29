@@ -8,6 +8,7 @@ interface TrackerOnboardingProps {
   userId: string;
   partnerCode: string;
   onComplete: () => void;
+  isPartner?: boolean;
 }
 
 const scheduleTypes = [
@@ -21,8 +22,11 @@ export function TrackerOnboarding({
   userId,
   partnerCode,
   onComplete,
+  isPartner = false,
 }: TrackerOnboardingProps) {
-  const [step, setStep] = useState<'welcome' | 'cycle-basics' | 'period-date' | 'schedule'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'cycle-basics' | 'period-date' | 'schedule'>(
+    isPartner ? 'cycle-basics' : 'welcome'
+  );
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
   const [typicalPeriodLengthDays, setTypicalPeriodLengthDays] = useState(5);
   const [lastPeriodDate, setLastPeriodDate] = useState('');
@@ -67,7 +71,11 @@ export function TrackerOnboarding({
       }
 
       setError('');
-      setStep('schedule');
+      if (isPartner) {
+        handleComplete();
+      } else {
+        setStep('schedule');
+      }
     } else if (step === 'schedule') {
       handleComplete();
     }

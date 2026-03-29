@@ -133,12 +133,23 @@ function App() {
             // Set partnerProfile state - use null if no profile exists
             setPartnerProfile(profile || null);
 
-            if (profile?.supportStyles?.length) {
-              console.log('Going to partner-dashboard (completed onboarding)');
-              setCurrentView('partner-dashboard');
-            } else {
-              console.log('Going to partner-onboarding (not completed)');
+            if (!profile?.supportStyles?.length) {
+              console.log('Going to partner-onboarding');
               setCurrentView('partner-onboarding');
+            } else if (!profile?.linkedTrackerId) {
+              // Manual Mode Partner: Also needs Cycle Basics onboarding
+              const tProfile = await cycleService.getTrackerProfile(currentUser.uid);
+              setTrackerProfile(tProfile || null);
+              if (tProfile?.lastPeriodDate) {
+                console.log('Manual Partner: Cycle Basics completed. Going to dashboard.');
+                setCurrentView('partner-dashboard');
+              } else {
+                console.log('Manual Partner: Cycle Basics missing. Going to tracker-onboarding.');
+                setCurrentView('tracker-onboarding');
+              }
+            } else {
+              console.log('Going to partner-dashboard');
+              setCurrentView('partner-dashboard');
             }
           } catch (err) {
             console.error('Error fetching partner profile:', err);
@@ -271,7 +282,8 @@ function App() {
           <TrackerOnboarding
             userId={currentUser!.uid}
             partnerCode={trackerPartnerCode}
-            onComplete={() => setCurrentView('tracker-dashboard')}
+            isPartner={sessionRole === 'partner'}
+            onComplete={() => setCurrentView(sessionRole === 'partner' ? 'partner-dashboard' : 'tracker-dashboard')}
           />
         </>
       )}
@@ -279,7 +291,18 @@ function App() {
       {currentView === 'partner-onboarding' && (
         <PartnerOnboarding
           userId={currentUser!.uid}
-          onComplete={() => setCurrentView('partner-dashboard')}
+          onComplete={async () => {
+            // After partner onboarding, check if they need tracker onboarding (Manual Mode)
+            const profile = await cycleService.getPartnerProfile(currentUser!.uid);
+            if (!profile?.linkedTrackerId) {
+              const tProfile = await cycleService.getTrackerProfile(currentUser!.uid);
+              if (!tProfile?.lastPeriodDate) {
+                setCurrentView('tracker-onboarding');
+                return;
+              }
+            }
+            setCurrentView('partner-dashboard');
+          }}
         />
       )}
 

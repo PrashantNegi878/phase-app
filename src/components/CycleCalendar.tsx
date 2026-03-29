@@ -4,6 +4,7 @@ import { X, Calendar as CalendarIcon } from 'lucide-react';
 import { CycleData } from '../types';
 import { getToday, normalizeDate, formatDateForDisplay, addDays } from '../utils/dateUtils';
 import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
+import { PHASE_COLORS, PHASE_LABELS } from '../constants/phases';
 
 interface CycleCalendarProps {
   cycleData: CycleData;
@@ -11,30 +12,6 @@ interface CycleCalendarProps {
   onClose: () => void;
   isHistory?: boolean;
 }
-
-const PHASE_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  menstrual: { bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200', dot: 'bg-rose-400' },
-  follicular: { bg: 'bg-sage-100', text: 'text-sage-700', border: 'border-sage-200', dot: 'bg-sage-500' },
-  ovulation: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-400' },
-  luteal: { bg: 'bg-earth-200', text: 'text-earth-700', border: 'border-earth-300', dot: 'bg-earth-500' },
-  'period-expected': { bg: 'bg-rose-50', text: 'text-rose-500', border: 'border-rose-100', dot: 'bg-rose-300' },
-  'extended-follicular': { bg: 'bg-sage-50', text: 'text-sage-600', border: 'border-sage-200', dot: 'bg-sage-400' },
-  'out-of-cycle': { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
-  future: { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
-};
-
-const PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual',
-  follicular: 'Follicular',
-  ovulation: 'Ovulation',
-  luteal: 'Luteal',
-  'period-expected': 'Expected',
-  'extended-follicular': 'Delayed',
-  'out-of-cycle': 'Awaiting Log',
-  future: 'Future',
-};
-
-
 
 export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHistory = false }: CycleCalendarProps) {
   // 1. Current Day Calculation
@@ -85,9 +62,10 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
     }
 
     // High Precision: Always render at least until today to ensure PCOD "Delayed Phase" is visible
-    const endDate = targetDate.getTime() > today.getTime() 
-      ? targetDate 
-      : addDays(today, 2); // Show a 2-day buffer into the future
+    // CRITICAL: Only extend for current cycle. History should strictly stop at targetDate.
+    const endDate = (isHistory || targetDate.getTime() > today.getTime())
+      ? targetDate
+      : addDays(today, 2); // Show a 2-day buffer into the future for active tracking
 
     let currentDate = new Date(lastPeriod);
     let dayNum = 1;
@@ -257,7 +235,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                       key={item.date.toISOString()}
                       className={`
                         relative aspect-square flex flex-col items-center justify-center rounded-xl border
-                        ${colors.bg} ${colors.border}
+                        ${colors.calendarBg} ${colors.border}
                         ${item.isToday ? 'ring-2 ring-sage-500 ring-offset-2' : ''}
                         transition-all duration-200
                       `}

@@ -23,6 +23,7 @@ import { EditPeriod } from './EditPeriod';
 import { getToday, normalizeDate, formatDateForDisplay } from '../utils/dateUtils';
 import { getSelfSuggestions } from '../data/suggestions';
 import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
+import { PHASE_COLORS, PHASE_LABELS } from '../constants/phases';
 
 interface TrackerDashboardProps {
   userId: string;
@@ -30,28 +31,6 @@ interface TrackerDashboardProps {
   onLogSymptoms: () => void;
   onLogPeriod: () => void;
 }
-
-const PHASE_COLORS: Record<string, { bg: string; text: string; light: string; gradient: string }> = {
-  menstrual: { bg: 'bg-rose-400', text: 'text-rose-600', light: 'bg-rose-50', gradient: 'from-rose-100 to-rose-50' },
-  follicular: { bg: 'bg-sage-500', text: 'text-sage-700', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
-  ovulation: { bg: 'bg-amber-400', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-100 to-amber-50' },
-  luteal: { bg: 'bg-earth-500', text: 'text-earth-700', light: 'bg-earth-100', gradient: 'from-earth-200 to-earth-100' },
-  'extended-follicular': { bg: 'bg-sage-400', text: 'text-sage-600', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
-  'period-expected': { bg: 'bg-rose-300', text: 'text-rose-500', light: 'bg-rose-50', gradient: 'from-rose-50 to-white' },
-  'out-of-cycle': { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
-  pending: { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
-};
-
-const PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual Phase',
-  follicular: 'Follicular Phase',
-  ovulation: 'Ovulation',
-  luteal: 'Luteal Phase',
-  'extended-follicular': 'Delayed',
-  'period-expected': 'Awaiting Period',
-  'out-of-cycle': 'Awaiting Log',
-  pending: 'Pending Data',
-};
 
 export function TrackerDashboard({
   userId,
@@ -303,7 +282,7 @@ export function TrackerDashboard({
           </div>
           <div className={`text-3xl font-semibold ${colors.text} mb-2 tracking-tight`}>{phaseLabel}</div>
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
+            <div className={`w-2 h-2 rounded-full ${colors.vibrantBg}`} />
             <span className="text-earth-600">
               {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : `Day ${currentDayOfCycle} of your cycle`}
             </span>

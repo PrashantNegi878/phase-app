@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Edit3, Calendar, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { X, Edit3, Calendar, AlertTriangle } from 'lucide-react';
 import { collection, doc, getDoc, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
@@ -290,9 +290,10 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="overflow-hidden"
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-2"
               >
-                <div className={`p-4 rounded-2xl border flex gap-3 mb-2 ${
+                <div className={`p-4 rounded-2xl border flex gap-3 ${
                   isGuardrailViolated 
                     ? 'bg-rose-50 border-rose-100 text-rose-700' 
                     : 'bg-amber-50 border-amber-100 text-amber-700'
@@ -307,24 +308,31 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                         ? `This adjustment results in a ${Math.abs(prevCycleLength!)}-day cycle, which falls outside the established 21–55 day parameters.`
                         : `This modification will adjust your previous cycle length to ${Math.abs(prevCycleLength!)} days.`}
                     </p>
-                    {isHormonalOverride && (
-                      <p className="mt-2 font-medium">
-                        ⚠️ Notice: This adjustment overlaps with your last recorded ovulation. To maintain a consistent medical history, related symptomatic logs will be reset.
-                      </p>
-                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {isHormonalOverride && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-2"
+              >
+                <div className="p-4 rounded-2xl border flex gap-3 bg-rose-50 border-rose-100 text-rose-700">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold mb-1">Ovulation Overlap Notice</p>
+                    <p>
+                      This adjustment overlaps with your last recorded ovulation. To maintain a consistent medical history, related symptomatic logs will be reset.
+                    </p>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Clinical Status Indicator */}
-          <motion.div variants={itemVariants} className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3 opacity-100">
-            <ShieldCheck className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-sage-700 font-medium">
-              Professional Clinical Record Active: High-precision guardrails ensure all historical data remains biologically consistent and medically reliable.
-            </p>
-          </motion.div>
 
           {/* Buttons */}
           <motion.div variants={itemVariants} className="flex gap-3 pt-2">
