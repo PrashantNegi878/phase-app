@@ -26,11 +26,11 @@ export function ReloadPrompt() {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
-          className="fixed bottom-6 right-6 z-[100] bg-white/95 backdrop-blur-xl border border-sage-200 shadow-soft-xl rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 max-w-sm"
+          className="fixed bottom-6 right-6 z-[100] bg-card-bg/95 backdrop-blur-xl border border-border-subtle shadow-soft-xl rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 max-w-sm"
         >
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-slate-800 mb-1">Update Available 🚀</h3>
-            <p className="text-xs text-earth-600">A new version of Phase is ready. Reload to update.</p>
+            <h3 className="text-sm font-semibold text-text-main mb-1">Update Available 🚀</h3>
+            <p className="text-xs text-text-muted">A new version of Phase is ready. Reload to update.</p>
           </div>
           <div className="flex items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
             <button
@@ -42,7 +42,7 @@ export function ReloadPrompt() {
             </button>
             <button
               onClick={close}
-              className="p-2 text-earth-400 hover:text-earth-600 hover:bg-earth-50 rounded-lg transition-colors flex-shrink-0"
+              className="p-2 text-text-muted opacity-60 hover:opacity-100 hover:bg-app-bg rounded-lg transition-colors flex-shrink-0"
             >
               <X className="w-4 h-4" />
             </button>

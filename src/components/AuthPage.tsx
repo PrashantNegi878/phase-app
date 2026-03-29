@@ -103,11 +103,11 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
   const buttonTap = { scale: 0.95 };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/40 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
 
       <motion.div
@@ -119,7 +119,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
         {/* Main Card */}
         <motion.div
           variants={cardVariants}
-          className="bg-white/80 backdrop-blur-xl rounded-4xl shadow-soft-lg p-8 sm:p-10"
+          className="bg-card-bg/80 backdrop-blur-xl rounded-4xl shadow-soft-lg p-8 sm:p-10 border border-border-subtle"
         >
           {/* Logo & Welcome Section */}
           <motion.div variants={itemVariants} className="text-center mb-8">
@@ -129,12 +129,16 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="flex justify-center mb-6"
             >
-              <img src="/pwa-192x192.png" alt="Phase Logo" className="w-16 h-16 sm:w-24 sm:h-24 mix-blend-multiply hover:scale-105 transition-transform duration-300 drop-shadow-sm" />
+              <img 
+                src="/pwa-192x192.png" 
+                alt="Phase Logo" 
+                className="w-16 h-16 sm:w-24 sm:h-24 dark:brightness-110 hover:scale-105 transition-transform duration-300 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+              />
             </motion.div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-text-main mb-2 tracking-tight">
               Welcome to Phase
             </h1>
-            <p className="text-earth-600 font-light">
+            <p className="text-text-muted font-light">
               Your mindful cycle companion
             </p>
           </motion.div>
@@ -146,7 +150,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
+                className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-2xl text-sm opacity-100"
               >
                 {error}
               </motion.div>
@@ -160,7 +164,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-sage-50 border border-sage-200 text-sage-700 rounded-2xl text-sm opacity-100"
+                className="mb-6 p-4 bg-sage-50 dark:bg-sage-900/10 border border-sage-200 dark:border-sage-900/20 text-sage-700 dark:text-sage-400 rounded-2xl text-sm opacity-100"
               >
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 flex-shrink-0" />
@@ -173,14 +177,14 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
           <div className="space-y-6">
             {/* Role Selection - Segmented Control */}
             <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-slate-700 mb-3">
+              <label className="block text-sm font-medium text-text-main mb-3">
                 I am a...
               </label>
-              <div className="relative bg-earth-200/70 p-1.5 rounded-2xl">
+              <div className="relative bg-app-bg dark:bg-slate-800/50 p-1.5 rounded-2xl border border-border-subtle">
                 {/* Sliding background */}
                 <motion.div
                   layout
-                  className="absolute top-1.5 bottom-1.5 bg-white rounded-xl shadow-md ring-1 ring-sage-200/50"
+                  className="absolute top-1.5 bottom-1.5 bg-card-bg rounded-xl shadow-md ring-1 ring-sage-200/50 dark:ring-sage-900/30"
                   initial={false}
                   animate={{
                     left: role === 'tracker' ? '4px' : '50%',
@@ -195,8 +199,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                     whileTap={buttonTap}
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 opacity-100 ${
                       role === 'tracker'
-                        ? 'text-sage-700'
-                        : 'text-earth-500 hover:text-earth-700'
+                        ? 'text-sage-700 dark:text-sage-300'
+                        : 'text-text-muted hover:text-text-main'
                     }`}
                   >
                     <Heart className="w-4 h-4" />
@@ -208,8 +212,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                     whileTap={buttonTap}
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 opacity-100 ${
                       role === 'partner'
-                        ? 'text-sage-700'
-                        : 'text-earth-500 hover:text-earth-700'
+                        ? 'text-sage-700 dark:text-sage-300'
+                        : 'text-text-muted hover:text-text-main'
                     }`}
                   >
                     <Users className="w-4 h-4" />
@@ -217,7 +221,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                   </motion.button>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-earth-500 text-center">
+              <p className="mt-2 text-xs text-text-muted text-center">
                 {role === 'tracker'
                   ? "Track your cycle and share insights with your partner"
                   : "Support and stay connected with your partner's journey"}
@@ -231,7 +235,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               disabled={isGoogleLoading || isMagicLinkSending}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="w-full bg-white border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-medium py-4 rounded-2xl transition-colors duration-200 opacity-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm hover:shadow-soft"
+              className="w-full bg-card-bg border border-border-subtle hover:border-sage-300 dark:hover:border-sage-700 text-text-main font-medium py-4 rounded-2xl transition-all duration-200 opacity-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm hover:shadow-soft"
             >
               {isGoogleLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -270,10 +274,10 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
             {/* Divider */}
             <motion.div variants={itemVariants} className="relative opacity-100">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-earth-200"></div>
+                <div className="w-full border-t border-border-subtle"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-white/80 text-earth-400 text-sm">
+                <span className="px-4 bg-card-bg/80 backdrop-blur-sm text-text-muted text-sm">
                   or continue with email
                 </span>
               </div>
@@ -282,16 +286,16 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
             {/* Magic Link Form */}
             <motion.form variants={itemVariants} onSubmit={handleMagicLink} className="space-y-4 opacity-100">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-text-main mb-2">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-earth-400" />
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted opacity-60" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700 placeholder-earth-400"
+                    className="w-full pl-12 pr-4 py-4 border-2 border-border-subtle rounded-2xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 bg-app-bg dark:bg-slate-800 text-text-main placeholder-text-muted/40"
                     placeholder="hello@example.com"
                     required
                   />
@@ -322,7 +326,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               </motion.button>
             </motion.form>
 
-            <motion.p variants={itemVariants} className="text-center text-sm text-earth-500 opacity-100">
+            <motion.p variants={itemVariants} className="text-center text-sm text-text-muted opacity-100">
               No password needed. We'll send a secure link to your inbox.
             </motion.p>
           </div>
@@ -331,7 +335,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
         {/* Footer tagline */}
         <motion.p
           variants={itemVariants}
-          className="text-center text-earth-400 text-sm mt-6 opacity-100"
+          className="text-center text-text-muted opacity-60 text-sm mt-6"
         >
           Mindful tracking for couples
         </motion.p>

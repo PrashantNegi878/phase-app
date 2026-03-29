@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,6 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Theme Variables
+        'app-bg': 'var(--bg-main)',
+        'card-bg': 'var(--bg-card)',
+        'text-main': 'var(--text-main)',
+        'text-muted': 'var(--text-muted)',
+        'border-subtle': 'var(--border-subtle)',
+        'sage-primary': 'var(--sage-primary)',
+        'earth-primary': 'var(--earth-primary)',
+        
         // Calming Sage & Earth Palette
         sage: {
           50: '#f6f8f6',

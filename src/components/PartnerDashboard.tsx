@@ -210,10 +210,10 @@ export function PartnerDashboard({
 
   if (loadingCycle) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center">
+      <div className="min-h-screen bg-app-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-          <p className="text-earth-600 font-light">Loading...</p>
+          <div className="w-10 h-10 border-3 border-sage-200 dark:border-sage-900 border-t-sage-500 rounded-full animate-spin" />
+          <p className="text-text-muted font-light">Loading...</p>
         </div>
       </div>
     );
@@ -221,18 +221,18 @@ export function PartnerDashboard({
 
   if (!cycleData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 p-4">
+      <div className="min-h-screen bg-app-bg p-4 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md mx-auto mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-soft-lg p-8"
+          className="bg-card-bg rounded-4xl shadow-soft-lg w-full max-w-md p-8 border border-border-subtle relative z-10"
         >
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-sage-200 to-sage-300 mb-4 shadow-soft">
               <Heart className="w-8 h-8 text-sage-700" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">Get Started</h2>
-            <p className="text-earth-600">
+            <h2 className="text-xl font-semibold text-text-main mb-2">Get Started</h2>
+            <p className="text-text-muted">
               {isManualMode
                 ? 'Your cycle baseline is not set. Please complete the setup to begin tracking.'
                 : "Your partner hasn't shared their cycle data yet."}
@@ -249,13 +249,13 @@ export function PartnerDashboard({
                 <Droplets className="w-5 h-5" />
                 Log Period Start
               </motion.button>
-              <p className="text-xs text-earth-500 text-center">
+              <p className="text-xs text-text-muted text-center">
                 Once you log your period, you can track symptoms
               </p>
             </>
           )}
           {!isManualMode && (
-            <p className="text-xs text-earth-500 text-center">
+            <p className="text-xs text-text-muted text-center">
               Please ask your partner to log their cycle data first.
             </p>
           )}
@@ -265,7 +265,7 @@ export function PartnerDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50/50 to-earth-100 p-4 pb-28">
+    <div className="min-h-screen bg-app-bg p-4 pb-28 transition-colors duration-300">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -275,10 +275,10 @@ export function PartnerDashboard({
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-6 mt-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+            <h1 className="text-2xl font-semibold text-text-main tracking-tight">
               Overview
             </h1>
-            <p className="text-sm text-earth-500">
+            <p className="text-sm text-text-muted">
               {isManualMode ? 'Manual tracking mode' : 'Linked to partner'}
             </p>
           </div>
@@ -287,7 +287,7 @@ export function PartnerDashboard({
               onClick={() => setShowHistory(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={buttonTap}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-card-bg border border-border-subtle text-text-muted hover:text-sage-600 dark:hover:text-sage-400 transition-colors duration-200 shadow-soft"
             >
               <History className="w-5 h-5" />
             </motion.button>
@@ -296,7 +296,7 @@ export function PartnerDashboard({
                 onClick={() => setShowSettings(true)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={buttonTap}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-card-bg border border-border-subtle text-text-muted hover:text-sage-600 dark:hover:text-sage-400 transition-colors duration-200 shadow-soft"
               >
                 <SettingsIcon className="w-5 h-5" />
               </motion.button>
@@ -310,11 +310,11 @@ export function PartnerDashboard({
           onClick={() => setShowCalendar(true)}
           whileHover={{ y: -2 }}
           whileTap={buttonTap}
-          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300 opacity-100`}
+          className={`bg-gradient-to-br ${colors.gradient} border border-sage-200/50 dark:border-sage-400/20 rounded-3xl p-6 mb-6 cursor-pointer shadow-soft hover:shadow-soft-lg transition-all duration-300`}
         >
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-earth-500">Current Phase</span>
-            <div className="flex items-center gap-1 text-earth-400">
+            <span className="text-sm font-medium text-text-muted opacity-80">Current Phase</span>
+            <div className="flex items-center gap-1 text-text-muted opacity-60">
               <Calendar className="w-4 h-4" />
               <ChevronRight className="w-4 h-4" />
             </div>
@@ -322,7 +322,7 @@ export function PartnerDashboard({
           <div className={`text-3xl font-semibold ${colors.text} mb-2 tracking-tight`}>{phaseLabel}</div>
           <div className="flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${colors.vibrantBg}`} />
-            <span className="text-earth-600">
+            <span className="text-text-muted">
               {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : (isManualMode ? `Day ${cycleData.dayOfCycle} of your cycle` : `Day ${calculateDayOfCycle(normalizeDate(cycleData.lastPeriodDate))} of the cycle`)}
             </span>
           </div>
@@ -335,15 +335,15 @@ export function PartnerDashboard({
               onClick={() => isManualMode && setShowEditPeriod(true)}
               whileHover={isManualMode ? { y: -2 } : {}}
               whileTap={isManualMode ? buttonTap : {}}
-              className={`bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 transition-all duration-300 opacity-100 ${
+              className={`bg-card-bg rounded-2xl p-4 shadow-soft border border-border-subtle transition-all duration-300 ${
                 isManualMode ? 'cursor-pointer hover:shadow-soft-lg' : 'cursor-default'
               }`}
             >
-              <div className="flex items-center gap-2 text-earth-400 mb-2">
+              <div className="flex items-center gap-2 text-text-muted opacity-80 mb-2">
                 <Droplets className="w-4 h-4" />
                 <span className="text-xs font-medium">Last Period</span>
               </div>
-              <div className="font-semibold text-slate-800">
+              <div className="font-semibold text-text-main">
                 {formatDateForDisplay(cycleData.lastPeriodDate)}
               </div>
               {isManualMode && (
@@ -356,19 +356,19 @@ export function PartnerDashboard({
           )}
 
           {cycleData.nextPeriodDate ? (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100">
-              <div className="flex items-center gap-2 text-earth-400 mb-2">
+            <div className="bg-card-bg rounded-2xl p-4 shadow-soft border border-border-subtle">
+              <div className="flex items-center gap-2 text-text-muted opacity-80 mb-2">
                 <Calendar className="w-4 h-4" />
                 <span className="text-xs font-medium">Next Period</span>
               </div>
-              <div className="font-semibold text-slate-800">
+              <div className="font-semibold text-text-main">
                 {formatDateForDisplay(cycleData.nextPeriodDate)}
               </div>
             </div>
           ) : (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100 flex flex-col justify-center items-center">
-              <div className="text-xs text-earth-400 font-medium">Next Period</div>
-              <div className="font-semibold text-earth-400">Pending</div>
+            <div className="bg-card-bg rounded-2xl p-4 shadow-soft border border-border-subtle flex flex-col justify-center items-center">
+              <div className="text-xs text-text-muted opacity-60 font-medium">Next Period</div>
+              <div className="font-semibold text-text-muted opacity-40">Pending</div>
             </div>
           )}
         </motion.div>
@@ -390,37 +390,37 @@ export function PartnerDashboard({
         {/* Recent Activity Section */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 opacity-100"
+          className="bg-card-bg rounded-2xl p-5 shadow-soft mb-6 border border-border-subtle opacity-100"
         >
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-text-main mb-4">
             <Activity className="w-4 h-4 text-sage-500" />
             <span>Recent Activity</span>
           </div>
           <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-earth-100 font-outfit">
-              <span className="text-earth-600 text-sm">Today's Score</span>
-              <span className="font-semibold text-slate-800">
+            <div className="flex justify-between items-center py-2 border-b border-border-subtle font-outfit">
+              <span className="text-text-muted text-sm">Today's Score</span>
+              <span className="font-semibold text-text-main">
                 {todayScore !== null ? `${todayScore}/10` : 'Not logged'}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-earth-100 font-outfit">
-              <span className="text-earth-600 text-sm">Last Logged</span>
-              <span className="font-semibold text-slate-800">
+            <div className="flex justify-between items-center py-2 border-b border-border-subtle font-outfit">
+              <span className="text-text-muted text-sm">Last Logged</span>
+              <span className="font-semibold text-text-main">
                 {recentLogs.length > 0 ? formatDateForDisplay(normalizeDate(recentLogs[0].date)) : 'Never'}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 gap-4 font-outfit">
-              <span className="text-earth-600 text-sm flex-shrink-0">Ovulation Status</span>
+              <span className="text-text-muted text-sm flex-shrink-0">Ovulation Status</span>
               {(() => {
                 const today = getToday();
                 if (cycleData.ovulationDetectedDate) {
-                  return <span className="font-semibold text-sage-600 text-right leading-tight">Confirmed via Symptoms</span>;
+                  return <span className="font-semibold text-sage-600 dark:text-sage-400 text-right leading-tight">Confirmed via Symptoms</span>;
                 } else if (cycleData.ovulationPhaseEnd && today > normalizeDate(cycleData.ovulationPhaseEnd)) {
                   return <span className="font-semibold text-amber-500 text-right leading-tight">Past Predicted Window</span>;
                 } else if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd && today >= normalizeDate(cycleData.ovulationPhaseStart) && today <= normalizeDate(cycleData.ovulationPhaseEnd)) {
                   return <span className="font-semibold text-rose-400 text-right leading-tight">In Fertile Window</span>;
                 } else {
-                  return <span className="font-semibold text-earth-400 text-right leading-tight">Awaiting</span>;
+                  return <span className="font-semibold text-text-muted opacity-50 text-right leading-tight">Awaiting</span>;
                 }
               })()}
             </div>
@@ -430,9 +430,9 @@ export function PartnerDashboard({
         {/* AI Suggestions Section */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100"
+          className="bg-card-bg rounded-2xl p-5 shadow-soft mb-6 border border-border-subtle opacity-100"
         >
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-text-main mb-4">
             <Lightbulb className="w-5 h-5 text-amber-500" />
             <span>Daily Suggestions</span>
           </div>
@@ -445,9 +445,9 @@ export function PartnerDashboard({
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-gradient-to-r from-sage-50 to-earth-50 border border-sage-200 rounded-xl p-4"
+                  className="bg-app-bg border border-border-subtle rounded-xl p-4"
                 >
-                  <p className="text-slate-700 text-sm leading-relaxed">{suggestion}</p>
+                  <p className="text-text-main/90 text-sm leading-relaxed">{suggestion}</p>
                 </motion.div>
               ))}
             </div>
@@ -472,7 +472,7 @@ export function PartnerDashboard({
               onClick={onLogPeriod}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+              className="w-full bg-card-bg/80 backdrop-blur border-2 border-border-subtle hover:border-sage-300 dark:hover:border-sage-700 text-text-main font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
             >
               <Droplets className="w-5 h-5 text-rose-400" />
               Log Period Start

@@ -146,19 +146,19 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg"
+          className="bg-card-bg rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg border border-border-subtle"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-6 z-10">
+          <div className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-6 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-                <CalendarIcon className="w-5 h-5 text-sage-600" />
+              <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-sage-600 dark:text-sage-400" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-800">Cycle Calendar</h2>
+              <h2 className="text-xl font-semibold text-text-main">Cycle Calendar</h2>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -173,37 +173,37 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                   : [])
               ].map((p) => (
                 <div key={p} className="flex items-center gap-2">
-                  <div className={`w-2.5 h-2.5 rounded-full ${PHASE_COLORS[p]?.dot || 'bg-earth-300'}`} />
-                  <span className="text-[11px] sm:text-xs text-earth-600 font-medium">{PHASE_LABELS[p]}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${PHASE_COLORS[p]?.dot || 'bg-earth-300 dark:bg-slate-600'}`} />
+                  <span className="text-[11px] sm:text-xs text-text-muted font-medium">{PHASE_LABELS[p]}</span>
                 </div>
               ))}
             </motion.div>
 
             {/* Cycle Stats (Only for current cycle) */}
             {!isHistory && (
-              <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-earth-100">
-                <div className="bg-sage-50 rounded-xl p-4">
-                  <div className="text-xs text-earth-500 mb-1">Current Phase</div>
-                  <div className="text-lg font-semibold text-sage-700 truncate">
+              <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-border-subtle">
+                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-4">
+                  <div className="text-xs text-text-muted mb-1">Current Phase</div>
+                  <div className="text-lg font-semibold text-sage-700 dark:text-sage-400 truncate">
                     {PHASE_LABELS[currentPhase] || 'Pending'}
                   </div>
                 </div>
-                <div className="bg-sage-50 rounded-xl p-4">
-                <div className="text-xs text-earth-500 mb-1">Day of Cycle</div>
-                <div className="text-lg font-semibold text-sage-700 font-outfit">
+                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-4">
+                <div className="text-xs text-text-muted mb-1">Day of Cycle</div>
+                <div className="text-lg font-semibold text-sage-700 dark:text-sage-400 font-outfit">
                   {isHistory || currentPhase !== 'out-of-cycle' ? `Day ${currentDayOfCycle}` : 'Sync Needed'}
                 </div>
               </div>
                 {cycleData.nextPeriodDate && (
-                  <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-                    <div className="text-xs text-earth-500 mb-1">
+                  <div className="bg-rose-50 dark:bg-rose-900/10 rounded-xl p-4 col-span-2 sm:col-span-1 border border-rose-100 dark:border-rose-900/20">
+                    <div className="text-xs text-text-muted mb-1">
                       {currentPhase === 'period-expected' 
                         ? 'Expected Period' 
                         : (currentPhase === 'extended-follicular' || currentPhase === 'out-of-cycle')
                           ? 'Was Expected'
                           : 'Next Period'}
                     </div>
-                    <div className="text-lg font-semibold text-rose-600">
+                    <div className="text-lg font-semibold text-rose-600 dark:text-rose-400">
                       {formatDateForDisplay(cycleData.nextPeriodDate)}
                     </div>
                   </div>
@@ -215,7 +215,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
             <motion.div variants={itemVariants}>
               <div className="grid grid-cols-7 gap-2">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center text-xs font-bold text-earth-400 py-2 uppercase tracking-tight">
+                  <div key={day} className="text-center text-xs font-bold text-text-muted opacity-60 py-2 uppercase tracking-tight">
                     {day}
                   </div>
                 ))}
@@ -244,7 +244,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                         {dayOfMonth}
                       </div>
                       {showMonth && (
-                        <div className="absolute bottom-1 text-[8px] text-earth-500 font-bold uppercase tracking-tighter">
+                        <div className="absolute bottom-1 text-[8px] text-text-muted opacity-60 font-bold uppercase tracking-tighter">
                           {item.date.toLocaleDateString('en-US', { month: 'short' })}
                         </div>
                       )}

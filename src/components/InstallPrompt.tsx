@@ -67,17 +67,17 @@ export function InstallPrompt() {
         className="fixed left-4 right-4 z-[90] sm:left-auto sm:right-6 sm:max-w-sm"
         style={{ top: 'calc(env(safe-area-inset-top, 16px) + 16px)' }}
       >
-        <div className="bg-white/95 backdrop-blur-xl border border-sage-200 shadow-soft-xl rounded-2xl p-4 flex items-start gap-4">
+        <div className="bg-card-bg/95 backdrop-blur-xl border border-border-subtle shadow-soft-xl rounded-2xl p-4 flex items-start gap-4">
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-slate-800 mb-1">
+            <h3 className="text-sm font-semibold text-text-main mb-1">
               Install Phase
             </h3>
             {isIOS ? (
-              <p className="text-xs text-earth-600 leading-relaxed">
+              <p className="text-xs text-text-muted leading-relaxed">
                 To install, tap the <Share className="inline w-3 h-3 mx-1 text-sage-600" /> Share button and select <strong>"Add to Home Screen"</strong>.
               </p>
             ) : (
-              <p className="text-xs text-earth-600">
+              <p className="text-xs text-text-muted">
                 Install our app on your device for quick access and offline support.
               </p>
             )}
@@ -86,7 +86,7 @@ export function InstallPrompt() {
           <div className="flex flex-col items-center gap-2 mt-1">
             <button
               onClick={closePrompt}
-              className="p-1 text-earth-400 hover:text-earth-600 hover:bg-earth-50 rounded-lg transition-colors"
+              className="p-1 text-text-muted opacity-60 hover:opacity-100 hover:bg-app-bg rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

@@ -21,23 +21,23 @@ interface OptionCardProps {
 function OptionCard({ selected, onClick, icon, label, color = 'sage' }: OptionCardProps) {
   const colorClasses = {
     sage: {
-      selected: 'border-sage-400 bg-sage-50 ring-2 ring-sage-200',
-      icon: 'bg-sage-100 text-sage-600',
+      selected: 'border-sage-400 dark:border-sage-600 bg-sage-50 dark:bg-sage-900/20 ring-2 ring-sage-200 dark:ring-sage-900/30',
+      icon: 'bg-sage-100 dark:bg-sage-900/40 text-sage-600 dark:text-sage-400',
       check: 'bg-sage-500',
     },
     amber: {
-      selected: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200',
-      icon: 'bg-amber-100 text-amber-600',
+      selected: 'border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 ring-2 ring-amber-200 dark:ring-amber-900/30',
+      icon: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
       check: 'bg-amber-500',
     },
     rose: {
-      selected: 'border-rose-400 bg-rose-50 ring-2 ring-rose-200',
-      icon: 'bg-rose-100 text-rose-600',
+      selected: 'border-rose-400 dark:border-rose-600 bg-rose-50 dark:bg-rose-900/20 ring-2 ring-rose-200 dark:ring-rose-900/30',
+      icon: 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400',
       check: 'bg-rose-500',
     },
     sky: {
-      selected: 'border-sky-400 bg-sky-50 ring-2 ring-sky-200',
-      icon: 'bg-sky-100 text-sky-600',
+      selected: 'border-sky-400 dark:border-sky-600 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-200 dark:ring-sky-900/30',
+      icon: 'bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400',
       check: 'bg-sky-500',
     },
   };
@@ -53,18 +53,18 @@ function OptionCard({ selected, onClick, icon, label, color = 'sage' }: OptionCa
       className={`relative p-3 rounded-xl border-2 transition-colors duration-200 text-left ${
         selected
           ? colors.selected
-          : 'border-earth-200 bg-white hover:border-earth-300 hover:bg-earth-50'
+          : 'border-border-subtle bg-card-bg hover:border-earth-300 dark:hover:border-slate-700 hover:bg-earth-50 dark:hover:bg-slate-800'
       }`}
     >
       <div className="flex items-center gap-2">
         {icon && (
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            selected ? colors.icon : 'bg-earth-100 text-earth-500'
+            selected ? colors.icon : 'bg-app-bg dark:bg-slate-800 text-text-muted opacity-60'
           }`}>
             {icon}
           </div>
         )}
-        <span className={`text-sm font-medium ${selected ? 'text-slate-800' : 'text-slate-600'}`}>
+        <span className={`text-sm font-medium ${selected ? 'text-text-main' : 'text-text-muted'}`}>
           {label}
         </span>
       </div>
@@ -155,13 +155,13 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
   const buttonTap = { scale: 0.97 };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black flex items-end sm:items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-soft-lg flex flex-col"
+        className="bg-card-bg w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-soft-lg flex flex-col border border-border-subtle"
       >
         <AnimatePresence mode="wait">
           {!isSuccess ? (
@@ -173,18 +173,18 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
               className="flex flex-col h-full overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 z-10">
+              <div className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-5 z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-sage-600" />
+                  <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-sage-600 dark:text-sage-400" />
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-800">Log Symptoms</h2>
+                  <h2 className="text-lg font-semibold text-text-main">Log Symptoms</h2>
                 </div>
                 <motion.button
                   onClick={onCancel}
                   whileHover={{ scale: 1.05 }}
                   whileTap={buttonTap}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </motion.button>
@@ -197,7 +197,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm"
+                      className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-2xl text-sm"
                     >
                       {error}
                     </motion.div>
@@ -206,7 +206,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
                 {/* Date */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <Calendar className="w-4 h-4 text-sage-500" />
                     Date
                   </label>
@@ -215,9 +215,9 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                     value={date}
                     max={formatDateForInput(getToday())}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors bg-white text-slate-700"
+                    className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors bg-app-bg dark:bg-slate-800 text-text-main"
                   />
-                  <p className="mt-2 text-sm text-earth-500">
+                  <p className="mt-2 text-sm text-text-muted">
                     {(() => {
                       if (!date) return '';
                       try {
@@ -234,7 +234,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
                 {/* Cervical Fluid */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <Droplets className="w-4 h-4 text-sky-500" />
                     Cervical Fluid
                   </label>
@@ -254,7 +254,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
                 {/* Basal Body Temperature */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <Thermometer className="w-4 h-4 text-amber-500" />
                     Basal Body Temperature
                   </label>
@@ -267,15 +267,15 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                       value={symptoms.bbt || ''}
                       onChange={(e) => setSymptoms({ ...symptoms, bbt: parseFloat(e.target.value) || '' })}
                       placeholder="36.5"
-                      className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-colors bg-white text-slate-700 pr-12"
+                      className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-amber-400 dark:focus:border-amber-600 focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-900/30 transition-colors bg-app-bg dark:bg-slate-800 text-text-main pr-12"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-earth-400 font-medium">°C</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted opacity-60 font-medium">°C</span>
                   </div>
                 </div>
 
                 {/* Cramps */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <Flame className="w-4 h-4 text-rose-500" />
                     Cramps
                   </label>
@@ -295,7 +295,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
                 {/* Mood */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <Heart className="w-4 h-4 text-sage-500" />
                     Mood
                   </label>
@@ -315,7 +315,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
 
                 {/* Notes */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-3">
                     <FileText className="w-4 h-4 text-sage-500" />
                     Notes (optional)
                   </label>
@@ -324,7 +324,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                     onChange={(e) => setSymptoms({ ...symptoms, notes: e.target.value })}
                     placeholder="Any other observations..."
                     rows={3}
-                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors bg-white text-slate-700 resize-none"
+                    className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors bg-app-bg dark:bg-slate-800 text-text-main resize-none placeholder-text-muted/40"
                   />
                 </div>
 
@@ -335,7 +335,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                     onClick={onCancel}
                     whileHover={{ y: -2 }}
                     whileTap={buttonTap}
-                    className="flex-1 px-4 py-3.5 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200"
+                    className="flex-1 px-4 py-3.5 border-2 border-border-subtle text-text-main font-medium rounded-xl hover:border-earth-300 dark:hover:border-slate-700 hover:bg-earth-50 dark:hover:bg-slate-800 transition-colors duration-200"
                   >
                     Cancel
                   </motion.button>
@@ -369,7 +369,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.2 }}
-                className="w-20 h-20 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 mb-8 shadow-soft-lg"
+                className="w-20 h-20 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center text-sage-600 dark:text-sage-400 mb-8 shadow-soft-lg"
               >
                 <Check className="w-10 h-10" strokeWidth={3} />
               </motion.div>
@@ -378,7 +378,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-2xl font-bold text-slate-800 mb-3"
+                className="text-2xl font-bold text-text-main mb-3"
               >
                 Log Successful!
               </motion.h3>
@@ -389,16 +389,16 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="mb-6 p-4 bg-white border border-sage-100 rounded-[28px] shadow-soft-lg flex flex-col items-center gap-3 w-full max-w-[280px]"
+                    className="mb-6 p-4 bg-app-bg dark:bg-slate-800 border border-border-subtle rounded-[28px] shadow-soft-lg flex flex-col items-center gap-3 w-full max-w-[280px]"
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-sage-50 flex items-center justify-center text-sage-600">
+                    <div className="w-10 h-10 rounded-2xl bg-sage-50 dark:bg-sage-900/20 flex items-center justify-center text-sage-600 dark:text-sage-400">
                       <CalendarCheck className="w-5 h-5" />
                     </div>
                     <div className="text-center">
                       <p className="text-[10px] text-sage-500 uppercase tracking-[0.1em] font-black mb-1">
                         Smart Sync Active
                       </p>
-                      <h4 className="text-base font-bold text-slate-800 leading-tight">
+                      <h4 className="text-base font-bold text-text-main leading-tight">
                         Recalculated Cycle: <br/> {newCycleLength} Days
                       </h4>
                     </div>
@@ -414,11 +414,11 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                     transition={{ delay: 0.6 }}
                     className="max-w-xs mx-auto"
                   >
-                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Info className="w-4 h-4 text-amber-600" />
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-2xl flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                        <Info className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       </div>
-                      <p className="text-sm font-medium text-amber-800 leading-relaxed italic">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-300 leading-relaxed italic">
                         {additionalMessage}
                       </p>
                     </div>
@@ -430,7 +430,7 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.6 }}
                 transition={{ delay: 1.5 }}
-                className="mt-8 text-xs text-earth-500 uppercase tracking-widest font-semibold"
+                className="mt-8 text-xs text-text-muted uppercase tracking-widest font-semibold"
               >
                 Closing automatically...
               </motion.p>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Calendar, ArrowRight, Share2, Clock, Briefcase, GraduationCap, Dumbbell, Check, ArrowLeft } from 'lucide-react';
 import { cycleService } from '../services/cycle';
-import { parseDateFromInput, getToday, formatDateForInput } from '../utils/dateUtils';
+import { parseDateFromInput, getToday, formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
 
 interface TrackerOnboardingProps {
   userId: string;
@@ -35,6 +35,7 @@ export function TrackerOnboarding({
   const [hasManuallyChangedEndDate, setHasManuallyChangedEndDate] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Debug log to confirm component is rendering
   console.log('TrackerOnboarding rendering with partnerCode:', partnerCode);
@@ -110,6 +111,16 @@ export function TrackerOnboarding({
     }
   };
 
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(partnerCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
@@ -121,17 +132,17 @@ export function TrackerOnboarding({
   const buttonTap = { scale: 0.97 };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/40 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
 
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative bg-white/80 backdrop-blur-xl rounded-4xl shadow-soft-lg w-full max-w-md p-8"
+        className="relative bg-card-bg rounded-4xl shadow-soft-lg w-full max-w-md p-8 border border-border-subtle"
       >
         <AnimatePresence mode="wait">
           {step === 'welcome' && (
@@ -145,9 +156,13 @@ export function TrackerOnboarding({
             >
               <motion.div variants={itemVariants} className="text-center">
                 <div className="flex justify-center mb-6">
-                  <img src="/pwa-192x192.png" alt="Phase Logo" className="w-16 h-16 sm:w-24 sm:h-24 mix-blend-multiply hover:scale-105 transition-transform duration-300 drop-shadow-sm" />
+                  <img 
+                    src="/pwa-192x192.png" 
+                    alt="Phase Logo" 
+                    className="w-16 h-16 sm:w-24 sm:h-24 dark:brightness-110 hover:scale-105 transition-transform duration-300 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                  />
                 </div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-semibold text-text-main mb-2 tracking-tight">
                   Welcome to Phase!
                 </h1>
                 <p className="text-earth-600 font-light">
@@ -157,17 +172,38 @@ export function TrackerOnboarding({
 
               <motion.div
                 variants={itemVariants}
-                className="bg-gradient-to-r from-sage-50 to-earth-50 border border-sage-200 rounded-2xl p-5"
+                className="bg-app-bg dark:bg-sage-900/10 border border-border-subtle rounded-2xl p-5"
               >
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                  <Share2 className="w-4 h-4 text-sage-500" />
-                  <span>Your Partner Code</span>
+                <div className="flex items-center justify-between gap-2 text-sm font-medium text-text-main mb-3">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-sage-500" />
+                    <span>Your Partner Code</span>
+                  </div>
+                  <AnimatePresence>
+                    {copied && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="text-[10px] font-bold text-sage-600 dark:text-sage-400 bg-sage-50 dark:bg-sage-900/30 px-2 py-0.5 rounded-full border border-sage-100 dark:border-sage-800"
+                      >
+                        Copied
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <p className="text-4xl font-bold text-sage-700 tracking-widest text-center font-mono">
-                  {partnerCode}
-                </p>
-                <p className="text-xs text-earth-500 mt-3 text-center">
-                  Share this code with your partner to link accounts
+                <motion.button
+                  onClick={handleCopyCode}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 text-center cursor-pointer group"
+                >
+                  <p className="text-4xl font-bold text-sage-700 dark:text-sage-400 tracking-widest font-mono group-active:scale-95 transition-transform">
+                    {partnerCode}
+                  </p>
+                </motion.button>
+                <p className="text-xs text-text-muted mt-3 text-center">
+                  Tap the code to copy and share with your partner
                 </p>
               </motion.div>
 
@@ -193,22 +229,22 @@ export function TrackerOnboarding({
               className="space-y-6"
             >
               <motion.div variants={itemVariants}>
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-sage-100 to-sage-200 mb-4 shadow-soft">
-                  <Clock className="w-6 h-6 text-sage-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-sage-100 dark:bg-sage-900/30 mb-4 shadow-soft">
+                  <Clock className="w-6 h-6 text-sage-600 dark:text-sage-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-800 mb-2 tracking-tight">
+                <h2 className="text-xl font-semibold text-text-main mb-2 tracking-tight">
                   Your Cycle Basics
                 </h2>
-                <p className="text-sm text-earth-600">
+                <p className="text-sm text-text-muted">
                   Help us personalize your predictions
                 </p>
               </motion.div>
 
               <motion.div variants={itemVariants} className="space-y-6">
                 <div>
-                  <div className="flex justify-between text-sm font-medium text-slate-700 mb-3">
+                  <div className="flex justify-between text-sm font-medium text-text-main mb-3">
                     <span>Typical Cycle Length</span>
-                    <span className="text-sage-600 font-bold">{cycleLengthDays} Days</span>
+                    <span className="text-sage-600 dark:text-sage-400 font-bold">{cycleLengthDays} Days</span>
                   </div>
                   <input
                     type="range"
@@ -216,18 +252,18 @@ export function TrackerOnboarding({
                     max="45"
                     value={cycleLengthDays}
                     onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
-                    className="w-full h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                    className="w-full h-2 bg-app-bg dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sage-500"
                   />
-                  <div className="flex justify-between text-[10px] text-earth-400 mt-2">
+                  <div className="flex justify-between text-[10px] text-text-muted mt-2">
                     <span>21 Days</span>
                     <span>45 Days</span>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-sm font-medium text-slate-700 mb-3">
+                  <div className="flex justify-between text-sm font-medium text-text-main mb-3">
                     <span>Average Period Length</span>
-                    <span className="text-sage-600 font-bold">{typicalPeriodLengthDays} Days</span>
+                    <span className="text-sage-600 dark:text-sage-400 font-bold">{typicalPeriodLengthDays} Days</span>
                   </div>
                   <input
                     type="range"
@@ -235,9 +271,9 @@ export function TrackerOnboarding({
                     max="10"
                     value={typicalPeriodLengthDays}
                     onChange={(e) => setTypicalPeriodLengthDays(parseInt(e.target.value))}
-                    className="w-full h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                    className="w-full h-2 bg-app-bg dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sage-500"
                   />
-                  <div className="flex justify-between text-[10px] text-earth-400 mt-2">
+                  <div className="flex justify-between text-[10px] text-text-muted mt-2">
                     <span>2 Days</span>
                     <span>10 Days</span>
                   </div>
@@ -270,13 +306,13 @@ export function TrackerOnboarding({
               className="space-y-6"
             >
               <motion.div variants={itemVariants}>
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 to-rose-200 mb-4">
-                  <Calendar className="w-6 h-6 text-rose-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/30 mb-4">
+                  <Calendar className="w-6 h-6 text-rose-600 dark:text-rose-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-800 mb-2 tracking-tight">
+                <h2 className="text-xl font-semibold text-text-main mb-2 tracking-tight">
                   When was your last period?
                 </h2>
-                <p className="text-sm text-earth-600">
+                <p className="text-sm text-text-muted">
                   This helps us predict your cycle phases accurately
                 </p>
               </motion.div>
@@ -287,7 +323,7 @@ export function TrackerOnboarding({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm opacity-100"
+                    className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-2xl text-sm opacity-100"
                   >
                     {error}
                   </motion.div>
@@ -296,7 +332,7 @@ export function TrackerOnboarding({
 
               <motion.div variants={itemVariants} className="space-y-4">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-2">
                     <Calendar className="w-4 h-4 text-rose-400" />
                     Period Start Date
                   </label>
@@ -313,12 +349,15 @@ export function TrackerOnboarding({
                         setEndDate(formatDateForInput(endDateObj));
                       }
                     }}
-                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+                    className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 bg-app-bg dark:bg-slate-800 text-text-main"
                   />
+                  <p className="mt-2 text-sm text-text-muted">
+                    {lastPeriodDate ? formatDateForDisplay(new Date(lastPeriodDate)) : ''}
+                  </p>
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-2">
                     <Calendar className="w-4 h-4 text-rose-400" />
                     Period End Date
                   </label>
@@ -329,8 +368,11 @@ export function TrackerOnboarding({
                       setEndDate(e.target.value);
                       setHasManuallyChangedEndDate(true);
                     }}
-                    className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+                    className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 bg-app-bg dark:bg-slate-800 text-text-main"
                   />
+                  <p className="mt-2 text-sm text-text-muted">
+                    {endDate ? formatDateForDisplay(new Date(endDate)) : ''}
+                  </p>
                 </div>
               </motion.div>
 
@@ -370,18 +412,18 @@ export function TrackerOnboarding({
                 <motion.button
                   type="button"
                   onClick={() => setStep('period-date')}
-                  className="flex items-center gap-2 text-sage-600 hover:text-sage-700 text-sm font-medium mb-4 transition-colors"
+                  className="flex items-center gap-2 text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300 text-sm font-medium mb-4 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </motion.button>
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 mb-4 shadow-soft">
-                  <Clock className="w-6 h-6 text-amber-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 mb-4 shadow-soft">
+                  <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-800 mb-2 tracking-tight">
+                <h2 className="text-xl font-semibold text-text-main mb-2 tracking-tight">
                   Your Daily Schedule
                 </h2>
-                <p className="text-sm text-earth-600">
+                <p className="text-sm text-text-muted">
                   We'll tailor wellness tips to your routine
                 </p>
               </motion.div>
@@ -399,8 +441,8 @@ export function TrackerOnboarding({
                       whileTap={{ scale: 0.98 }}
                       className={`relative p-4 rounded-2xl border-2 text-left transition-all duration-200 opacity-100 ${
                         isSelected
-                          ? 'border-sage-400 bg-sage-50 shadow-sm'
-                          : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
+                          ? 'border-sage-400 dark:border-sage-600 bg-sage-50 dark:bg-sage-900/20 shadow-sm'
+                          : 'border-border-subtle bg-card-bg hover:border-sage-200 dark:hover:border-sage-700 hover:bg-sage-50/30 dark:hover:bg-sage-900/10'
                       }`}
                     >
                       {isSelected && (
@@ -413,14 +455,14 @@ export function TrackerOnboarding({
                         </motion.div>
                       )}
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-                        isSelected ? 'bg-sage-200' : 'bg-earth-100'
+                        isSelected ? 'bg-sage-200 dark:bg-sage-900/40' : 'bg-app-bg dark:bg-slate-800'
                       }`}>
-                        <Icon className={`w-5 h-5 ${isSelected ? 'text-sage-700' : 'text-earth-500'}`} />
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-sage-700 dark:text-sage-400' : 'text-text-muted opacity-60'}`} />
                       </div>
-                      <div className={`text-sm font-medium ${isSelected ? 'text-sage-800' : 'text-slate-700'}`}>
+                      <div className={`text-sm font-medium ${isSelected ? 'text-text-main' : 'text-text-muted font-normal'}`}>
                         {schedule.label}
                       </div>
-                      <div className="text-xs text-earth-500 mt-1 leading-tight">
+                      <div className="text-xs text-text-muted mt-1 leading-tight opacity-70">
                         {schedule.description}
                       </div>
                     </motion.button>
