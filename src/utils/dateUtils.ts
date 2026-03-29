@@ -71,8 +71,6 @@ export function calculatePhaseDates(
   ovulationPhaseEnd: Date | null;
   lutealPhaseStart: Date | null;
   lutealPhaseEnd: Date | null;
-  extendedFollicularPhaseStart: Date | null;
-  extendedFollicularPhaseEnd: Date | null;
   nextMenstrualPhaseStart: Date | null;
   nextMenstrualPhaseEnd: Date | null;
 } {
@@ -86,8 +84,6 @@ export function calculatePhaseDates(
       ovulationPhaseEnd: null,
       lutealPhaseStart: null,
       lutealPhaseEnd: null,
-      extendedFollicularPhaseStart: null,
-      extendedFollicularPhaseEnd: null,
       nextMenstrualPhaseStart: null,
       nextMenstrualPhaseEnd: null,
     };
@@ -147,8 +143,6 @@ export function calculatePhaseDates(
     ovulationPhaseEnd,
     lutealPhaseStart,
     lutealPhaseEnd,
-    extendedFollicularPhaseStart: null, // Simplified: no longer used
-    extendedFollicularPhaseEnd: null,
     nextMenstrualPhaseStart,
     nextMenstrualPhaseEnd,
   };

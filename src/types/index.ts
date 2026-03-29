@@ -64,8 +64,6 @@ export interface CycleData {
   ovulationPhaseEnd?: Date | null;
   lutealPhaseStart?: Date | null;
   lutealPhaseEnd?: Date | null;
-  extendedFollicularPhaseStart?: Date | null;
-  extendedFollicularPhaseEnd?: Date | null;
   // Next cycle menstrual phase for proper calendar rendering
   nextMenstrualPhaseStart?: Date | null;
   nextMenstrualPhaseEnd?: Date | null;

@@ -37,6 +37,7 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; light: string; gr
   ovulation: { bg: 'bg-amber-400', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-100 to-amber-50' },
   luteal: { bg: 'bg-earth-500', text: 'text-earth-700', light: 'bg-earth-100', gradient: 'from-earth-200 to-earth-100' },
   'extended-follicular': { bg: 'bg-sage-400', text: 'text-sage-600', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
+  'period-expected': { bg: 'bg-rose-300', text: 'text-rose-500', light: 'bg-rose-50', gradient: 'from-rose-50 to-white' },
   'out-of-cycle': { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
   pending: { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
 };
@@ -46,7 +47,8 @@ const PHASE_LABELS: Record<string, string> = {
   follicular: 'Follicular Phase',
   ovulation: 'Ovulation',
   luteal: 'Luteal Phase',
-  'extended-follicular': 'Extended Follicular',
+  'extended-follicular': 'Delayed',
+  'period-expected': 'Awaiting Period',
   'out-of-cycle': 'Awaiting Log',
   pending: 'Pending Data',
 };
@@ -136,7 +138,7 @@ export function TrackerDashboard({
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
     const diffTime = today.getTime() - lastPeriod.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return diffDays + 1;
   }, [cycleData?.lastPeriodDate]);
 
@@ -157,7 +159,7 @@ export function TrackerDashboard({
     if (cycleData.nextMenstrualPhaseStart && cycleData.nextMenstrualPhaseEnd) {
       const nextMenstrualStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
       const nextMenstrualEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) phase = 'menstrual';
+      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) phase = 'period-expected';
     }
     if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd) {
       const follicularStart = normalizeDate(cycleData.follicularPhaseStart);
@@ -173,11 +175,6 @@ export function TrackerDashboard({
       const lutealStart = normalizeDate(cycleData.lutealPhaseStart);
       const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
       if (today >= lutealStart && today <= lutealEnd && phase === 'future') phase = 'luteal';
-    }
-    if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
-      const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
-      const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-      if (today >= extendedStart && today <= extendedEnd && phase === 'future') phase = 'extended-follicular';
     }
 
     if (phase === 'future') {

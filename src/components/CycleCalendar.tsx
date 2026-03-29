@@ -17,6 +17,7 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; border: string; d
   follicular: { bg: 'bg-sage-100', text: 'text-sage-700', border: 'border-sage-200', dot: 'bg-sage-500' },
   ovulation: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-400' },
   luteal: { bg: 'bg-earth-200', text: 'text-earth-700', border: 'border-earth-300', dot: 'bg-earth-500' },
+  'period-expected': { bg: 'bg-rose-50', text: 'text-rose-500', border: 'border-rose-100', dot: 'bg-rose-300' },
   'extended-follicular': { bg: 'bg-sage-50', text: 'text-sage-600', border: 'border-sage-200', dot: 'bg-sage-400' },
   'out-of-cycle': { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
   future: { bg: 'bg-earth-50', text: 'text-earth-400', border: 'border-earth-200', dot: 'bg-earth-300' },
@@ -27,7 +28,8 @@ const PHASE_LABELS: Record<string, string> = {
   follicular: 'Follicular',
   ovulation: 'Ovulation',
   luteal: 'Luteal',
-  'extended-follicular': 'Delayed Phase',
+  'period-expected': 'Expected',
+  'extended-follicular': 'Delayed',
   'out-of-cycle': 'Awaiting Log',
   future: 'Future',
 };
@@ -68,28 +70,25 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
 
     // Only show next predicted period if NOT in history mode
     if (!isHistory) {
-      phases.push({ start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'menstrual' });
+      phases.push({ start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'period-expected' });
     }
 
-    let endDate;
+    const diffDays = Math.floor((today.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24));
+    const fallbackDays = cycleLengthDays + 4;
 
+    let targetDate;
     if (isHistory && cycleData.nextPeriodDate) {
-      // In history, we stop exactly at the end of the luteal phase (one day before next period)
-      endDate = addDays(normalizeDate(cycleData.nextPeriodDate), -1);
+      targetDate = addDays(normalizeDate(cycleData.nextPeriodDate), -1);
     } else if (cycleData.nextMenstrualPhaseEnd) {
-      endDate = normalizeDate(cycleData.nextMenstrualPhaseEnd);
+      targetDate = normalizeDate(cycleData.nextMenstrualPhaseEnd);
     } else {
-      // Default fallback: current cycle + early bleeding of next cycle
-      endDate = addDays(lastPeriod, cycleLengthDays + 4);
+      targetDate = addDays(lastPeriod, fallbackDays);
     }
 
-    console.log('[DEBUG] Calendar Render Logic:', {
-      isHistory,
-      lastPeriod: formatDateForDisplay(lastPeriod),
-      endDate: formatDateForDisplay(endDate),
-      phases: phases.map(p => ({ type: p.type, start: p.start ? formatDateForDisplay(normalizeDate(p.start)) : 'null' })),
-      cycleData
-    });
+    // High Precision: Always render at least until today to ensure PCOD "Delayed Phase" is visible
+    const endDate = targetDate.getTime() > today.getTime() 
+      ? targetDate 
+      : addDays(today, 2); // Show a 2-day buffer into the future
 
     let currentDate = new Date(lastPeriod);
     let dayNum = 1;
@@ -190,11 +189,15 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
 
           <div className="p-6">
             {/* Phase Legend */}
-            <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {['menstrual', 'follicular', 'ovulation', 'luteal'].map((p) => (
+            <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 px-1">
+              {['menstrual', 'follicular', 'ovulation', 'luteal', 
+                ...(currentPhase === 'period-expected' || currentPhase === 'extended-follicular' || currentPhase === 'out-of-cycle' 
+                  ? ['period-expected', 'extended-follicular'] 
+                  : [])
+              ].map((p) => (
                 <div key={p} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${PHASE_COLORS[p].dot}`} />
-                  <span className="text-sm text-slate-700">{PHASE_LABELS[p]}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${PHASE_COLORS[p]?.dot || 'bg-earth-300'}`} />
+                  <span className="text-[11px] sm:text-xs text-earth-600 font-medium">{PHASE_LABELS[p]}</span>
                 </div>
               ))}
             </motion.div>
@@ -216,7 +219,13 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
               </div>
                 {cycleData.nextPeriodDate && (
                   <div className="bg-rose-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-                    <div className="text-xs text-earth-500 mb-1">Next Period</div>
+                    <div className="text-xs text-earth-500 mb-1">
+                      {currentPhase === 'period-expected' 
+                        ? 'Expected Period' 
+                        : (currentPhase === 'extended-follicular' || currentPhase === 'out-of-cycle')
+                          ? 'Was Expected'
+                          : 'Next Period'}
+                    </div>
                     <div className="text-lg font-semibold text-rose-600">
                       {formatDateForDisplay(cycleData.nextPeriodDate)}
                     </div>
