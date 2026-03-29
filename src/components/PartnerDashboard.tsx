@@ -1,16 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Settings as SettingsIcon, Lightbulb, Heart, ChevronRight, Activity, Droplets } from 'lucide-react';
+import { Calendar, Settings as SettingsIcon, Lightbulb, Heart, ChevronRight, Activity, Droplets, History, Edit3 } from 'lucide-react';
 import { db } from '../services/firebase';
-import { CycleData, TrackerProfile, PartnerProfile } from '../types';
+import { CycleData, TrackerProfile, PartnerProfile, DailyLog } from '../types';
+import { cycleService } from '../services/cycle';
 import { CycleCalendar } from './CycleCalendar';
 import { CycleHistory } from './CycleHistory';
 import { Settings } from './Settings';
 import { EditPeriod } from './EditPeriod';
 import { getPartnerSuggestions } from '../data/suggestions';
 import { getToday, normalizeDate, calculateDayOfCycle, calculateDayOfCycleForDate, formatDateForDisplay } from '../utils/dateUtils';
-
+import { PHASE_COLORS, PHASE_LABELS } from '../constants/phases';
 interface PartnerDashboardProps {
   userId: string;
   linkedTrackerId?: string;
@@ -18,24 +19,6 @@ interface PartnerDashboardProps {
   onLogSymptoms?: () => void;
   onLogPeriod?: () => void;
 }
-
-const PHASE_COLORS: Record<string, { bg: string; text: string; light: string; gradient: string }> = {
-  menstrual: { bg: 'bg-rose-400', text: 'text-rose-600', light: 'bg-rose-50', gradient: 'from-rose-100 to-rose-50' },
-  follicular: { bg: 'bg-sage-500', text: 'text-sage-700', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
-  ovulation: { bg: 'bg-amber-400', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-100 to-amber-50' },
-  luteal: { bg: 'bg-earth-500', text: 'text-earth-700', light: 'bg-earth-100', gradient: 'from-earth-200 to-earth-100' },
-  'extended-follicular': { bg: 'bg-sage-400', text: 'text-sage-600', light: 'bg-sage-50', gradient: 'from-sage-100 to-sage-50' },
-  pending: { bg: 'bg-earth-300', text: 'text-earth-600', light: 'bg-earth-50', gradient: 'from-earth-100 to-earth-50' },
-};
-
-const PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual Phase',
-  follicular: 'Follicular Phase',
-  ovulation: 'Ovulation',
-  luteal: 'Luteal Phase',
-  'extended-follicular': 'Extended Follicular',
-  pending: 'Pending Data',
-};
 
 export function PartnerDashboard({
   userId,
@@ -54,6 +37,8 @@ export function PartnerDashboard({
   const [showHistory, setShowHistory] = useState(false);
   const [showEditPeriod, setShowEditPeriod] = useState(false);
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
+  const [recentLogs, setRecentLogs] = useState<DailyLog[]>([]);
+  const [todayScore, setTodayScore] = useState<number | null>(null);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -121,23 +106,47 @@ export function PartnerDashboard({
     fetchPartnerProfile();
   }, [userId, linkedTrackerId]);
 
+  // Sync Recent Activity (Last 7 Days)
+  useEffect(() => {
+    const trackerIdToUse = linkedTrackerId || userId;
+    const unsubscribe = cycleService.onRecentLogsChange(trackerIdToUse, 7, (logs) => {
+      setRecentLogs(logs);
+      
+      const today = getToday();
+      const todayLog = logs.find(log => normalizeDate(log.date).toDateString() === today.toDateString());
+      setTodayScore(todayLog ? todayLog.symptomScore : null);
+    });
+
+    return () => unsubscribe();
+  }, [userId, linkedTrackerId]);
+
   const currentPhase = useMemo(() => {
     if (!cycleData) return 'pending';
     const today = getToday();
     const lastPeriod = normalizeDate(cycleData.lastPeriodDate);
     const dayOfCycle = calculateDayOfCycle(lastPeriod);
+
+    // High-priority Stale Check (Freeze at Day 56+)
+    if (dayOfCycle > 55) return 'out-of-cycle';
+
     let phase = 'future';
 
+    // 1. Current Menstrual Phase
     if (cycleData.menstrualPhaseStart && cycleData.menstrualPhaseEnd) {
       const menstrualStart = normalizeDate(cycleData.menstrualPhaseStart);
       const menstrualEnd = normalizeDate(cycleData.menstrualPhaseEnd);
       if (today >= menstrualStart && today <= menstrualEnd) phase = 'menstrual';
     }
+    
+    // 2. Predicted Period Window (Awaiting vs Delayed)
     if (cycleData.nextMenstrualPhaseStart && cycleData.nextMenstrualPhaseEnd) {
-      const nextMenstrualStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
-      const nextMenstrualEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
-      if (today >= nextMenstrualStart && today <= nextMenstrualEnd) phase = 'menstrual';
+      const nextStart = normalizeDate(cycleData.nextMenstrualPhaseStart);
+      const nextEnd = normalizeDate(cycleData.nextMenstrualPhaseEnd);
+      if (today >= nextStart && today <= nextEnd && phase === 'future') phase = 'period-expected';
+      if (today > nextEnd && phase === 'future') phase = 'extended-follicular'; // Acts as "Delayed"
     }
+
+    // 3. Other Phases (Priority lower than active period)
     if (cycleData.follicularPhaseStart && cycleData.follicularPhaseEnd) {
       const follicularStart = normalizeDate(cycleData.follicularPhaseStart);
       const follicularEnd = normalizeDate(cycleData.follicularPhaseEnd);
@@ -153,12 +162,8 @@ export function PartnerDashboard({
       const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
       if (today >= lutealStart && today <= lutealEnd && phase === 'future') phase = 'luteal';
     }
-    if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
-      const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
-      const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-      if (today >= extendedStart && today <= extendedEnd && phase === 'future') phase = 'extended-follicular';
-    }
 
+    // 4. Default Fallbacks (if no specific phase detected)
     if (phase === 'future') {
       if (cycleData.ovulationDetectedDate) {
         const ovulationDate = normalizeDate(cycleData.ovulationDetectedDate);
@@ -173,7 +178,6 @@ export function PartnerDashboard({
         else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) phase = 'follicular';
         else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) phase = 'ovulation';
         else if (dayOfCycle >= expectedOvulationDay + 3 && dayOfCycle <= expectedOvulationDay + 16) phase = 'luteal';
-        else if (dayOfCycle > expectedOvulationDay + 16 && dayOfCycle >= 20) phase = 'extended-follicular';
         else if (dayOfCycle > expectedOvulationDay + 16) phase = 'follicular';
       }
     }
@@ -230,7 +234,7 @@ export function PartnerDashboard({
             <h2 className="text-xl font-semibold text-slate-800 mb-2">Get Started</h2>
             <p className="text-earth-600">
               {isManualMode
-                ? 'To start tracking, first log when your last period started.'
+                ? 'Your cycle baseline is not set. Please complete the setup to begin tracking.'
                 : "Your partner hasn't shared their cycle data yet."}
             </p>
           </div>
@@ -278,16 +282,26 @@ export function PartnerDashboard({
               {isManualMode ? 'Manual tracking mode' : 'Linked to partner'}
             </p>
           </div>
-          {isManualMode && (
+          <div className="flex gap-2">
             <motion.button
-              onClick={() => setShowSettings(true)}
+              onClick={() => setShowHistory(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={buttonTap}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
             >
-              <SettingsIcon className="w-5 h-5" />
+              <History className="w-5 h-5" />
             </motion.button>
-          )}
+            {isManualMode && (
+              <motion.button
+                onClick={() => setShowSettings(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={buttonTap}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur border border-earth-200 text-earth-500 hover:text-sage-600 transition-colors duration-200 opacity-100 shadow-soft"
+              >
+                <SettingsIcon className="w-5 h-5" />
+              </motion.button>
+            )}
+          </div>
         </motion.div>
 
         {/* Current Phase Card */}
@@ -307,52 +321,57 @@ export function PartnerDashboard({
           </div>
           <div className={`text-3xl font-semibold ${colors.text} mb-2 tracking-tight`}>{phaseLabel}</div>
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
+            <div className={`w-2 h-2 rounded-full ${colors.vibrantBg}`} />
             <span className="text-earth-600">
-              Day {isManualMode ? cycleData.dayOfCycle : calculateDayOfCycle(normalizeDate(cycleData.lastPeriodDate))} of the cycle
+              {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : (isManualMode ? `Day ${cycleData.dayOfCycle} of your cycle` : `Day ${calculateDayOfCycle(normalizeDate(cycleData.lastPeriodDate))} of the cycle`)}
             </span>
           </div>
         </motion.div>
 
-        {/* Cycle Info */}
-        {cycleData.lastPeriodDate && (
-          <motion.div
-            variants={itemVariants}
-            onClick={() => isManualMode && setShowEditPeriod(true)}
-            whileHover={isManualMode ? { y: -2 } : {}}
-            whileTap={isManualMode ? buttonTap : {}}
-            className={`bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 transition-all duration-300 opacity-100 ${
-              isManualMode ? 'cursor-pointer hover:shadow-soft-lg' : 'cursor-default'
-            }`}
-          >
-            <div className="flex items-center gap-2 text-earth-400 mb-2">
-              <Droplets className="w-4 h-4" />
-              <span className="text-xs font-medium">Last Period</span>
-            </div>
-            <div className="font-semibold text-slate-800 text-lg">
-              {formatDateForDisplay(cycleData.lastPeriodDate)}
-            </div>
-            
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-earth-100/50">
-              <motion.button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowHistory(true);
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={buttonTap}
-                className="flex items-center gap-1.5 text-xs font-semibold text-sage-600 bg-sage-50 px-2 py-1 rounded-md"
-              >
-                <Activity className="w-3.5 h-3.5" />
-                View History
-              </motion.button>
-              
+        {/* Cycle Info Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3 mb-6">
+          {cycleData.lastPeriodDate && (
+            <motion.div
+              onClick={() => isManualMode && setShowEditPeriod(true)}
+              whileHover={isManualMode ? { y: -2 } : {}}
+              whileTap={isManualMode ? buttonTap : {}}
+              className={`bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 transition-all duration-300 opacity-100 ${
+                isManualMode ? 'cursor-pointer hover:shadow-soft-lg' : 'cursor-default'
+              }`}
+            >
+              <div className="flex items-center gap-2 text-earth-400 mb-2">
+                <Droplets className="w-4 h-4" />
+                <span className="text-xs font-medium">Last Period</span>
+              </div>
+              <div className="font-semibold text-slate-800">
+                {formatDateForDisplay(cycleData.lastPeriodDate)}
+              </div>
               {isManualMode && (
-                <p className="text-xs text-sage-500">tap to edit period</p>
+                <div className="flex items-center gap-1 text-xs text-sage-500 mt-1">
+                  <Edit3 className="w-3 h-3" />
+                  <span>tap to edit</span>
+                </div>
               )}
+            </motion.div>
+          )}
+
+          {cycleData.nextPeriodDate ? (
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100">
+              <div className="flex items-center gap-2 text-earth-400 mb-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Next Period</span>
+              </div>
+              <div className="font-semibold text-slate-800">
+                {formatDateForDisplay(cycleData.nextPeriodDate)}
+              </div>
             </div>
-          </motion.div>
-        )}
+          ) : (
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-soft border border-earth-100 opacity-100 flex flex-col justify-center items-center">
+              <div className="text-xs text-earth-400 font-medium">Next Period</div>
+              <div className="font-semibold text-earth-400">Pending</div>
+            </div>
+          )}
+        </motion.div>
 
         {/* Error Message */}
         <AnimatePresence>
@@ -367,6 +386,46 @@ export function PartnerDashboard({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Recent Activity Section */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-soft mb-6 border border-earth-100 opacity-100"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-4">
+            <Activity className="w-4 h-4 text-sage-500" />
+            <span>Recent Activity</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-earth-100 font-outfit">
+              <span className="text-earth-600 text-sm">Today's Score</span>
+              <span className="font-semibold text-slate-800">
+                {todayScore !== null ? `${todayScore}/10` : 'Not logged'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-earth-100 font-outfit">
+              <span className="text-earth-600 text-sm">Last Logged</span>
+              <span className="font-semibold text-slate-800">
+                {recentLogs.length > 0 ? formatDateForDisplay(normalizeDate(recentLogs[0].date)) : 'Never'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 gap-4 font-outfit">
+              <span className="text-earth-600 text-sm flex-shrink-0">Ovulation Status</span>
+              {(() => {
+                const today = getToday();
+                if (cycleData.ovulationDetectedDate) {
+                  return <span className="font-semibold text-sage-600 text-right leading-tight">Confirmed via Symptoms</span>;
+                } else if (cycleData.ovulationPhaseEnd && today > normalizeDate(cycleData.ovulationPhaseEnd)) {
+                  return <span className="font-semibold text-amber-500 text-right leading-tight">Past Predicted Window</span>;
+                } else if (cycleData.ovulationPhaseStart && cycleData.ovulationPhaseEnd && today >= normalizeDate(cycleData.ovulationPhaseStart) && today <= normalizeDate(cycleData.ovulationPhaseEnd)) {
+                  return <span className="font-semibold text-rose-400 text-right leading-tight">In Fertile Window</span>;
+                } else {
+                  return <span className="font-semibold text-earth-400 text-right leading-tight">Awaiting</span>;
+                }
+              })()}
+            </div>
+          </div>
+        </motion.div>
 
         {/* AI Suggestions Section */}
         <motion.div
@@ -395,19 +454,31 @@ export function PartnerDashboard({
           )}
         </motion.div>
 
-        {/* Manual Mode: Log Symptoms */}
-        {isManualMode && onLogSymptoms && (
-          <motion.button
-            variants={itemVariants}
-            onClick={onLogSymptoms}
-            whileHover={{ y: -2 }}
-            whileTap={buttonTap}
-            className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all duration-200 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
-          >
-            <Activity className="w-5 h-5 text-sage-500" />
-            Log Symptoms
-          </motion.button>
-        )}
+        {/* Action Buttons */}
+        <motion.div variants={itemVariants} className="space-y-3">
+          {isManualMode && onLogSymptoms && (
+            <motion.button
+              onClick={onLogSymptoms}
+              whileHover={{ y: -2 }}
+              whileTap={buttonTap}
+              className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+            >
+              <Activity className="w-5 h-5" />
+              Log Symptoms
+            </motion.button>
+          )}
+          {isManualMode && onLogPeriod && (
+            <motion.button
+              onClick={onLogPeriod}
+              whileHover={{ y: -2 }}
+              whileTap={buttonTap}
+              className="w-full bg-white/80 backdrop-blur border-2 border-earth-200 hover:border-sage-300 text-slate-700 font-semibold py-4 rounded-2xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+            >
+              <Droplets className="w-5 h-5 text-rose-400" />
+              Log Period Start
+            </motion.button>
+          )}
+        </motion.div>
 
         {/* Modals */}
         <AnimatePresence>

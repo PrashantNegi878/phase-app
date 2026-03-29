@@ -44,6 +44,7 @@ export const authService = {
         lastPeriodDate: null,
         nextPeriodDate: null,
         cycleLengthDays: 28, // Default 28-day cycle
+        typicalPeriodLengthDays: 5,
         createdAt: getToday(),
         updatedAt: getToday(),
       };
@@ -64,6 +65,7 @@ export const authService = {
         lastPeriodDate: null,
         nextPeriodDate: null,
         cycleLengthDays: 28, // Default 28-day cycle
+        typicalPeriodLengthDays: 5,
         createdAt: getToday(),
         updatedAt: getToday(),
       };
@@ -249,6 +251,7 @@ export const authService = {
           lastPeriodDate: null,
           nextPeriodDate: null,
           cycleLengthDays: 28,
+          typicalPeriodLengthDays: 5,
           createdAt: getToday(),
           updatedAt: getToday(),
         };
@@ -268,6 +271,7 @@ export const authService = {
           lastPeriodDate: null,
           nextPeriodDate: null,
           cycleLengthDays: 28,
+          typicalPeriodLengthDays: 5,
           createdAt: getToday(),
           updatedAt: getToday(),
         };
