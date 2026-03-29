@@ -16,6 +16,7 @@ export interface TrackerProfile {
   lastPeriodDate: Date | null;
   nextPeriodDate: Date | null;
   cycleLengthDays: number; // Default 28, user can set 21-50
+  typicalPeriodLengthDays: number; // Default 5, user can set 2-10
   dailyScheduleConstraints?: 'busy-student' | 'flexible' | 'strict-gym-routine' | 'business-professional';
   createdAt: Date;
   updatedAt: Date;
@@ -45,7 +46,7 @@ export interface DailyLog {
   symptomScore: number;
 }
 
-export type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'extended-follicular' | 'pending';
+export type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'extended-follicular' | 'out-of-cycle' | 'pending';
 
 export interface CycleData {
   userId: string;
@@ -63,8 +64,6 @@ export interface CycleData {
   ovulationPhaseEnd?: Date | null;
   lutealPhaseStart?: Date | null;
   lutealPhaseEnd?: Date | null;
-  extendedFollicularPhaseStart?: Date | null;
-  extendedFollicularPhaseEnd?: Date | null;
   // Next cycle menstrual phase for proper calendar rendering
   nextMenstrualPhaseStart?: Date | null;
   nextMenstrualPhaseEnd?: Date | null;
@@ -77,4 +76,29 @@ export interface AIGeneratedSuggestion {
   dailyScheduleConstraints: string;
   suggestions: string[];
   generatedAt: Date;
+}
+
+export interface CycleHistory {
+  id?: string;
+  userId: string;
+  startDate: Date;
+  endDate: Date;
+  ovulationDate: Date | null;
+  cycleLength: number;
+  dayOvulationOccurred: number | null;
+  
+  // Frozen phase dates for "Time Machine" accuracy
+  menstrualPhaseStart?: Date | null;
+  menstrualPhaseEnd?: Date | null;
+  follicularPhaseStart?: Date | null;
+  follicularPhaseEnd?: Date | null;
+  ovulationPhaseStart?: Date | null;
+  ovulationPhaseEnd?: Date | null;
+  lutealPhaseStart?: Date | null;
+  lutealPhaseEnd?: Date | null;
+  nextMenstrualPhaseStart?: Date | null;
+  nextMenstrualPhaseEnd?: Date | null;
+  isPredictedOvulation?: boolean;
+  
+  createdAt: Date;
 }

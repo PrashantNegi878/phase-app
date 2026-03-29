@@ -22,7 +22,9 @@ export function TrackerOnboarding({
   partnerCode,
   onComplete,
 }: TrackerOnboardingProps) {
-  const [step, setStep] = useState<'welcome' | 'period-date' | 'schedule'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'cycle-basics' | 'period-date' | 'schedule'>('welcome');
+  const [cycleLengthDays, setCycleLengthDays] = useState(28);
+  const [typicalPeriodLengthDays, setTypicalPeriodLengthDays] = useState(5);
   const [lastPeriodDate, setLastPeriodDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [scheduleConstraints, setScheduleConstraints] = useState('flexible');
@@ -35,6 +37,8 @@ export function TrackerOnboarding({
 
   const handleContinue = async () => {
     if (step === 'welcome') {
+      setStep('cycle-basics');
+    } else if (step === 'cycle-basics') {
       setStep('period-date');
     } else if (step === 'period-date') {
       if (!lastPeriodDate) {
@@ -81,7 +85,14 @@ export function TrackerOnboarding({
     setLoading(true);
     setError('');
     try {
-      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd, scheduleConstraints);
+      await cycleService.recordPeriodStart(
+        userId, 
+        parsedStart, 
+        parsedEnd, 
+        scheduleConstraints,
+        cycleLengthDays,
+        typicalPeriodLengthDays
+      );
       onComplete();
     } catch (err) {
       console.error('Onboarding error:', err);
@@ -164,6 +175,80 @@ export function TrackerOnboarding({
               </motion.button>
             </motion.div>
           )}
+          {step === 'cycle-basics' && (
+            <motion.div
+              key="cycle-basics"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <motion.div variants={itemVariants}>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-sage-100 to-sage-200 mb-4 shadow-soft">
+                  <Clock className="w-6 h-6 text-sage-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 mb-2 tracking-tight">
+                  Your Cycle Basics
+                </h2>
+                <p className="text-sm text-earth-600">
+                  Help us personalize your predictions
+                </p>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-sm font-medium text-slate-700 mb-3">
+                    <span>Typical Cycle Length</span>
+                    <span className="text-sage-600 font-bold">{cycleLengthDays} Days</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="21"
+                    max="45"
+                    value={cycleLengthDays}
+                    onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
+                    className="w-full h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-earth-400 mt-2">
+                    <span>21 Days</span>
+                    <span>45 Days</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm font-medium text-slate-700 mb-3">
+                    <span>Average Period Length</span>
+                    <span className="text-sage-600 font-bold">{typicalPeriodLengthDays} Days</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="10"
+                    value={typicalPeriodLengthDays}
+                    onChange={(e) => setTypicalPeriodLengthDays(parseInt(e.target.value))}
+                    className="w-full h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-earth-400 mt-2">
+                    <span>2 Days</span>
+                    <span>10 Days</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.button
+                variants={itemVariants}
+                onClick={handleContinue}
+                whileHover={{ y: -2 }}
+                whileTap={buttonTap}
+                className="w-full bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-2"
+              >
+                Next
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+            </motion.div>
+          )}
+
 
 
 
@@ -216,7 +301,7 @@ export function TrackerOnboarding({
                       if (!hasManuallyChangedEndDate) {
                         const startDateObj = new Date(e.target.value);
                         const endDateObj = new Date(startDateObj);
-                        endDateObj.setDate(startDateObj.getDate() + 4);
+                        endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLengthDays - 1));
                         setEndDate(formatDateForInput(endDateObj));
                       }
                     }}

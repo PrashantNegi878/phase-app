@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Droplets, Calendar } from 'lucide-react';
 import { cycleService } from '../services/cycle';
-import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay } from '../utils/dateUtils';
+import { TrackerProfile } from '../types';
+import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay, normalizeDate } from '../utils/dateUtils';
 
 interface LogPeriodProps {
   userId: string;
+  trackerProfile?: TrackerProfile | null;
   onLogComplete: () => void;
   onCancel: () => void;
 }
 
-export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
+export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: LogPeriodProps) {
   const today = getToday();
-  const defaultEndDate = addDays(today, 4);
+  const typicalPeriodLength = trackerProfile?.typicalPeriodLengthDays || 5;
+  const defaultEndDate = addDays(today, typicalPeriodLength - 1);
 
   const [startDate, setStartDate] = useState(formatDateForInput(today));
   const [endDate, setEndDate] = useState(formatDateForInput(defaultEndDate));
@@ -27,6 +30,24 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
 
     const parsedStart = parseDateFromInput(startDate);
     const parsedEnd = parseDateFromInput(endDate);
+
+    // 1. Overlap Prevention & Chronological Integrity
+    if (trackerProfile?.lastPeriodDate) {
+      const lastStart = normalizeDate(trackerProfile.lastPeriodDate);
+      const daysSinceLast = Math.ceil((parsedStart.getTime() - lastStart.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLast < 0) {
+        setError(`Chronological Error: This entry occurs before your last recorded period (${formatDateForDisplay(lastStart)}). Chronological consistency is required for medical history.`);
+        setSaving(false);
+        return;
+      }
+      
+      if (daysSinceLast < 21) {
+        setError(`Date Verification Required: Your last period began only ${daysSinceLast} days ago. A new cycle typically requires a minimum of 21 days for clinical accuracy.`);
+        setSaving(false);
+        return;
+      }
+    }
 
     if (parsedStart > getToday()) {
       setError('Period start date cannot be in the future');
@@ -142,7 +163,7 @@ export function LogPeriod({ userId, onLogComplete, onCancel }: LogPeriodProps) {
                 if (!hasManuallyChangedEndDate) {
                   const startDateObj = new Date(e.target.value);
                   const endDateObj = new Date(startDateObj);
-                  endDateObj.setDate(startDateObj.getDate() + 4);
+                  endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLength - 1));
                   setEndDate(formatDateForInput(endDateObj));
                 }
               }}

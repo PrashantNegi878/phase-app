@@ -1,29 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Edit3, Calendar, Info } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { X, Edit3, Calendar, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { collection, doc, getDoc, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
-import { CycleData } from '../types';
-import { normalizeDate, formatDateForInput, parseDateFromInput, formatDateForDisplay, getToday } from '../utils/dateUtils';
+import { CycleData, TrackerProfile, CycleHistory } from '../types';
+import { normalizeDate, formatDateForInput, parseDateFromInput, formatDateForDisplay, getToday, daysBetween } from '../utils/dateUtils';
 
 interface EditPeriodProps {
   userId: string;
+  trackerProfile?: TrackerProfile | null;
   onEditComplete: () => void;
   onCancel: () => void;
 }
 
-export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps) {
+export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }: EditPeriodProps) {
   const [cycleData, setCycleData] = useState<CycleData | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [lastHistory, setLastHistory] = useState<CycleHistory | null>(null);
 
   useEffect(() => {
-    const fetchCycleData = async () => {
+    const fetchData = async () => {
       try {
+        // 1. Fetch Current Cycle
         const docSnap = await getDoc(doc(db, 'cycleData', userId));
         if (docSnap.exists()) {
           const data = docSnap.data() as CycleData;
@@ -37,51 +41,81 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
             setEndDate(formatDateForInput(end));
           }
         }
+
+        // 2. Fetch Last History Entry for Boundary Checks
+        const hq = query(
+          collection(db, 'cycleHistory'),
+          where('userId', '==', userId),
+          orderBy('startDate', 'desc'),
+          limit(1)
+        );
+        const historySnap = await getDocs(hq);
+        if (!historySnap.empty) {
+          setLastHistory(historySnap.docs[0].data() as CycleHistory);
+        }
       } catch (err) {
-        console.error('Error fetching cycle data:', err);
+        console.error('Error fetching data:', err);
         setError('Failed to load period data');
       } finally {
         setLoading(false);
       }
     };
-    fetchCycleData();
+    fetchData();
   }, [userId]);
 
-  const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
+  const parsedStart = parseDateFromInput(startDate);
+  const parsedEnd = endDate ? parseDateFromInput(endDate) : undefined;
 
-    const parsedStart = parseDateFromInput(startDate);
-    const parsedEnd = endDate ? parseDateFromInput(endDate) : undefined;
+  // Validation Logic
+  const originalStart = cycleData?.lastPeriodDate ? normalizeDate(cycleData.lastPeriodDate) : null;
+  const isStartDateChanged = originalStart && parsedStart.getTime() !== originalStart.getTime();
+  
+  const prevCycleLength = lastHistory && isStartDateChanged 
+    ? daysBetween(normalizeDate(lastHistory.startDate), parsedStart) 
+    : null;
+
+  const isGuardrailViolated = prevCycleLength !== null && (prevCycleLength < 21 || prevCycleLength > 55);
+  const hasManualOvulation = lastHistory && !!lastHistory.ovulationDate && !lastHistory.isPredictedOvulation;
+  
+  const isHormonalOverride = isStartDateChanged && hasManualOvulation;
+
+  const handleSaveChanges = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
     if (parsedStart > getToday()) {
       setError('Period start date cannot be in the future');
-      setSaving(false);
       return;
     }
 
     if (parsedEnd && parsedEnd < parsedStart) {
       setError('Period end date must be after start date');
-      setSaving(false);
       return;
     }
 
-    if (parsedEnd) {
-      const durationDays = Math.ceil((parsedEnd.getTime() - parsedStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      if (durationDays > 10) {
-        setError('Period duration cannot exceed 10 days. Please check your dates.');
-        setSaving(false);
-        return;
-      }
+    if (isGuardrailViolated) {
+      setError(`Clinical Guardrail: This adjustment results in a ${Math.abs(prevCycleLength!)}-day cycle, which falls outside the 21–55 day clinical parameters. Please adjust the dates to maintain the integrity of your medical record.`);
+      return;
     }
 
+    // Trigger confirmation if destructive scenario detected
+    if (isStartDateChanged) {
+      setShowConfirmation(true);
+    } else {
+      performUpdate();
+    }
+  };
+
+  const performUpdate = async () => {
+    setSaving(true);
+    setError('');
     try {
-      await cycleService.recordPeriodStart(userId, parsedStart, parsedEnd);
+      await cycleService.updateCurrentCyclePeriod(userId, parsedStart, parsedEnd);
       onEditComplete();
     } catch (err) {
       console.error('Error updating period:', err);
       setError(err instanceof Error ? err.message : 'Failed to update period');
+      setShowConfirmation(false);
     } finally {
       setSaving(false);
     }
@@ -211,7 +245,8 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
                 setStartDate(e.target.value);
                 const startDateObj = new Date(e.target.value);
                 const endDateObj = new Date(startDateObj);
-                endDateObj.setDate(startDateObj.getDate() + 4);
+                const typicalPeriodLength = trackerProfile?.typicalPeriodLengthDays || 5;
+                endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLength - 1));
                 setEndDate(formatDateForInput(endDateObj));
               }}
               className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
@@ -249,11 +284,45 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
             )}
           </motion.div>
 
-          {/* Info box */}
+          {/* Clinical Alerts */}
+          <AnimatePresence>
+            {isStartDateChanged && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="overflow-hidden"
+              >
+                <div className={`p-4 rounded-2xl border flex gap-3 mb-2 ${
+                  isGuardrailViolated 
+                    ? 'bg-rose-50 border-rose-100 text-rose-700' 
+                    : 'bg-amber-50 border-amber-100 text-amber-700'
+                }`}>
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold mb-1">
+                      {isGuardrailViolated ? 'Clinical Parameter Alert' : 'Cycle Boundary Modification'}
+                    </p>
+                    <p>
+                      {isGuardrailViolated 
+                        ? `This adjustment results in a ${Math.abs(prevCycleLength!)}-day cycle, which falls outside the established 21–55 day parameters.`
+                        : `This modification will adjust your previous cycle length to ${Math.abs(prevCycleLength!)} days.`}
+                    </p>
+                    {isHormonalOverride && (
+                      <p className="mt-2 font-medium">
+                        ⚠️ Notice: This adjustment overlaps with your last recorded ovulation. To maintain a consistent medical history, related symptomatic logs will be reset.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Clinical Status Indicator */}
           <motion.div variants={itemVariants} className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3 opacity-100">
-            <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-sage-700">
-              Updating the period will recalculate your cycle phases and ovulation prediction.
+            <ShieldCheck className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-sage-700 font-medium">
+              Professional Clinical Record Active: High-precision guardrails ensure all historical data remains biologically consistent and medically reliable.
             </p>
           </motion.div>
 
@@ -270,10 +339,10 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
             </motion.button>
             <motion.button
               type="submit"
-              disabled={saving}
-              whileHover={saving ? {} : { y: -2 }}
-              whileTap={saving ? {} : buttonTap}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg disabled:from-slate-300 disabled:to-slate-400 disabled:text-slate-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none flex items-center justify-center gap-2"
+              disabled={saving || isGuardrailViolated}
+              whileHover={saving || isGuardrailViolated ? {} : { y: -2 }}
+              whileTap={saving || isGuardrailViolated ? {} : buttonTap}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-all duration-300 opacity-100 shadow-soft hover:shadow-soft-lg disabled:from-slate-300 disabled:to-slate-400 disabled:text-slate-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -286,6 +355,53 @@ export function EditPeriod({ userId, onEditComplete, onCancel }: EditPeriodProps
             </motion.button>
           </motion.div>
         </form>
+
+        {/* RE-ARCHITECTED: Confirmation Modal */}
+        <AnimatePresence>
+          {showConfirmation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 z-[60]"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl"
+              >
+                <div className="p-8 text-center uppercase tracking-widest text-[10px] font-bold text-rose-500 mb-2">
+                  Important: Clinical Update Required
+                </div>
+                <div className="px-8 pb-4 text-center">
+                  <h3 className="text-xl font-bold text-slate-800 mb-3">Confirm Date Adjustments</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed mb-6">
+                    {isHormonalOverride 
+                      ? "This change conflicts with your previous cycle's manual ovulation. To ensure medical consistency, related symptomatic logs will be reset and both cycles will be recalculated."
+                      : "Modifying your period start date will reset your symptoms and phase calculations for the current cycle to maintain clinical accuracy. Proceed with the update?"}
+                  </p>
+                </div>
+                
+                <div className="p-6 bg-slate-50 flex gap-3">
+                  <button
+                    onClick={() => setShowConfirmation(false)}
+                    className="flex-1 py-4 text-slate-600 font-semibold hover:bg-white rounded-2xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={performUpdate}
+                    disabled={saving}
+                    className="flex-2 px-6 py-4 bg-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
+                  >
+                    {saving ? "Updating..." : "Confirm Update"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

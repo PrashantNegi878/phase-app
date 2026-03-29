@@ -1,6 +1,7 @@
 /**
  * Centralized date utilities for consistent date handling across the application
  */
+import { STANDARD_LUTEAL_PHASE_DAYS } from '../constants/cycle';
 
 /**
  * Get the current date with time set to start of day (00:00:00)
@@ -70,8 +71,6 @@ export function calculatePhaseDates(
   ovulationPhaseEnd: Date | null;
   lutealPhaseStart: Date | null;
   lutealPhaseEnd: Date | null;
-  extendedFollicularPhaseStart: Date | null;
-  extendedFollicularPhaseEnd: Date | null;
   nextMenstrualPhaseStart: Date | null;
   nextMenstrualPhaseEnd: Date | null;
 } {
@@ -85,8 +84,6 @@ export function calculatePhaseDates(
       ovulationPhaseEnd: null,
       lutealPhaseStart: null,
       lutealPhaseEnd: null,
-      extendedFollicularPhaseStart: null,
-      extendedFollicularPhaseEnd: null,
       nextMenstrualPhaseStart: null,
       nextMenstrualPhaseEnd: null,
     };
@@ -103,8 +100,19 @@ export function calculatePhaseDates(
   let ovulationDate: Date;
   if (ovulationDetectedDate) {
     ovulationDate = normalizeDate(ovulationDetectedDate);
+  } else if (nextPeriodDate) {
+    // Smart Archival/Long Cycle Logic: If we have a definitive next period date 
+    // but no symptom-detected ovulation, work backwards to maintain a healthy 
+    // standard luteal phase. This correctly identifies "Extended Follicular" phases (PCOD).
+    ovulationDate = addDays(normalizeDate(nextPeriodDate), -STANDARD_LUTEAL_PHASE_DAYS);
+    
+    // Safety: Ensure ovulation doesn't happen before the period actually ends
+    const minOvulationDate = addDays(menstrualPhaseEnd, 1);
+    if (ovulationDate < minOvulationDate) {
+      ovulationDate = minOvulationDate;
+    }
   } else {
-    // Predicted ovulation: approx middle of cycle
+    // Forward prediction for current/future cycles
     const expectedOvulationDay = Math.round(cycleLengthDays / 2);
     ovulationDate = addDays(lastPeriod, expectedOvulationDay - 1);
   }
@@ -135,8 +143,6 @@ export function calculatePhaseDates(
     ovulationPhaseEnd,
     lutealPhaseStart,
     lutealPhaseEnd,
-    extendedFollicularPhaseStart: null, // Simplified: no longer used
-    extendedFollicularPhaseEnd: null,
     nextMenstrualPhaseStart,
     nextMenstrualPhaseEnd,
   };

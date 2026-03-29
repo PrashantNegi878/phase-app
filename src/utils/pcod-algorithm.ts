@@ -1,5 +1,6 @@
 import { DailyLog, CyclePhase } from '../types';
 import { calculateDayOfCycle, calculateDayOfCycleForDate, normalizeDate } from './dateUtils';
+import { STALE_CYCLE_THRESHOLD_DAYS, OVULATION_WINDOW_START_DAY, OVULATION_WINDOW_END_DAY } from '../constants/cycle';
 
 export interface CyclePhaseResult {
   phase: CyclePhase;
@@ -81,7 +82,7 @@ export function calculateCyclePhase(
       
       // ONLY consider symptoms from the CURRENT cycle (logDayOfCycle > 0)
       // and within the reasonable ovulation window for PCOD
-      if (logDayOfCycle >= 10 && logDayOfCycle <= 35) {
+      if (logDayOfCycle >= OVULATION_WINDOW_START_DAY && logDayOfCycle <= OVULATION_WINDOW_END_DAY) {
         ovulationDetectedDate = normalizeDate(log.date);
         // Forecast next period exactly 14 days after ovulation
         nextPeriodDate = new Date(ovulationDetectedDate);
@@ -110,13 +111,20 @@ export function calculateCyclePhase(
     }
   } else if (dayOfCycle > 20 && !nextPeriodDate) {
     // No ovulation detected and cycle is extended
-    phase = 'extended-follicular';
+    // Check if it's significantly overdue (Out of Sync)
+    if (dayOfCycle > STALE_CYCLE_THRESHOLD_DAYS) {
+      phase = 'out-of-cycle';
+    } else {
+      phase = 'extended-follicular';
+    }
     nextPeriodDate = null;
+  } else {
+    phase = 'follicular';
   }
 
   // Build an optional message for the logging UI
   const additionalMessage = highScoreOutsideWindow
-    ? `Your symptoms are strong (Day ${dayOfCycle}), but outside the typical ovulation window (Days 10–35). Keep logging!`
+    ? `Your symptoms are strong (Day ${dayOfCycle}), but outside the typical ovulation window (Days ${OVULATION_WINDOW_START_DAY}–${OVULATION_WINDOW_END_DAY}). Keep logging!`
     : undefined;
 
   return {
