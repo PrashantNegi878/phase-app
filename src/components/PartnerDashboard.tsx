@@ -153,11 +153,6 @@ export function PartnerDashboard({
       const lutealEnd = normalizeDate(cycleData.lutealPhaseEnd);
       if (today >= lutealStart && today <= lutealEnd && phase === 'future') phase = 'luteal';
     }
-    if (cycleData.extendedFollicularPhaseStart && cycleData.extendedFollicularPhaseEnd) {
-      const extendedStart = normalizeDate(cycleData.extendedFollicularPhaseStart);
-      const extendedEnd = normalizeDate(cycleData.extendedFollicularPhaseEnd);
-      if (today >= extendedStart && today <= extendedEnd && phase === 'future') phase = 'extended-follicular';
-    }
 
     if (phase === 'future') {
       if (cycleData.ovulationDetectedDate) {

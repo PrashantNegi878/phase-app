@@ -73,7 +73,6 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
       phases.push({ start: cycleData.nextMenstrualPhaseStart, end: cycleData.nextMenstrualPhaseEnd, type: 'period-expected' });
     }
 
-    const diffDays = Math.floor((today.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24));
     const fallbackDays = cycleLengthDays + 4;
 
     let targetDate;
