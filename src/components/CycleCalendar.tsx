@@ -174,36 +174,44 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
               ].map((p) => (
                 <div key={p} className="flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${PHASE_COLORS[p]?.dot || 'bg-earth-300 dark:bg-slate-600'}`} />
-                  <span className="text-[11px] sm:text-xs text-text-muted font-medium">{PHASE_LABELS[p]}</span>
+                  <span className="text-[11px] sm:text-xs text-text-muted font-medium whitespace-nowrap">
+                    {PHASE_LABELS[p]
+                      ?.replace(' Phase', '')
+                      .replace('Awaiting Period', 'Expected')
+                      .replace('Awaiting Log', 'Awaiting')}
+                  </span>
                 </div>
               ))}
             </motion.div>
 
             {/* Cycle Stats (Only for current cycle) */}
             {!isHistory && (
-              <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-border-subtle">
-                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-4">
-                  <div className="text-xs text-text-muted mb-1">Current Phase</div>
-                  <div className="text-lg font-semibold text-sage-700 dark:text-sage-400 truncate">
-                    {PHASE_LABELS[currentPhase] || 'Pending'}
+              <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-6 pb-6 border-b border-border-subtle">
+                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-3 sm:p-4">
+                  <div className="text-[10px] sm:text-xs text-text-muted mb-1 uppercase font-bold tracking-tight">Status</div>
+                  <div className="text-base sm:text-lg font-semibold text-sage-700 dark:text-sage-400 truncate whitespace-nowrap">
+                    {(PHASE_LABELS[currentPhase] || 'Pending')
+                      .replace(' Phase', '')
+                      .replace('Awaiting Period', 'Expected')
+                      .replace('Awaiting Log', 'Awaiting')}
                   </div>
                 </div>
-                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-4">
-                <div className="text-xs text-text-muted mb-1">Day of Cycle</div>
-                <div className="text-lg font-semibold text-sage-700 dark:text-sage-400 font-outfit">
-                  {isHistory || currentPhase !== 'out-of-cycle' ? `Day ${currentDayOfCycle}` : 'Sync Needed'}
+                <div className="bg-app-bg dark:bg-slate-800/40 rounded-xl p-3 sm:p-4">
+                  <div className="text-[10px] sm:text-xs text-text-muted mb-1 uppercase font-bold tracking-tight">Day of Cycle</div>
+                  <div className="text-base sm:text-lg font-semibold text-sage-700 dark:text-sage-400 font-outfit whitespace-nowrap">
+                    {isHistory || currentPhase !== 'out-of-cycle' ? `Day ${currentDayOfCycle}` : 'Sync Needed'}
+                  </div>
                 </div>
-              </div>
                 {cycleData.nextPeriodDate && (
-                  <div className="bg-rose-50 dark:bg-rose-900/10 rounded-xl p-4 col-span-2 sm:col-span-1 border border-rose-100 dark:border-rose-900/20">
-                    <div className="text-xs text-text-muted mb-1">
+                  <div className="bg-rose-50 dark:bg-rose-900/10 rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1 border border-rose-100 dark:border-rose-900/20">
+                    <div className="text-[10px] sm:text-xs text-text-muted mb-1 uppercase font-bold tracking-tight">
                       {currentPhase === 'period-expected' 
-                        ? 'Expected Period' 
+                        ? 'Expected' 
                         : (currentPhase === 'extended-follicular' || currentPhase === 'out-of-cycle')
                           ? 'Was Expected'
                           : 'Next Period'}
                     </div>
-                    <div className="text-lg font-semibold text-rose-600 dark:text-rose-400">
+                    <div className="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                       {formatDateForDisplay(cycleData.nextPeriodDate)}
                     </div>
                   </div>
