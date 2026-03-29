@@ -9,7 +9,6 @@ import { TrackerDashboard } from './components/TrackerDashboard';
 import { PartnerDashboard } from './components/PartnerDashboard';
 import { LogSymptoms } from './components/LogSymptoms';
 import { LogPeriod } from './components/LogPeriod';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { InstallPrompt } from './components/InstallPrompt';
 import { ThemeToggle } from './components/ThemeToggle';
