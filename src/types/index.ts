@@ -100,6 +100,7 @@ export interface CycleHistory {
   lutealPhaseEnd?: Date | null;
   nextMenstrualPhaseStart?: Date | null;
   nextMenstrualPhaseEnd?: Date | null;
+  isPredictedOvulation?: boolean;
   
   createdAt: Date;
 }

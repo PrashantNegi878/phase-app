@@ -234,6 +234,11 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                   </div>
                 ))}
 
+                {/* Weekday Padding: Align first day of cycle to its actual day of the week */}
+                {Array.from({ length: normalizeDate(cycleData.lastPeriodDate).getDay() }).map((_, i) => (
+                  <div key={`pad-${i}`} className="aspect-square opacity-0 pointer-events-none" />
+                ))}
+
                 {calendarDays.map((item, index) => {
                   const colors = PHASE_COLORS[item.phase] || PHASE_COLORS.future;
                   const dayOfMonth = item.date.getDate();

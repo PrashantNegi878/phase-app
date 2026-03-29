@@ -18,7 +18,7 @@ import { db } from './firebase';
 import { DailyLog, CycleData, TrackerProfile, PartnerProfile, CycleHistory } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
 import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays, daysBetween } from '../utils/dateUtils';
-import { MIN_CYCLE_LENGTH_FOR_ARCHIVE } from '../constants/cycle';
+import { MIN_CYCLE_LENGTH_FOR_ARCHIVE, STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 
 export const cycleService = {
   // Delete all logs for the current cycle
@@ -32,6 +32,10 @@ export const cycleService = {
     const querySnapshot = await getDocs(q);
     const deletePromises = querySnapshot.docs.map(document => deleteDoc(document.ref));
     await Promise.all(deletePromises);
+    
+    if (querySnapshot.docs.length > 0) {
+      console.log(`[CLINICAL SCRUB] Deleted ${querySnapshot.docs.length} symptoms/ovulation logs starting from ${normalizeDate(lastPeriodDate).toLocaleDateString()}`);
+    }
   },
 
   // Listen for recent logs
@@ -244,6 +248,7 @@ export const cycleService = {
       lutealPhaseEnd: reconstructedPhases.lutealPhaseEnd ? Timestamp.fromDate(reconstructedPhases.lutealPhaseEnd) as any : null,
       nextMenstrualPhaseStart: reconstructedPhases.nextMenstrualPhaseStart ? Timestamp.fromDate(reconstructedPhases.nextMenstrualPhaseStart) as any : null,
       nextMenstrualPhaseEnd: reconstructedPhases.nextMenstrualPhaseEnd ? Timestamp.fromDate(reconstructedPhases.nextMenstrualPhaseEnd) as any : null,
+      isPredictedOvulation: !currentCycle.ovulationDetectedDate,
 
       createdAt: Timestamp.now() as any,
     };
@@ -260,7 +265,17 @@ export const cycleService = {
     cycleLength?: number,
     typicalPeriodLength?: number
   ): Promise<void> {
-    // 1. Archive the current cycle before we overwrite it
+    // 1. Overlap Prevention: Ensure new cycle isn't starting too soon after the last one
+    const profile = await this.getTrackerProfile(userId);
+    if (profile?.lastPeriodDate) {
+      const lastStart = normalizeDate(profile.lastPeriodDate);
+      const daysSinceLastStart = daysBetween(lastStart, normalizeDate(startDate));
+      if (daysSinceLastStart < MIN_CYCLE_LENGTH_FOR_ARCHIVE) {
+        throw new Error(`Collision Detected: A new cycle cannot start only ${daysSinceLastStart} days after your last period (Min ${MIN_CYCLE_LENGTH_FOR_ARCHIVE} days).`);
+      }
+    }
+
+    // 2. Archive the current cycle before we overwrite it
     await this.archiveCurrentCycle(userId, startDate);
 
     // Update Profile with preferences if provided
@@ -272,9 +287,9 @@ export const cycleService = {
       });
     }
 
-    // 2. Get tracker profile to access typical cycle length
-    const trackerProfile = await this.getTrackerProfile(userId);
-    const cycleLengthDays = trackerProfile?.cycleLengthDays || 28;
+    // 3. Get profile to access typical cycle length
+    const freshProfile = await this.getTrackerProfile(userId);
+    const cycleLengthDays = freshProfile?.cycleLengthDays || 28;
     
     // Normalize dates to start of day
     const normalizedStartDate = normalizeDate(startDate);
@@ -354,10 +369,20 @@ export const cycleService = {
       normalizedEndDate.setHours(0, 0, 0, 0);
     }
 
-    const predictedNextPeriodDate = addDays(normalizedStartDate, cycleLengthDays);
+    const currentCycle = await this.getCycleData(userId);
+    const existingOvulationDate = currentCycle?.ovulationDetectedDate ? normalizeDate(currentCycle.ovulationDetectedDate) : null;
+
+    // Calculate current phases, PRESERVING ovulation if it exists
+    let predictedNextPeriodDate: Date;
+    if (existingOvulationDate) {
+      predictedNextPeriodDate = addDays(existingOvulationDate, 14);
+    } else {
+      predictedNextPeriodDate = addDays(normalizedStartDate, cycleLengthDays);
+    }
+
     const phaseDates = calculatePhaseDates(
       normalizedStartDate,
-      null, // Assume ovulation needs re-evaluation if start date changed significantly
+      existingOvulationDate,
       cycleLengthDays,
       predictedNextPeriodDate,
       normalizedEndDate || undefined
@@ -399,21 +424,60 @@ export const cycleService = {
       const newPrevEndDate = normalizedStartDate;
       const newPrevLength = daysBetween(prevStartDate, newPrevEndDate);
 
+      // Clinical Guardrail: History cycle length check
+      if (newPrevLength < MIN_CYCLE_LENGTH_FOR_ARCHIVE || newPrevLength > STALE_CYCLE_THRESHOLD_DAYS) {
+        throw new Error(`Clinical Guardrail: This edit would make your previous cycle ${newPrevLength} days. Historical cycles must be between 21 and 55 days.`);
+      }
+
+      // 3. CLINICAL RESET: Trigger if start date changes and affects previous manual data
+      const historyOvulationDate = lastHistoryData.ovulationDate 
+        ? (lastHistoryData.ovulationDate instanceof Date ? lastHistoryData.ovulationDate : (lastHistoryData.ovulationDate as any).toDate()) 
+        : null;
+      
+      const hasManualOvulation = !!historyOvulationDate && !lastHistoryData.isPredictedOvulation;
+      // Date conversion safety for Firestore
+      const lastPeriodField = currentCycle?.lastPeriodDate;
+      const currentCycleStartDate = lastPeriodField instanceof Date 
+        ? lastPeriodField 
+        : (lastPeriodField as any)?.toDate?.() || null;
+
+      const isStartDateChanged = currentCycleStartDate && normalizedStartDate.getTime() !== currentCycleStartDate.getTime();
+      
+      // If start date changed and there's manual data, we trigger a Hard Reset (Override)
+      const isOverridingManual = isStartDateChanged && hasManualOvulation;
+
+      if (isOverridingManual || (currentCycleStartDate && normalizedStartDate.getTime() !== currentCycleStartDate.getTime())) {
+         // Wipe current cycle logs if start date changed
+         await this.deleteCurrentCycleLogs(userId, normalizedStartDate);
+         
+         if (isOverridingManual) {
+            // CRITICAL: Scrub historical logs from the START of the previous cycle
+            // This ensures a total clinical reset for the "butchered" period
+            await this.deleteCurrentCycleLogs(userId, prevStartDate);
+         }
+      }
+
       // Re-reconstruct phases for the past cycle with the updated end date
       const historicalPhases = calculatePhaseDates(
         prevStartDate,
-        lastHistoryData.ovulationDate ? normalizeDate(lastHistoryData.ovulationDate) : null,
+        isOverridingManual ? null : (historyOvulationDate ? normalizeDate(historyOvulationDate) : null),
         cycleLengthDays,
         newPrevEndDate,
-        null // We don't store historical period end dates in same field usually
+        null 
       );
 
       await updateDoc(lastHistoryDoc.ref, {
         endDate: Timestamp.fromDate(newPrevEndDate),
         cycleLength: newPrevLength,
         ...historicalPhases,
+        isPredictedOvulation: isOverridingManual ? true : lastHistoryData.isPredictedOvulation,
         updatedAt: Timestamp.now()
       });
+    }
+
+    // 4. Update Rolling Average (if period ends are provided)
+    if (normalizedEndDate) {
+       await this.updateAdaptivePeriodLength(userId);
     }
   },
   async getRecentLogs(userId: string, days: number = 40): Promise<DailyLog[]> {
@@ -513,9 +577,49 @@ export const cycleService = {
 
   // Update tracker symptoms to track
   async updateTrackerSymptoms(userId: string, symptoms: string[]): Promise<void> {
-    await setDoc(doc(db, 'trackerProfiles', userId), {
+    const trackerDocRef = doc(db, 'trackerProfiles', userId);
+    await updateDoc(trackerDocRef, {
       trackedSymptoms: symptoms,
       updatedAt: new Date(),
-    }, { merge: true });
+    });
   },
+
+  // ADAPTIVE SETTINGS: 3-Cycle Rolling Average for Period Length
+  async updateAdaptivePeriodLength(userId: string): Promise<void> {
+    const q = query(
+      collection(db, 'cycleHistory'),
+      where('userId', '==', userId),
+      orderBy('startDate', 'desc'),
+      limit(3)
+    );
+    
+    try {
+      const snap = await getDocs(q);
+      if (snap.empty) return;
+
+      const lengths: number[] = [];
+      snap.docs.forEach(d => {
+        const data = d.data() as CycleHistory;
+        if (data.menstrualPhaseStart && data.menstrualPhaseEnd) {
+           const start = normalizeDate(data.menstrualPhaseStart);
+           const end = normalizeDate(data.menstrualPhaseEnd);
+           lengths.push(daysBetween(start, end) + 1); 
+        }
+      });
+
+      if (lengths.length > 0) {
+        const average = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
+        // Biological bounds Check (2–10 days)
+        if (average >= 2 && average <= 10) {
+          await updateDoc(doc(db, 'trackerProfiles', userId), {
+            typicalPeriodLengthDays: average,
+            updatedAt: Timestamp.now()
+          });
+          console.log(`[ADAPTIVE] Period length updated to ${average} days (Avg of ${lengths.length} cycles)`);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating adaptive period length:", error);
+    }
+  }
 };

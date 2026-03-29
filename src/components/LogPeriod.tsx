@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Droplets, Calendar } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { TrackerProfile } from '../types';
-import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay } from '../utils/dateUtils';
+import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay, normalizeDate } from '../utils/dateUtils';
 
 interface LogPeriodProps {
   userId: string;
@@ -30,6 +30,24 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
 
     const parsedStart = parseDateFromInput(startDate);
     const parsedEnd = parseDateFromInput(endDate);
+
+    // 1. Overlap Prevention & Chronological Integrity
+    if (trackerProfile?.lastPeriodDate) {
+      const lastStart = normalizeDate(trackerProfile.lastPeriodDate);
+      const daysSinceLast = Math.ceil((parsedStart.getTime() - lastStart.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLast < 0) {
+        setError(`Chronological Error: This entry occurs before your last recorded period (${formatDateForDisplay(lastStart)}). Chronological consistency is required for medical history.`);
+        setSaving(false);
+        return;
+      }
+      
+      if (daysSinceLast < 21) {
+        setError(`Date Verification Required: Your last period began only ${daysSinceLast} days ago. A new cycle typically requires a minimum of 21 days for clinical accuracy.`);
+        setSaving(false);
+        return;
+      }
+    }
 
     if (parsedStart > getToday()) {
       setError('Period start date cannot be in the future');

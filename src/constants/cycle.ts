@@ -10,13 +10,13 @@ export const STALE_CYCLE_THRESHOLD_DAYS = 55;
 export const STANDARD_LUTEAL_PHASE_DAYS = 14;
 
 // Minimum cycle length for a valid entry in history (prevents duplicates or accidental logs).
-export const MIN_CYCLE_LENGTH_FOR_ARCHIVE = 20;
+export const MIN_CYCLE_LENGTH_FOR_ARCHIVE = 21;
 
 // The minimum number of days allowed for a "Typical Cycle Length" setting.
 export const MIN_TYPICAL_CYCLE_LENGTH = 21;
 
 // The maximum number of days allowed for a "Typical Cycle Length" setting.
-export const MAX_TYPICAL_CYCLE_LENGTH = 50;
+export const MAX_TYPICAL_CYCLE_LENGTH = 55;
 
 // The clinical window (Days since last period) where ovulation symptoms are considered valid.
 export const OVULATION_WINDOW_START_DAY = 10;
