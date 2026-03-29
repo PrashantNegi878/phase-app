@@ -117,11 +117,11 @@ export function Settings({ userId, onBack }: SettingsProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-md p-6 shadow-soft-lg"
+          className="bg-card-bg/95 backdrop-blur-xl rounded-3xl w-full max-w-md p-6 shadow-soft-lg"
         >
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-            <p className="text-earth-600">Loading settings...</p>
+            <p className="text-text-muted">Loading settings...</p>
           </div>
         </motion.div>
       </div>
@@ -129,13 +129,13 @@ export function Settings({ userId, onBack }: SettingsProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
       <motion.div
         variants={modalVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-md shadow-soft-lg overflow-hidden"
+        className="bg-card-bg rounded-3xl w-full max-w-md shadow-soft-xl border border-border-subtle overflow-hidden"
       >
         <AnimatePresence mode="wait">
           {!isSuccess ? (
@@ -147,18 +147,18 @@ export function Settings({ userId, onBack }: SettingsProps) {
               className="flex flex-col"
             >
               {/* Header */}
-              <div className="border-b border-earth-100 flex items-center justify-between p-6 z-10 relative">
+              <div className="border-b border-border-subtle flex items-center justify-between p-6 z-10 relative">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-                    <Settings2 className="w-5 h-5 text-sage-600" />
+                  <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+                    <Settings2 className="w-5 h-5 text-sage-600 dark:text-sage-400" />
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-800">Settings</h2>
+                  <h2 className="text-xl font-semibold text-text-main">Settings</h2>
                 </div>
                 <motion.button
                   onClick={onBack}
                   whileHover={{ scale: 1.05 }}
                   whileTap={buttonTap}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors duration-200"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors duration-200"
                 >
                   <X className="w-5 h-5" />
                 </motion.button>
@@ -169,7 +169,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 {/* Cycle Length Setting */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-text-main">
                       Typical Cycle Length
                     </label>
                     {ovulationDate && !isManualOverride && (
@@ -178,30 +178,43 @@ export function Settings({ userId, onBack }: SettingsProps) {
                         animate={{ opacity: 1, x: 0 }}
                         className="px-2 py-1 bg-sage-50 text-sage-600 text-[10px] font-bold uppercase tracking-wider rounded-md border border-sage-100 flex items-center gap-1.5"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-sage-500 animate-pulse" />
-                        Smart Optimized
+                        <Info className="w-3 h-3" />
+                        Smart Sync Active
                       </motion.div>
                     )}
                   </div>
-                  <div className="flex items-center gap-6">
-                    <input
-                      type="range"
-                      min={MIN_TYPICAL_CYCLE_LENGTH}
-                      max={MAX_TYPICAL_CYCLE_LENGTH}
-                      value={cycleLengthDays}
-                      onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-earth-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
-                    />
-                    <div className="text-center bg-sage-50 rounded-xl px-4 py-2 min-w-[80px]">
-                      <div className="text-2xl font-bold text-sage-700">
-                        {cycleLengthDays}
+                  
+                  <div className="bg-app-bg rounded-2xl p-4 border border-border-subtle">
+                    <div className="flex items-center justify-between gap-4">
+                      <input
+                        type="range"
+                        min={MIN_TYPICAL_CYCLE_LENGTH}
+                        max={MAX_TYPICAL_CYCLE_LENGTH}
+                        value={cycleLengthDays}
+                        onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-sage-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                      />
+                        <div className="w-12 h-10 flex items-center justify-center bg-card-bg rounded-xl border border-sage-200 dark:border-sage-900/50 text-text-main font-bold shadow-sm">
+                          {cycleLengthDays}
+                        </div>
                       </div>
-                      <div className="text-xs text-earth-500">days</div>
-                    </div>
+                    <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
+                      Typical range: 21-45 days. Adjusting this will refine your future period predictions.
+                    </p>
                   </div>
-                  <p className="mt-3 text-sm text-earth-600">
-                    Expected ovulation: <span className="font-medium text-sage-600">Day {Math.round(cycleLengthDays / 2)}</span>
-                  </p>
+
+                  {isManualOverride && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-2"
+                    >
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-[10px] text-amber-700 leading-tight">
+                        <strong>Manual Override:</strong> You've adjusted the cycle length while ovulation is already detected. Smarter Sync will be temporarily paused for this interval.
+                      </p>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Info / Warning box */}
@@ -211,12 +224,12 @@ export function Settings({ userId, onBack }: SettingsProps) {
                       key="warning"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3 shadow-sm"
+                      className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/20 rounded-2xl p-4 flex gap-3 shadow-sm"
                     >
-                      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <p className="text-sm font-bold text-red-800">Manual Override Warning</p>
-                        <p className="text-xs text-red-700 leading-relaxed">
+                        <p className="text-sm font-bold text-red-800 dark:text-red-300">Manual Override Warning</p>
+                        <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
                           Note: You've already logged symptoms that detected ovulation. Manually changing this length will <strong>delete all symptoms for this month</strong> to allow a clean-slate reset.
                         </p>
                       </div>
@@ -226,10 +239,10 @@ export function Settings({ userId, onBack }: SettingsProps) {
                       key="info"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-sage-50 border border-sage-200 rounded-2xl p-4 flex gap-3"
+                      className="bg-sage-50 dark:bg-sage-900/10 border border-sage-200 dark:border-sage-900/20 rounded-2xl p-4 flex gap-3"
                     >
-                      <Info className="w-5 h-5 text-sage-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-sage-700">
+                      <Info className="w-5 h-5 text-sage-600 dark:text-sage-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-sage-700 dark:text-sage-300">
                         {ovulationDate 
                           ? `Ovulation detected on ${ovulationDate.toLocaleDateString()}. Your cycle length for this month has been automatically optimized.`
                           : "Phases are predicted based on your typical cycle length. Your actual ovulation day is detected automatically as you log symptoms."
@@ -246,7 +259,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-sm p-4 rounded-2xl bg-red-50 text-red-700 border border-red-200 flex items-center gap-2"
+                      className="text-sm p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/20 flex items-center gap-2"
                     >
                       <X className="w-4 h-4" />
                       {message}
@@ -260,7 +273,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                     onClick={onBack}
                     whileHover={{ y: -2 }}
                     whileTap={buttonTap}
-                    className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200"
+                    className="flex-1 px-4 py-3 border-2 border-border-subtle text-text-main font-medium rounded-xl hover:bg-earth-100 dark:hover:bg-slate-700 transition-colors duration-200"
                   >
                     Cancel
                   </motion.button>
@@ -294,7 +307,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.2 }}
-                className="w-20 h-20 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 mb-8 shadow-soft-lg"
+                className="w-20 h-20 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center text-sage-600 dark:text-sage-400 mb-8 shadow-soft-lg"
               >
                 <Check className="w-10 h-10" strokeWidth={3} />
               </motion.div>
@@ -303,16 +316,16 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-2xl font-bold text-slate-800 mb-3"
+                className="text-2xl font-bold text-text-main mb-3"
               >
-                Settings Updated!
+                Profile Updated!
               </motion.h3>
               
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="text-earth-600 max-w-[200px]"
+                className="text-earth-600 dark:text-earth-400 max-w-[200px]"
               >
                 {isManualOverride ? (
                   "Your cycle has been reset and logs have been cleared."
@@ -341,7 +354,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-red-100"
+                className="bg-card-bg rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-red-100 dark:border-red-900/30"
               >
                 <div className="bg-red-50 p-6 flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">

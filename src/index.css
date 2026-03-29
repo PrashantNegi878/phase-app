@@ -8,6 +8,26 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg-main: #faf9f7;
+  --bg-card: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-subtle: #e8ede8;
+  --sage-primary: #7d9c78;
+  --earth-primary: #b5a790;
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-subtle: #334155;
+  --sage-primary: #9ab396;
+  --earth-primary: #c9bfad;
+}
+
 html,
 body {
   margin: 0;
@@ -16,11 +36,17 @@ body {
     'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #faf9f7;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
+}
+
+.dark input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
 }
 
 /* Custom scrollbar for webkit browsers */

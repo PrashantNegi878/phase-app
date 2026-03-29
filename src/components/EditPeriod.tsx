@@ -151,15 +151,16 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-4 z-50">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/90 backdrop-blur-xl rounded-3xl w-full sm:max-w-md p-6 shadow-soft-lg"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-card-bg rounded-3xl w-full max-w-lg shadow-soft-xl overflow-hidden border border-border-subtle"
         >
-          <div className="flex items-center justify-center gap-3">
+          <div className="p-6 flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-            <p className="text-earth-600">Loading period data...</p>
+            <p className="text-text-muted">Loading period data...</p>
           </div>
         </motion.div>
       </div>
@@ -168,17 +169,17 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
 
   if (!cycleData) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-4 z-50">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
-          className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-md p-6 text-center shadow-soft-lg"
+          className="bg-card-bg rounded-3xl w-full sm:max-w-md p-6 text-center shadow-soft-lg border border-border-subtle"
         >
-          <p className="text-earth-600 mb-4">No period data to edit yet.</p>
+          <p className="text-text-muted mb-4">No period data to edit yet.</p>
           <motion.button
             onClick={onCancel}
             whileHover={{ y: -2 }}
             whileTap={buttonTap}
-            className="px-6 py-3 bg-earth-100 text-slate-700 font-medium rounded-xl hover:bg-earth-200 transition-colors duration-200 opacity-100"
+            className="px-6 py-3 bg-app-bg dark:bg-slate-800 text-text-main font-medium rounded-xl hover:bg-earth-200 dark:hover:bg-slate-700 transition-colors duration-200 opacity-100"
           >
             Close
           </motion.button>
@@ -192,27 +193,27 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
     : null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-4 z-50">
       <motion.div
         variants={modalVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-white/95 backdrop-blur-xl rounded-3xl w-full sm:max-w-md shadow-soft-lg overflow-hidden"
+        className="bg-card-bg rounded-3xl w-full sm:max-w-md shadow-soft-lg overflow-hidden border border-border-subtle"
       >
         {/* Header */}
-        <motion.div variants={itemVariants} className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-earth-100 flex items-center justify-between p-5 z-10">
+        <motion.div variants={itemVariants} className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-5 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-              <Edit3 className="w-5 h-5 text-sage-600" />
+            <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+              <Edit3 className="w-5 h-5 text-sage-600 dark:text-sage-400" />
             </div>
-            <h2 className="text-lg font-semibold text-slate-800">Edit Period</h2>
+            <h2 className="text-lg font-semibold text-text-main">Edit Period</h2>
           </div>
           <motion.button
             onClick={onCancel}
             whileHover={{ scale: 1.05 }}
             whileTap={buttonTap}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors duration-200 opacity-100"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors duration-200 opacity-100"
           >
             <X className="w-5 h-5" />
           </motion.button>
@@ -233,7 +234,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
           </AnimatePresence>
 
           <motion.div variants={itemVariants}>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-2">
               <Calendar className="w-4 h-4 text-rose-400" />
               Period Start Date
             </label>
@@ -249,18 +250,18 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                 endDateObj.setDate(startDateObj.getDate() + (typicalPeriodLength - 1));
                 setEndDate(formatDateForInput(endDateObj));
               }}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+              className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 bg-app-bg dark:bg-slate-800 text-text-main"
               required
             />
             {startDate && (
-              <p className="mt-2 text-sm text-earth-500">
+              <p className="mt-2 text-sm text-text-muted">
                 {formatDateForDisplay(new Date(startDate))}
               </p>
             )}
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-text-main mb-2">
               <Calendar className="w-4 h-4 text-rose-400" />
               Period End Date (Optional)
             </label>
@@ -268,15 +269,15 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-earth-200 rounded-xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 bg-white text-slate-700"
+              className="w-full px-4 py-3 border-2 border-border-subtle rounded-xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 bg-app-bg dark:bg-slate-800 text-text-main"
             />
             {endDate && (
               <div className="mt-2 flex items-center justify-between">
-                <p className="text-sm text-earth-500">
+                <p className="text-sm text-text-muted">
                   {formatDateForDisplay(new Date(endDate))}
                 </p>
                 {periodDuration && (
-                  <p className="text-sm text-sage-600 font-medium">
+                  <p className="text-sm text-sage-600 dark:text-sage-400 font-medium">
                     {periodDuration} days
                   </p>
                 )}
@@ -293,23 +294,23 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden mb-2"
               >
-                <div className={`p-4 rounded-2xl border flex gap-3 ${
-                  isGuardrailViolated 
-                    ? 'bg-rose-50 border-rose-100 text-rose-700' 
-                    : 'bg-amber-50 border-amber-100 text-amber-700'
-                }`}>
-                  <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-semibold mb-1">
-                      {isGuardrailViolated ? 'Clinical Parameter Alert' : 'Cycle Boundary Modification'}
-                    </p>
-                    <p>
-                      {isGuardrailViolated 
-                        ? `This adjustment results in a ${Math.abs(prevCycleLength!)}-day cycle, which falls outside the established 21–55 day parameters.`
-                        : `This modification will adjust your previous cycle length to ${Math.abs(prevCycleLength!)} days.`}
-                    </p>
+                  <div className={`p-4 rounded-2xl border flex gap-3 ${
+                    isGuardrailViolated 
+                      ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/20 text-rose-700 dark:text-rose-400' 
+                      : 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/20 text-amber-700 dark:text-amber-400'
+                  }`}>
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-semibold mb-1">
+                        {isGuardrailViolated ? 'Clinical Parameter Alert' : 'Cycle Boundary Modification'}
+                      </p>
+                      <p>
+                        {isGuardrailViolated 
+                          ? `This adjustment results in a ${Math.abs(prevCycleLength!)}-day cycle, which falls outside the established 21–55 day parameters.`
+                          : `This modification will adjust your previous cycle length to ${Math.abs(prevCycleLength!)} days.`}
+                      </p>
+                    </div>
                   </div>
-                </div>
               </motion.div>
             )}
 
@@ -320,7 +321,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden mb-2"
               >
-                <div className="p-4 rounded-2xl border flex gap-3 bg-rose-50 border-rose-100 text-rose-700">
+                <div className="p-4 rounded-2xl border flex gap-3 bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/20 text-rose-700 dark:text-rose-400">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
                     <p className="font-semibold mb-1">Ovulation Overlap Notice</p>
@@ -341,7 +342,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
               onClick={onCancel}
               whileHover={{ y: -2 }}
               whileTap={buttonTap}
-              className="flex-1 px-4 py-3 border-2 border-earth-200 text-slate-700 font-medium rounded-xl hover:border-earth-300 hover:bg-earth-50 transition-colors duration-200 opacity-100"
+              className="flex-1 px-4 py-3 border-2 border-border-subtle text-text-main font-medium rounded-xl hover:border-earth-300 dark:hover:border-slate-700 hover:bg-earth-50 dark:hover:bg-slate-800 transition-colors duration-200 opacity-100"
             >
               Cancel
             </motion.button>
@@ -377,31 +378,31 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl"
+                className="bg-card-bg rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl border border-border-subtle"
               >
                 <div className="p-8 text-center uppercase tracking-widest text-[10px] font-bold text-rose-500 mb-2">
                   Important: Clinical Update Required
                 </div>
                 <div className="px-8 pb-4 text-center">
-                  <h3 className="text-xl font-bold text-slate-800 mb-3">Confirm Date Adjustments</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed mb-6">
+                  <h3 className="text-xl font-bold text-text-main mb-3">Confirm Date Adjustments</h3>
+                  <p className="text-text-muted text-sm leading-relaxed mb-6">
                     {isHormonalOverride 
                       ? "This change conflicts with your previous cycle's manual ovulation. To ensure medical consistency, related symptomatic logs will be reset and both cycles will be recalculated."
                       : "Modifying your period start date will reset your symptoms and phase calculations for the current cycle to maintain clinical accuracy. Proceed with the update?"}
                   </p>
                 </div>
                 
-                <div className="p-6 bg-slate-50 flex gap-3">
+                <div className="p-6 bg-app-bg dark:bg-slate-800 flex gap-3">
                   <button
                     onClick={() => setShowConfirmation(false)}
-                    className="flex-1 py-4 text-slate-600 font-semibold hover:bg-white rounded-2xl transition-colors"
+                    className="flex-1 py-4 text-text-muted font-semibold hover:bg-card-bg dark:hover:bg-slate-700 rounded-2xl transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={performUpdate}
                     disabled={saving}
-                    className="flex-2 px-6 py-4 bg-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
+                    className="flex-2 px-6 py-4 bg-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 dark:shadow-none hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
                   >
                     {saving ? "Updating..." : "Confirm Update"}
                   </button>

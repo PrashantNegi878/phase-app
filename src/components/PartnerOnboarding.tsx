@@ -96,8 +96,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
     <div className="space-y-6">
       <motion.div variants={itemVariants} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Your Support Style</label>
-          <p className="text-xs text-earth-400 mt-0.5">Pick one or more</p>
+          <label className="block text-sm font-medium text-text-main">Your Support Style</label>
+          <p className="text-xs text-text-muted mt-0.5">Pick one or more</p>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {supportStyleOptions.map((style) => {
@@ -112,8 +112,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 whileTap={{ scale: 0.98 }}
                 className={`relative p-3 rounded-xl border-2 text-left transition-colors duration-200 opacity-100 ${
                   isSelected
-                    ? 'border-sage-400 bg-sage-50 shadow-sm'
-                    : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
+                    ? 'border-sage-400 dark:border-sage-600 bg-sage-50 dark:bg-sage-900/20 shadow-sm'
+                    : 'border-border-subtle bg-card-bg hover:border-sage-200 dark:hover:border-sage-700 hover:bg-sage-50/30 dark:hover:bg-sage-900/10'
                 }`}
               >
                 {isSelected && (
@@ -126,14 +126,14 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                   </motion.div>
                 )}
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
-                  isSelected ? 'bg-sage-200' : 'bg-earth-100'
+                  isSelected ? 'bg-sage-200 dark:bg-sage-900/40' : 'bg-app-bg dark:bg-slate-800'
                 }`}>
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-sage-700' : 'text-earth-500'}`} />
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-sage-700 dark:text-sage-400' : 'text-text-muted opacity-60'}`} />
                 </div>
-                <div className={`text-sm font-medium ${isSelected ? 'text-sage-800' : 'text-slate-700'}`}>
+                <div className={`text-sm font-medium ${isSelected ? 'text-text-main' : 'text-text-muted font-normal'}`}>
                   {style.label}
                 </div>
-                <div className="text-xs text-earth-500 mt-0.5">
+                <div className="text-xs text-text-muted mt-0.5 opacity-70">
                   {style.description}
                 </div>
               </motion.button>
@@ -143,7 +143,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       </motion.div>
 
       <motion.div variants={itemVariants} className="space-y-3">
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-sm font-medium text-text-main">
           Your Schedule
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -159,8 +159,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 whileTap={{ scale: 0.98 }}
                 className={`relative p-3 rounded-xl border-2 text-left transition-colors duration-200 opacity-100 ${
                   isSelected
-                    ? 'border-sage-400 bg-sage-50 shadow-sm'
-                    : 'border-earth-200 bg-white hover:border-sage-200 hover:bg-sage-50/30'
+                    ? 'border-sage-400 dark:border-sage-600 bg-sage-50 dark:bg-sage-900/20 shadow-sm'
+                    : 'border-border-subtle bg-card-bg hover:border-sage-200 dark:hover:border-sage-700 hover:bg-sage-50/30 dark:hover:bg-sage-900/10'
                 }`}
               >
                 {isSelected && (
@@ -173,14 +173,14 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                   </motion.div>
                 )}
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
-                  isSelected ? 'bg-sage-200' : 'bg-earth-100'
+                  isSelected ? 'bg-sage-200 dark:bg-sage-900/40' : 'bg-app-bg dark:bg-slate-800'
                 }`}>
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-sage-700' : 'text-earth-500'}`} />
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-sage-700 dark:text-sage-400' : 'text-text-muted opacity-60'}`} />
                 </div>
-                <div className={`text-sm font-medium ${isSelected ? 'text-sage-800' : 'text-slate-700'}`}>
+                <div className={`text-sm font-medium ${isSelected ? 'text-text-main' : 'text-text-muted font-normal'}`}>
                   {schedule.label}
                 </div>
-                <div className="text-xs text-earth-500 mt-0.5">
+                <div className="text-xs text-text-muted mt-0.5 opacity-70">
                   {schedule.description}
                 </div>
               </motion.button>
@@ -192,23 +192,23 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/40 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
 
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-soft-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"
+        className="relative bg-card-bg/80 backdrop-blur-xl rounded-3xl shadow-soft-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto border border-border-subtle"
       >
         <motion.div variants={itemVariants} className="text-center mb-5">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-sage-200 to-sage-300 mb-3 shadow-soft">
-            <Users className="w-7 h-7 text-sage-700" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-sage-200 dark:bg-sage-900/30 mb-3 shadow-soft">
+            <Users className="w-7 h-7 text-sage-700 dark:text-sage-400" />
           </div>
-          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">
+          <h1 className="text-xl font-semibold text-text-main tracking-tight">
             Partner Setup
           </h1>
         </motion.div>
@@ -219,7 +219,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm opacity-100"
+              className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm opacity-100"
             >
               {error}
             </motion.div>
@@ -236,7 +236,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
             >
-              <motion.p variants={itemVariants} className="text-earth-600 mb-4 text-center text-sm">
+              <motion.p variants={itemVariants} className="text-text-muted mb-4 text-center text-sm">
                 How would you like to connect?
               </motion.p>
 
@@ -245,14 +245,14 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setStep('link-input')}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-colors duration-200 opacity-100 text-left flex items-start gap-3"
+                className="w-full p-4 border-2 border-border-subtle rounded-2xl hover:border-sage-300 dark:hover:border-sage-700 hover:bg-sage-50/50 dark:hover:bg-sage-900/10 transition-colors duration-200 opacity-100 text-left flex items-start gap-3 bg-card-bg"
               >
-                <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center flex-shrink-0">
-                  <Link2 className="w-5 h-5 text-sage-600" />
+                <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center flex-shrink-0">
+                  <Link2 className="w-5 h-5 text-sage-600 dark:text-sage-400" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-800">Link Account</div>
-                  <div className="text-sm text-earth-500">Enter your partner's 6-digit code</div>
+                  <div className="font-semibold text-text-main">Link Account</div>
+                  <div className="text-sm text-text-muted">Enter your partner's 6-digit code</div>
                 </div>
               </motion.button>
 
@@ -261,14 +261,14 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 onClick={() => setStep('manual-setup')}
                 whileHover={{ y: -2 }}
                 whileTap={buttonTap}
-                className="w-full p-4 border-2 border-earth-200 rounded-2xl hover:border-sage-300 hover:bg-sage-50/50 transition-colors duration-200 opacity-100 text-left flex items-start gap-3"
+                className="w-full p-4 border-2 border-border-subtle rounded-2xl hover:border-sage-300 dark:hover:border-sage-700 hover:bg-sage-50/50 dark:hover:bg-sage-900/10 transition-colors duration-200 opacity-100 text-left flex items-start gap-3 bg-card-bg"
               >
-                <div className="w-10 h-10 rounded-xl bg-earth-100 flex items-center justify-center flex-shrink-0">
-                  <Edit3 className="w-5 h-5 text-earth-600" />
+                <div className="w-10 h-10 rounded-xl bg-app-bg dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                  <Edit3 className="w-5 h-5 text-text-muted" />
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-800">Manual Mode</div>
-                  <div className="text-sm text-earth-500">I'll track data myself</div>
+                  <div className="font-semibold text-text-main">Manual Mode</div>
+                  <div className="text-sm text-text-muted">I'll track data myself</div>
                 </div>
               </motion.button>
             </motion.div>
@@ -287,14 +287,14 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 variants={itemVariants}
                 type="button"
                 onClick={() => setStep('link-choice')}
-                className="flex items-center gap-2 text-sage-600 hover:text-sage-700 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300 text-sm font-medium transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </motion.button>
 
               <motion.div variants={itemVariants} className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-text-main">
                   Partner's 6-digit code
                 </label>
                 <input
@@ -303,7 +303,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                   onChange={(e) => setPartnerCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-4 border-2 border-earth-200 rounded-2xl focus:outline-none focus:border-sage-400 focus:ring-4 focus:ring-sage-100 transition-colors duration-200 opacity-100 text-center text-2xl tracking-[0.3em] font-mono bg-white text-slate-700"
+                  className="w-full px-4 py-4 border-2 border-border-subtle rounded-2xl focus:outline-none focus:border-sage-400 dark:focus:border-sage-600 focus:ring-4 focus:ring-sage-100 dark:focus:ring-sage-900/30 transition-colors duration-200 opacity-100 text-center text-2xl tracking-[0.3em] font-mono bg-app-bg dark:bg-slate-800 text-text-main"
                 />
               </motion.div>
 
@@ -345,13 +345,13 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
                 variants={itemVariants}
                 type="button"
                 onClick={() => setStep('link-choice')}
-                className="flex items-center gap-2 text-sage-600 hover:text-sage-700 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300 text-sm font-medium transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </motion.button>
 
-              <motion.p variants={itemVariants} className="text-earth-600 text-sm">
+              <motion.p variants={itemVariants} className="text-text-muted text-sm">
                 Set up your preferences for manual tracking:
               </motion.p>
 

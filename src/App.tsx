@@ -9,8 +9,11 @@ import { TrackerDashboard } from './components/TrackerDashboard';
 import { PartnerDashboard } from './components/PartnerDashboard';
 import { LogSymptoms } from './components/LogSymptoms';
 import { LogPeriod } from './components/LogPeriod';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { InstallPrompt } from './components/InstallPrompt';
+import { ThemeToggle } from './components/ThemeToggle';
+import { LogOut } from 'lucide-react';
 import { authService } from './services/auth';
 import { cycleService } from './services/cycle';
 
@@ -244,31 +247,35 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-earth-50 via-sage-50 to-earth-100 flex items-center justify-center">
+      <div className="min-h-screen bg-app-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-          <p className="text-earth-600 font-light">Loading...</p>
+          <div className="w-12 h-12 border-3 border-sage-200 dark:border-sage-900 border-t-sage-500 rounded-full animate-spin" />
+          <p className="text-text-muted font-light">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-earth-50 min-h-screen">
+    <div className="bg-app-bg min-h-screen font-outfit">
       {/* Top Navigation */}
       {currentUser && currentView !== 'auth' && (
-        <div className="bg-white/80 backdrop-blur-lg border-b border-earth-100 sticky top-0 z-40">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="bg-card-bg border-b border-border-subtle sticky top-0 z-40">
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/pwa-192x192.png" alt="Phase" className="w-6 h-6 rounded-md shadow-sm" />
-              <h1 className="font-semibold text-slate-800 tracking-tight text-lg">Phase</h1>
+              <img src="/pwa-192x192.png" alt="Phase" className="w-8 h-8 rounded-xl shadow-soft dark:brightness-110" />
+              <h1 className="font-bold text-text-main tracking-tight text-xl">Phase</h1>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-earth-500 hover:text-sage-600 transition-colors duration-200 font-medium"
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-app-bg dark:bg-slate-800 border border-border-subtle text-text-muted hover:text-rose-500 transition-all duration-200 shadow-soft hover:shadow-soft-lg"
+                aria-label="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -311,10 +318,10 @@ function App() {
         sessionRole === 'tracker' && (
         <>
           {loadingTrackerProfile ? (
-            <div className="min-h-screen bg-earth-50 flex items-center justify-center">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-                <p className="text-earth-600 font-light">Loading tracker data...</p>
+                <div className="w-10 h-10 border-3 border-sage-200 dark:border-sage-900 border-t-sage-500 rounded-full animate-spin" />
+                <p className="text-text-muted font-light">Loading tracker data...</p>
               </div>
             </div>
           ) : (
@@ -349,10 +356,10 @@ function App() {
         sessionRole === 'partner' && (
         <>
           {loadingPartnerProfile ? (
-            <div className="min-h-screen bg-earth-50 flex items-center justify-center">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
-                <p className="text-earth-600 font-light">Loading partner data...</p>
+                <div className="w-10 h-10 border-3 border-sage-200 dark:border-sage-900 border-t-sage-500 rounded-full animate-spin" />
+                <p className="text-text-muted font-light">Loading partner data...</p>
               </div>
             </div>
           ) : (
