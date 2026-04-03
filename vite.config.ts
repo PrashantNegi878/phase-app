@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Phase - Period & Cycle Tracker',
         short_name: 'Phase',
-        description: 'Track your cycle and get AI-powered insights for your wellness journey',
+        description: 'A comprehensive cycle tracker for regular and irregular cycles (PCOD/PCOS) with intelligent symptom-based prediction and personalized wellness insights.',
         theme_color: '#7d9c78',
         background_color: '#faf9f7',
         display: 'standalone',
