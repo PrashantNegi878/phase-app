@@ -250,12 +250,14 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                         transition-all duration-200
                       `}
                     >
-                      <div className={`text-xs sm:text-sm font-semibold ${colors.text} z-10 ${showMonth ? '-mt-1' : ''}`}>
+                      <div className={`text-xs sm:text-sm font-semibold flex items-center justify-center ${colors.text} z-10 ${showMonth ? '-mt-2 sm:-mt-1.5' : ''} leading-none`}>
                         {dayOfMonth}
                       </div>
                       {showMonth && (
-                        <div className="absolute bottom-1 text-[8px] text-text-muted opacity-60 font-bold uppercase tracking-tighter">
-                          {item.date.toLocaleDateString('en-US', { month: 'short' })}
+                        <div className="absolute bottom-1 sm:bottom-1.5 w-full flex justify-center items-center pointer-events-none">
+                          <span className="text-[10px] transform scale-[0.65] sm:scale-[0.8] origin-bottom text-text-muted opacity-80 font-bold uppercase tracking-wider leading-none whitespace-nowrap">
+                            {item.date.toLocaleDateString('en-US', { month: 'short' })}
+                          </span>
                         </div>
                       )}
                     </div>

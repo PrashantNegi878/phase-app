@@ -49,22 +49,14 @@ input[type='date']::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.6);
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Hide scrollbar to feel like a native mobile app */
 ::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
-  background: #f5f3ef;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #D1DCCF;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #b8c9b5;
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Focus ring styles */
