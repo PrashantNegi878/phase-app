@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Sparkles, Heart, Users } from 'lucide-react';
 import { authService } from '../services/auth';
+import { ThemeToggle } from './ThemeToggle';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;
@@ -24,7 +25,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
           onAuthSuccess();
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Magic link authentication failed');
+        setError('Invalid magic link. Please request a new one.');
+        console.error('Magic Link Error:', err);
       }
     };
 
@@ -38,7 +40,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       await authService.signInWithGoogle(role);
       onAuthSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google Sign-In failed');
+      setError('Google Sign-In failed or was cancelled. Please try again.');
+      console.error('Google Sign-In Error:', err);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -60,7 +63,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       setMagicLinkSent(true);
       setEmail('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send magic link');
+      setError('Failed to send magic link. Please check your email and try again.');
+      console.error('Send Link Error:', err);
     } finally {
       setIsMagicLinkSending(false);
     }
@@ -103,9 +107,9 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
   const buttonTap = { scale: 0.95 };
 
   return (
-    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-app-bg flex flex-col items-center justify-center p-4 py-12">
       {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none xl:fixed">
         <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
@@ -114,15 +118,20 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-md my-auto z-10"
       >
         {/* Main Card */}
         <motion.div
           variants={cardVariants}
-          className="bg-card-bg/80 backdrop-blur-xl rounded-4xl shadow-soft-lg p-8 sm:p-10 border border-border-subtle"
+          className="relative bg-card-bg/80 backdrop-blur-xl rounded-4xl shadow-soft-lg p-8 sm:p-10 border border-border-subtle"
         >
+          {/* Theme Toggle */}
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+            <ThemeToggle />
+          </div>
+
           {/* Logo & Welcome Section */}
-          <motion.div variants={itemVariants} className="text-center mb-8">
+          <motion.div variants={itemVariants} className="text-center mb-8 mt-2">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -183,12 +192,10 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
               <div className="relative bg-app-bg dark:bg-slate-800/50 p-1.5 rounded-2xl border border-border-subtle">
                 {/* Sliding background */}
                 <motion.div
-                  layout
-                  className="absolute top-1.5 bottom-1.5 bg-card-bg rounded-xl shadow-md ring-1 ring-sage-200/50 dark:ring-sage-900/30"
+                  className="absolute top-1.5 bottom-1.5 bg-card-bg rounded-xl shadow-md ring-1 ring-sage-200/50 dark:ring-sage-900/30 w-[calc(50%-6px)]"
                   initial={false}
                   animate={{
-                    left: role === 'tracker' ? '4px' : '50%',
-                    right: role === 'tracker' ? '50%' : '4px',
+                    left: role === 'tracker' ? '6px' : 'calc(50% + 2px)',
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
@@ -221,7 +228,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                   </motion.button>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-text-muted text-center">
+              <p className="mt-2 text-xs text-text-muted text-center h-8 flex items-center justify-center">
                 {role === 'tracker'
                   ? "Track your cycle and share insights with your partner"
                   : "Support and stay connected with your partner's journey"}
@@ -272,15 +279,12 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
             </motion.button>
 
             {/* Divider */}
-            <motion.div variants={itemVariants} className="relative opacity-100">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border-subtle"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-4 bg-card-bg/80 backdrop-blur-sm text-text-muted text-sm">
-                  or continue with email
-                </span>
-              </div>
+            <motion.div variants={itemVariants} className="relative flex items-center py-2 opacity-100">
+              <div className="flex-grow border-t border-border-subtle"></div>
+              <span className="flex-shrink-0 mx-4 text-text-muted text-sm">
+                or continue with email
+              </span>
+              <div className="flex-grow border-t border-border-subtle"></div>
             </motion.div>
 
             {/* Magic Link Form */}

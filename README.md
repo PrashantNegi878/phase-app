@@ -1,6 +1,6 @@
 # Phase - Period & Cycle Tracker PWA
 
-A comprehensive, dual-perspective Progressive Web App for period and cycle tracking with intelligent symptom-based cycle prediction for irregular cycles (PCOD).
+A comprehensive cycle tracker for regular and irregular cycles (PCOD/PCOS) with intelligent symptom-based prediction and personalized wellness insights.
 
 ## Features
 
@@ -17,13 +17,12 @@ A comprehensive, dual-perspective Progressive Web App for period and cycle track
 📊 **Advanced Cycle Prediction**
 - Symptom-based PCOD algorithm (not calendar-based)
 - Weighted scoring: Cervical fluid (5 pts), BBT (2 pts), Cramps (1 pt)
-- Ovulation detection at score ≥ 6
+- Ovulation detection at score >= 6
 - Extended follicular detection for irregular cycles
 
-🤖 **AI-Powered Suggestions**
-- Google Gemini API integration via Vercel serverless routes
-- Personalized daily suggestions based on cycle phase
-- Partner support style and schedule constraints
+💡 **Personalized Partner Suggestions**
+- Smart daily suggestions tailored to the current cycle phase
+- Adapts to partner support style and schedule constraints
 
 🔗 **Secure Account Linking**
 - 6-digit partner codes for account linking
@@ -57,8 +56,6 @@ A comprehensive, dual-perspective Progressive Web App for period and cycle track
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS (mobile-first)
 - **Backend**: Firebase Authentication + Cloud Firestore
-- **API**: Vercel Serverless Routes
-- **AI**: Google Generative AI (Gemini)
 - **PWA**: vite-plugin-pwa
 
 ## Project Structure
@@ -74,7 +71,7 @@ pt/
 │   │   ├── PartnerDashboard.tsx
 │   │   ├── LogSymptoms.tsx
 │   │   └── LogPeriod.tsx
-│   ├── services/            # Firebase & API services
+│   ├── services/            # Firebase services
 │   │   ├── firebase.ts      # Firebase config
 │   │   ├── auth.ts          # Auth logic
 │   │   └── cycle.ts         # Cycle data operations
@@ -88,8 +85,6 @@ pt/
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
-├── api/
-│   └── suggestion.ts        # Vercel API route: /api/suggestion
 ├── firestore/
 │   ├── firestore.rules      # Firestore security rules
 │   └── firestore.indexes.json
@@ -107,13 +102,10 @@ pt/
 
 - Node.js 16+ and npm
 - Firebase project with Firestore enabled
-- Google Gemini API key (for AI suggestions)
-- Vercel account (for serverless API routes)
 
 ### 2. Clone & Install
 
 ```bash
-cd PT
 npm install
 ```
 
@@ -139,13 +131,13 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ### 5. Firestore Security Rules
 
-1. Go to Firebase Console → Firestore → Rules
+1. Go to Firebase Console -> Firestore -> Rules
 2. Replace with rules from `firestore/firestore.rules`
 3. Publish the rules
 
 ### 6. Firestore Indexes
 
-1. Go to Firebase Console → Firestore → Indexes
+1. Go to Firebase Console -> Firestore -> Indexes
 2. Create composite indexes from `firestore/firestore.indexes.json`
 3. Or let Firebase auto-create them when needed
 
@@ -156,14 +148,7 @@ firebase login
 firebase deploy --only firestore:rules
 ```
 
-### 8. Vercel Setup for AI API
-
-1. Create a Vercel account and connect your GitHub repo
-2. Add environment variable in Vercel dashboard:
-   - `GEMINI_API_KEY`: Your Google Gemini API key
-3. Deploy: `vercel`
-
-### 9. Run Development Server
+### 8. Run Development Server
 
 ```bash
 npm run dev
@@ -171,45 +156,11 @@ npm run dev
 
 Visit `http://localhost:5173` in your browser.
 
-### 10. Build for Production
+### 9. Build for Production
 
 ```bash
 npm run build
 npm run preview
-```
-
-## API Documentation
-
-### POST `/api/suggestion`
-
-Generates AI-powered suggestions for partners.
-
-**Request:**
-```json
-{
-  "cyclePhase": "luteal",
-  "userId": "partner_user_id"
-}
-```
-
-**Response:**
-```json
-{
-  "suggestions": [
-    "Consider planning a relaxing evening together since this phase often involves higher energy needs.",
-    "Offer a gentle massage or warm compress for potential discomfort."
-  ],
-  "cyclePhase": "luteal",
-  "generatedAt": "2024-03-09T10:30:00.000Z"
-}
-```
-
-**Error Response:**
-```json
-{
-  "error": "Failed to generate suggestions",
-  "details": "Optional error details in development mode"
-}
 ```
 
 ## PCOD Algorithm Details
@@ -225,7 +176,7 @@ Generates AI-powered suggestions for partners.
 
 ### Ovulation Detection
 
-- **Trigger**: Daily symptom score ≥ 6
+- **Trigger**: Daily symptom score >= 6
 - **Result**: Sets phase to "ovulation" for 3 days
 - **Forecast**: Next period exactly 14 days from ovulation
 
@@ -265,14 +216,13 @@ Generates AI-powered suggestions for partners.
 ### Partner Dashboard (Linked)
 
 1. View linked tracker's current cycle phase
-2. Tap "Get Daily Suggestion" for AI-powered advice
-3. Receive personalized suggestions based on phase & preferences
+2. Receive personalized suggestions based on phase & preferences
 
 ### Partner Dashboard (Manual)
 
 1. Log symptoms directly on partner's profile
 2. View cycle phase in real-time
-3. Get daily AI suggestions
+3. Access daily personalized suggestions
 
 ## Firestore Data Structure
 
@@ -349,36 +299,11 @@ Generates AI-powered suggestions for partners.
 
 ### Firestore Security Rules
 
-- ✅ Users can only access their own documents
-- ✅ Linked partners can read tracker's cycle data
-- ✅ Daily logs are private to the user
-- ✅ Partner codes are 6-digit alphanumeric
-- ✅ No unauthorized access to personal health data
-
-### API Security
-
-- ✅ Vercel serverless routes hide Gemini API key
-- ✅ User ID verified before response
-- ✅ HTTPS-only communication
-- ✅ Environment variables for sensitive data
-
-## Deployment
-
-### Frontend (Vercel)
-
-```bash
-npm install -g vercel
-vercel login
-vercel
-```
-
-### Firebase
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase deploy
-```
+- Users can only access their own documents
+- Linked partners can read tracker's cycle data
+- Daily logs are private to the user
+- Partner codes are 6-digit alphanumeric
+- No unauthorized access to personal health data
 
 ## PWA Installation
 
@@ -393,71 +318,24 @@ Works offline with cached data. Service worker handles sync when connection retu
 
 ### Colors
 
-Edit `tailwind.config.js` to customize phase colors:
-```javascript
-follicular: '#3b82f6',
-ovulation: '#f59e0b',
-luteal: '#8b5cf6',
-menstrual: '#ef4444',
-```
-
-### Symptoms
-
-Add/remove symptoms in `components/LogSymptoms.tsx`:
-```typescript
-const symptomOptions = [
-  { id: 'new-symptom', label: 'New Symptom' }
-]
-```
+Edit `tailwind.config.js` to customize phase colors.
 
 ### Scoring Algorithm
 
-Adjust weights in `utils/pcod-algorithm.ts`:
-```typescript
-if (symptoms.cervicalFluid === 'egg-white') {
-  score += 5; // Change this value
-}
-```
+Adjust weights in `utils/pcod-algorithm.ts`.
 
 ## Troubleshooting
 
 **Firebase Config Issues**
-- ✓ Check `.env.local` matches Firebase project settings
-- ✓ Verify Firestore is enabled in Firebase Console
-- ✓ Check Firestore security rules are deployed
-
-**Gemini API Errors**
-- ✓ Verify `GEMINI_API_KEY` is set in Vercel
-- ✓ Check API key has Generative AI enabled
-- ✓ Ensure Vercel can access Google services
+- Check `.env.local` matches Firebase project settings
+- Verify Firestore is enabled in Firebase Console
+- Check Firestore security rules are deployed
 
 **PWA Not Installing**
-- ✓ App must be served over HTTPS
-- ✓ Check `vite.config.ts` PWA config
-- ✓ Clear browser cache and service workers
-
-## Future Enhancements
-
-- [ ] Symptom prediction (machine learning)
-- [ ] Partner notification when ovulation detected
-- [ ] Community insights & trends
-- [ ] Export cycle data (PDF)
-- [ ] Integration with fitness trackers
-- [ ] Multi-language support
-- [ ] Dark mode
+- App must be served over HTTPS
+- Check `vite.config.ts` PWA config
+- Clear browser cache and service workers
 
 ## License
 
 MIT
-
-## Support
-
-For issues or questions:
-1. Check Firestore security rules are correctly deployed
-2. Verify Firebase configuration in `.env.local`
-3. Check browser console for error messages
-4. Review `api/suggestion.ts` for API endpoint configuration
-
----
-
-**Built with ❤️ for better cycle tracking and partner support**

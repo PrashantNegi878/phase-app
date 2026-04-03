@@ -148,8 +148,8 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
       }, delay);
     } catch (err) {
       console.error('Error saving symptoms:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save symptoms';
-      setError(errorMessage);
+      setError('Failed to save symptoms. Please try again.');
+      console.error('Save Symptoms Error:', err);
       setSaving(false);
     }
   };

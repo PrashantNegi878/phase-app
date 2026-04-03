@@ -43,6 +43,10 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       setError('Please enter a valid 6-digit code');
       return;
     }
+    if (supportStyles.length === 0) {
+      setError('Please select at least one support style');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -50,13 +54,18 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       await cycleService.updatePartnerProfile(userId, supportStyles, scheduleConstraints);
       onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to link account');
+      setError('Invalid partner code or failed to link account. Please try again.');
+      console.error('Linking Error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleManualMode = async () => {
+    if (supportStyles.length === 0) {
+      setError('Please select at least one support style');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -64,7 +73,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       onComplete();
     } catch (err) {
       console.error('Error in handleManualMode:', err);
-      setError(err instanceof Error ? err.message : 'Failed to setup profile');
+      setError('Failed to setup profile. Please check your connection and try again.');
+      console.error('Setup Error:', err);
     } finally {
       setLoading(false);
     }
@@ -192,8 +202,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
   );
 
   return (
-    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="min-h-[100dvh] bg-app-bg flex flex-col items-center justify-center p-4 py-12">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none fixed">
         <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
@@ -202,7 +212,7 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative bg-card-bg/80 backdrop-blur-xl rounded-3xl shadow-soft-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto border border-border-subtle"
+        className="relative bg-card-bg/80 backdrop-blur-xl rounded-3xl shadow-soft-lg w-full max-w-md p-6 border border-border-subtle my-auto z-10"
       >
         <motion.div variants={itemVariants} className="text-center mb-5">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-sage-200 dark:bg-sage-900/30 mb-3 shadow-soft">
