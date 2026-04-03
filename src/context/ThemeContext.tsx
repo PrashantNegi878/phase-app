@@ -20,10 +20,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
+    }
+    
+    // Dynamically match the exact UI variable to prevent hardcoding mismatches
+    const bgColor = getComputedStyle(root).getPropertyValue('--bg-main').trim();
+    if (metaThemeColor && bgColor) {
+      metaThemeColor.setAttribute('content', bgColor);
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
