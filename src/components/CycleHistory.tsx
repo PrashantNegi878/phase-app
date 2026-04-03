@@ -5,6 +5,7 @@ import { CycleHistory as CycleHistoryType, CycleData } from '../types';
 import { cycleService } from '../services/cycle';
 import { formatDateForDisplay, normalizeDate, calculatePhaseDates } from '../utils/dateUtils';
 import { CycleCalendar } from './CycleCalendar';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface CycleHistoryProps {
   userId: string;
@@ -12,6 +13,7 @@ interface CycleHistoryProps {
 }
 
 export function CycleHistory({ userId, onClose }: CycleHistoryProps) {
+  useScrollLock();
   const [history, setHistory] = useState<CycleHistoryType[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCycleData, setSelectedCycleData] = useState<CycleData | null>(null);
@@ -87,7 +89,7 @@ export function CycleHistory({ userId, onClose }: CycleHistoryProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-card-bg rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-xl border border-border-subtle"
+        className="bg-card-bg rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-xl border border-border-subtle"
       >
         {/* Header */}
         <div className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-6 z-10">

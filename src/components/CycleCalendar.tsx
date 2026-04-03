@@ -5,6 +5,7 @@ import { CycleData } from '../types';
 import { getToday, normalizeDate, formatDateForDisplay, addDays } from '../utils/dateUtils';
 import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 import { PHASE_COLORS, PHASE_LABELS } from '../constants/phases';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface CycleCalendarProps {
   cycleData: CycleData;
@@ -14,6 +15,7 @@ interface CycleCalendarProps {
 }
 
 export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHistory = false }: CycleCalendarProps) {
+  useScrollLock();
   // 1. Current Day Calculation
   const currentDayOfCycle = useMemo(() => {
     if (isHistory || !cycleData?.lastPeriodDate) return 0;
@@ -146,7 +148,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-card-bg rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg border border-border-subtle"
+          className="bg-card-bg rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg border border-border-subtle"
         >
           {/* Header */}
           <div className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-6 z-10">
