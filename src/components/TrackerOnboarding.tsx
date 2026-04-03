@@ -133,8 +133,8 @@ export function TrackerOnboarding({
   const buttonTap = { scale: 0.97 };
 
   return (
-    <div className="min-h-screen bg-app-bg flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="min-h-[100dvh] bg-app-bg flex flex-col items-center justify-center p-4 py-12">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none fixed">
         <div className="absolute top-20 left-10 w-64 h-64 bg-sage-200/20 dark:bg-sage-900/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-80 h-80 bg-earth-200/30 dark:bg-slate-800/20 rounded-full blur-3xl" />
       </div>
@@ -143,7 +143,7 @@ export function TrackerOnboarding({
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative bg-card-bg rounded-4xl shadow-soft-lg w-full max-w-md p-8 border border-border-subtle"
+        className="relative bg-card-bg rounded-4xl shadow-soft-lg w-full max-w-md p-8 border border-border-subtle my-auto z-10"
       >
         <AnimatePresence mode="wait">
           {step === 'welcome' && (
