@@ -75,7 +75,8 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
       onLogComplete();
     } catch (err) {
       console.error('Error logging period:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save period');
+      setError('Failed to log period start. Please try again.');
+      console.error('Log Period Error:', err);
     } finally {
       setSaving(false);
     }

@@ -24,7 +24,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
           onAuthSuccess();
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Magic link authentication failed');
+        setError('Invalid magic link. Please request a new one.');
+        console.error('Magic Link Error:', err);
       }
     };
 
@@ -38,7 +39,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       await authService.signInWithGoogle(role);
       onAuthSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google Sign-In failed');
+      setError('Google Sign-In failed or was cancelled. Please try again.');
+      console.error('Google Sign-In Error:', err);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -60,7 +62,8 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
       setMagicLinkSent(true);
       setEmail('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send magic link');
+      setError('Failed to send magic link. Please check your email and try again.');
+      console.error('Send Link Error:', err);
     } finally {
       setIsMagicLinkSending(false);
     }

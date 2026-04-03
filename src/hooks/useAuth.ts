@@ -21,7 +21,8 @@ export function useAuth() {
           setUserData(null);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError('An error occurred during authentication. Please try again.');
+        console.error('Authentication Error:', err);
       } finally {
         setLoading(false);
       }

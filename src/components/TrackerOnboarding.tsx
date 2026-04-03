@@ -105,7 +105,8 @@ export function TrackerOnboarding({
       onComplete();
     } catch (err) {
       console.error('Onboarding error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
+      setError('Failed to setup profile. Please check your connection and try again.');
+      console.error('Onboarding Error:', err);
     } finally {
       setLoading(false);
     }

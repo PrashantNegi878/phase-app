@@ -116,7 +116,8 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
       onEditComplete();
     } catch (err) {
       console.error('Error updating period:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update period');
+      setError('Failed to update period data. Please try again.');
+      console.error('Edit Period Error:', err);
       setShowConfirmation(false);
     } finally {
       setSaving(false);

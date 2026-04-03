@@ -50,7 +50,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       await cycleService.updatePartnerProfile(userId, supportStyles, scheduleConstraints);
       onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to link account');
+      setError('Invalid partner code or failed to link account. Please try again.');
+      console.error('Linking Error:', err);
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,8 @@ export function PartnerOnboarding({ userId, onComplete }: PartnerOnboardingProps
       onComplete();
     } catch (err) {
       console.error('Error in handleManualMode:', err);
-      setError(err instanceof Error ? err.message : 'Failed to setup profile');
+      setError('Failed to setup profile. Please check your connection and try again.');
+      console.error('Setup Error:', err);
     } finally {
       setLoading(false);
     }
