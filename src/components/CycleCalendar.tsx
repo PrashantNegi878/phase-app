@@ -5,6 +5,7 @@ import { CycleData } from '../types';
 import { getToday, normalizeDate, formatDateForDisplay, addDays } from '../utils/dateUtils';
 import { STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 import { PHASE_COLORS, PHASE_LABELS } from '../constants/phases';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface CycleCalendarProps {
   cycleData: CycleData;
@@ -14,6 +15,7 @@ interface CycleCalendarProps {
 }
 
 export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHistory = false }: CycleCalendarProps) {
+  useScrollLock();
   // 1. Current Day Calculation
   const currentDayOfCycle = useMemo(() => {
     if (isHistory || !cycleData?.lastPeriodDate) return 0;
@@ -146,7 +148,7 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-card-bg rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg border border-border-subtle"
+          className="bg-card-bg rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-soft-lg border border-border-subtle"
         >
           {/* Header */}
           <div className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-6 z-10">
@@ -248,12 +250,14 @@ export function CycleCalendar({ cycleData, cycleLengthDays = 28, onClose, isHist
                         transition-all duration-200
                       `}
                     >
-                      <div className={`text-xs sm:text-sm font-semibold ${colors.text} z-10 ${showMonth ? '-mt-1' : ''}`}>
+                      <div className={`text-xs sm:text-sm font-semibold flex items-center justify-center ${colors.text} z-10 ${showMonth ? '-mt-2 sm:-mt-1.5' : ''} leading-none`}>
                         {dayOfMonth}
                       </div>
                       {showMonth && (
-                        <div className="absolute bottom-1 text-[8px] text-text-muted opacity-60 font-bold uppercase tracking-tighter">
-                          {item.date.toLocaleDateString('en-US', { month: 'short' })}
+                        <div className="absolute bottom-1 sm:bottom-1.5 w-full flex justify-center items-center pointer-events-none">
+                          <span className="text-[10px] transform scale-[0.65] sm:scale-[0.8] origin-bottom text-text-muted opacity-80 font-bold uppercase tracking-wider leading-none whitespace-nowrap">
+                            {item.date.toLocaleDateString('en-US', { month: 'short' })}
+                          </span>
                         </div>
                       )}
                     </div>

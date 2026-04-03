@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Activity, FileText, Check, Droplets, Thermometer, Flame, Heart, Minus, GripHorizontal, Cloud, Smile, Zap, AlertTriangle, SmilePlus, Meh, Frown, Wind, CloudLightning, Info, CalendarCheck } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { getToday, formatDateForInput, formatDateForDisplay, parseDateFromInput } from '../utils/dateUtils';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface LogSymptomsProps {
   userId: string;
@@ -111,6 +112,7 @@ const moodOptions = [
 ];
 
 export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProps) {
+  useScrollLock();
   const [date, setDate] = useState(formatDateForInput(getToday()));
   const [symptoms, setSymptoms] = useState<any>({});
   const [saving, setSaving] = useState(false);
@@ -155,13 +157,13 @@ export function LogSymptoms({ userId, onLogComplete, onCancel }: LogSymptomsProp
   const buttonTap = { scale: 0.97 };
 
   return (
-    <div className="fixed inset-0 bg-black flex items-end sm:items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-card-bg w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-soft-lg flex flex-col border border-border-subtle"
+        className="bg-card-bg rounded-4xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-soft-xl flex flex-col border border-border-subtle"
       >
         <AnimatePresence mode="wait">
           {!isSuccess ? (

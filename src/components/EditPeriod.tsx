@@ -6,6 +6,7 @@ import { db } from '../services/firebase';
 import { cycleService } from '../services/cycle';
 import { CycleData, TrackerProfile, CycleHistory } from '../types';
 import { normalizeDate, formatDateForInput, parseDateFromInput, formatDateForDisplay, getToday, daysBetween } from '../utils/dateUtils';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface EditPeriodProps {
   userId: string;
@@ -15,6 +16,7 @@ interface EditPeriodProps {
 }
 
 export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }: EditPeriodProps) {
+  useScrollLock();
   const [cycleData, setCycleData] = useState<CycleData | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -156,7 +158,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-card-bg rounded-3xl w-full max-w-lg shadow-soft-xl overflow-hidden border border-border-subtle"
+          className="bg-card-bg rounded-4xl w-full max-w-lg shadow-soft-xl overflow-hidden border border-border-subtle"
         >
           <div className="p-6 flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
@@ -172,7 +174,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
       <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center p-4 z-50">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
-          className="bg-card-bg rounded-3xl w-full sm:max-w-md p-6 text-center shadow-soft-lg border border-border-subtle"
+          className="bg-card-bg rounded-4xl w-full sm:max-w-md p-6 text-center shadow-soft-lg border border-border-subtle"
         >
           <p className="text-text-muted mb-4">No period data to edit yet.</p>
           <motion.button
@@ -199,7 +201,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-card-bg rounded-3xl w-full sm:max-w-md shadow-soft-lg overflow-hidden border border-border-subtle"
+        className="bg-card-bg rounded-4xl w-full sm:max-w-md shadow-soft-lg overflow-hidden border border-border-subtle"
       >
         {/* Header */}
         <motion.div variants={itemVariants} className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-5 z-10">
@@ -378,7 +380,7 @@ export function EditPeriod({ userId, trackerProfile, onEditComplete, onCancel }:
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-card-bg rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl border border-border-subtle"
+                className="bg-card-bg rounded-4xl w-full max-w-sm overflow-hidden shadow-2xl border border-border-subtle"
               >
                 <div className="p-8 text-center uppercase tracking-widest text-[10px] font-bold text-rose-500 mb-2">
                   Important: Clinical Update Required

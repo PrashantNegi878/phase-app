@@ -4,6 +4,7 @@ import { X, Droplets, Calendar } from 'lucide-react';
 import { cycleService } from '../services/cycle';
 import { TrackerProfile } from '../types';
 import { getToday, formatDateForInput, addDays, parseDateFromInput, formatDateForDisplay, normalizeDate } from '../utils/dateUtils';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface LogPeriodProps {
   userId: string;
@@ -13,6 +14,7 @@ interface LogPeriodProps {
 }
 
 export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: LogPeriodProps) {
+  useScrollLock();
   const today = getToday();
   const typicalPeriodLength = trackerProfile?.typicalPeriodLengthDays || 5;
   const defaultEndDate = addDays(today, typicalPeriodLength - 1);
@@ -116,7 +118,7 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
         animate="visible"
         exit="exit"
         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-card-bg w-full sm:max-w-md shadow-soft-lg overflow-hidden border border-border-subtle"
+        className="bg-card-bg rounded-4xl w-full sm:max-w-md shadow-soft-lg overflow-hidden border border-border-subtle"
       >
         {/* Header */}
         <motion.div variants={itemVariants} className="sticky top-0 bg-card-bg border-b border-border-subtle flex items-center justify-between p-5 z-10">

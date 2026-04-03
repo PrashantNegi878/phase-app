@@ -1,6 +1,7 @@
 {
   "name": "period-tracker-pwa",
   "version": "1.0.0",
+  "description": "A comprehensive cycle tracker for regular and irregular cycles (PCOD/PCOS) with intelligent symptom-based prediction and personalized wellness insights.",
   "type": "module",
   "scripts": {
     "dev": "vite",

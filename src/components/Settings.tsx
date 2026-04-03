@@ -7,6 +7,7 @@ import { TrackerProfile } from '../types';
 import { getToday, normalizeDate } from '../utils/dateUtils';
 import { cycleService } from '../services/cycle';
 import { MIN_TYPICAL_CYCLE_LENGTH, MAX_TYPICAL_CYCLE_LENGTH } from '../constants/cycle';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface SettingsProps {
   userId: string;
@@ -14,6 +15,7 @@ interface SettingsProps {
 }
 
 export function Settings({ userId, onBack }: SettingsProps) {
+  useScrollLock();
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -117,7 +119,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-card-bg/95 backdrop-blur-xl rounded-3xl w-full max-w-md p-6 shadow-soft-lg"
+          className="bg-card-bg/95 backdrop-blur-xl rounded-4xl w-full max-w-md p-6 shadow-soft-lg"
         >
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-sage-200 border-t-sage-500 rounded-full animate-spin" />
@@ -135,7 +137,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-card-bg rounded-3xl w-full max-w-md shadow-soft-xl border border-border-subtle overflow-hidden"
+        className="bg-card-bg rounded-4xl w-full max-w-md shadow-soft-xl border border-border-subtle overflow-hidden"
       >
         <AnimatePresence mode="wait">
           {!isSuccess ? (
@@ -354,7 +356,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-card-bg rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-red-100 dark:border-red-900/30"
+                className="bg-card-bg rounded-4xl w-full max-w-sm overflow-hidden shadow-2xl border border-red-100 dark:border-red-900/30"
               >
                 <div className="bg-red-50 p-6 flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
