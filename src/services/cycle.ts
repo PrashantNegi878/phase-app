@@ -17,7 +17,7 @@ import {
 import { db } from './firebase';
 import { DailyLog, CycleData, TrackerProfile, PartnerProfile, CycleHistory } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
-import { getToday, normalizeDate, calculateDayOfCycle, calculatePhaseDates, addDays, daysBetween } from '../utils/dateUtils';
+import { getToday, normalizeDate, calculatePhaseDates, addDays, daysBetween } from '../utils/dateUtils';
 import { MIN_CYCLE_LENGTH_FOR_ARCHIVE, STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 
 export const cycleService = {
@@ -32,10 +32,6 @@ export const cycleService = {
     const querySnapshot = await getDocs(q);
     const deletePromises = querySnapshot.docs.map(document => deleteDoc(document.ref));
     await Promise.all(deletePromises);
-    
-    if (querySnapshot.docs.length > 0) {
-      console.log(`[CLINICAL SCRUB] Deleted ${querySnapshot.docs.length} symptoms/ovulation logs starting from ${normalizeDate(lastPeriodDate).toLocaleDateString()}`);
-    }
   },
 
   // Listen for recent logs
@@ -108,8 +104,6 @@ export const cycleService = {
     const periodEndDate = existingCycleData?.periodEndDate || null;
 
     const lastPeriod = normalizeDate(trackerProfile.lastPeriodDate);
-    const dayOfCycle = calculateDayOfCycle(lastPeriod);
-    
     // 1. Determine Cycle Length to use
     // Preference: 1. Manual override, 2. Current profile setting, 3. Default 28
     const currentCycleLength = manualCycleLength || trackerProfile.cycleLengthDays || 28;
@@ -153,7 +147,6 @@ export const cycleService = {
       periodEndDate: periodEndDate ? normalizeDate(periodEndDate) : null,
       ovulationDetectedDate: effectiveOvulationDate,
       nextPeriodDate: nextPeriodDate ? normalizeDate(nextPeriodDate) : null,
-      dayOfCycle: dayOfCycle,
       // Comprehensive phase storage
       menstrualPhaseStart: phaseDates.menstrualPhaseStart ? normalizeDate(phaseDates.menstrualPhaseStart) : null,
       menstrualPhaseEnd: phaseDates.menstrualPhaseEnd ? normalizeDate(phaseDates.menstrualPhaseEnd) : null,
@@ -309,9 +302,6 @@ export const cycleService = {
     });
 
 
-    // Calculate correct day of cycle using centralized helper function
-    const dayOfCycle = calculateDayOfCycle(normalizedStartDate);
-    
     // 4. Calculate predicted next period date based on cycle length
     const predictedNextPeriodDate = addDays(normalizedStartDate, cycleLengthDays);
 
@@ -330,7 +320,6 @@ export const cycleService = {
       lastPeriodDate: normalizedStartDate,
       periodEndDate: normalizedEndDate || null,
       nextPeriodDate: normalizeDate(predictedNextPeriodDate),
-      dayOfCycle: dayOfCycle,
       // Comprehensive phase storage
       menstrualPhaseStart: phaseDates.menstrualPhaseStart ? normalizeDate(phaseDates.menstrualPhaseStart) : null,
       menstrualPhaseEnd: phaseDates.menstrualPhaseEnd ? normalizeDate(phaseDates.menstrualPhaseEnd) : null,
@@ -401,7 +390,6 @@ export const cycleService = {
       lastPeriodDate: normalizedStartDate,
       periodEndDate: normalizedEndDate,
       nextPeriodDate: normalizeDate(predictedNextPeriodDate),
-      dayOfCycle: calculateDayOfCycle(normalizedStartDate),
       ...phaseDates,
       updatedAt: new Date(),
     };
@@ -615,7 +603,6 @@ export const cycleService = {
             typicalPeriodLengthDays: average,
             updatedAt: Timestamp.now()
           });
-          console.log(`[ADAPTIVE] Period length updated to ${average} days (Avg of ${lengths.length} cycles)`);
         }
       }
     } catch (error) {

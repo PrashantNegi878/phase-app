@@ -8,6 +8,7 @@ import { getToday, normalizeDate } from '../utils/dateUtils';
 import { cycleService } from '../services/cycle';
 import { MIN_TYPICAL_CYCLE_LENGTH, MAX_TYPICAL_CYCLE_LENGTH } from '../constants/cycle';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useAuth } from '../hooks/useAuth';
 
 interface SettingsProps {
   userId: string;
@@ -16,6 +17,9 @@ interface SettingsProps {
 
 export function Settings({ userId, onBack }: SettingsProps) {
   useScrollLock();
+  const { currentUser } = useAuth();
+  const isReadOnly = currentUser?.uid !== userId;
+
   const [cycleLengthDays, setCycleLengthDays] = useState(28);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -58,6 +62,8 @@ export function Settings({ userId, onBack }: SettingsProps) {
   }, [userId]);
 
   const handleSave = async (forceDelete = false) => {
+    if (isReadOnly) return;
+
     if (isManualOverride && !forceDelete) {
       setShowConfirmDelete(true);
       return;
@@ -154,7 +160,12 @@ export function Settings({ userId, onBack }: SettingsProps) {
                   <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
                     <Settings2 className="w-5 h-5 text-sage-600 dark:text-sage-400" />
                   </div>
-                  <h2 className="text-xl font-semibold text-text-main">Settings</h2>
+                  <div>
+                    <h2 className="text-xl font-semibold text-text-main">Settings</h2>
+                    {isReadOnly && (
+                      <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">View Only Mode</p>
+                    )}
+                  </div>
                 </div>
                 <motion.button
                   onClick={onBack}
@@ -174,7 +185,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                     <label className="text-sm font-medium text-text-main">
                       Typical Cycle Length
                     </label>
-                    {ovulationDate && !isManualOverride && (
+                    {ovulationDate && !isManualOverride && !isReadOnly && (
                       <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -186,7 +197,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
                     )}
                   </div>
                   
-                  <div className="bg-app-bg rounded-2xl p-4 border border-border-subtle">
+                  <div className={`bg-app-bg rounded-2xl p-4 border border-border-subtle ${isReadOnly ? 'opacity-80' : ''}`}>
                     <div className="flex items-center justify-between gap-4">
                       <input
                         type="range"
@@ -194,18 +205,22 @@ export function Settings({ userId, onBack }: SettingsProps) {
                         max={MAX_TYPICAL_CYCLE_LENGTH}
                         value={cycleLengthDays}
                         onChange={(e) => setCycleLengthDays(parseInt(e.target.value))}
-                        className="flex-1 h-2 bg-sage-200 rounded-lg appearance-none cursor-pointer accent-sage-500"
+                        disabled={isReadOnly}
+                        className={`flex-1 h-2 bg-sage-200 rounded-lg appearance-none accent-sage-500 ${isReadOnly ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                       />
                         <div className="w-12 h-10 flex items-center justify-center bg-card-bg rounded-xl border border-sage-200 dark:border-sage-900/50 text-text-main font-bold shadow-sm">
                           {cycleLengthDays}
                         </div>
                       </div>
                     <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
-                      Typical range: 21-45 days. Adjusting this will refine your future period predictions.
+                      {isReadOnly 
+                        ? "This is the current set typical cycle length for this profile. Only the account owner can modify this value."
+                        : "Typical range: 21-45 days. Adjusting this will refine your future period predictions."
+                      }
                     </p>
                   </div>
 
-                  {isManualOverride && (
+                  {isManualOverride && !isReadOnly && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -221,7 +236,7 @@ export function Settings({ userId, onBack }: SettingsProps) {
 
                 {/* Info / Warning box */}
                 <AnimatePresence mode="wait">
-                  {isManualOverride ? (
+                  {isManualOverride && !isReadOnly ? (
                     <motion.div
                       key="warning"
                       initial={{ opacity: 0, y: 10 }}
@@ -275,29 +290,33 @@ export function Settings({ userId, onBack }: SettingsProps) {
                     onClick={onBack}
                     whileHover={{ y: -2 }}
                     whileTap={buttonTap}
-                    className="flex-1 px-4 py-3 border-2 border-border-subtle text-text-main font-medium rounded-xl hover:bg-earth-100 dark:hover:bg-slate-700 transition-colors duration-200"
+                    className={`flex-1 px-4 py-3 border-2 border-border-subtle text-text-main font-medium rounded-xl hover:bg-earth-100 dark:hover:bg-slate-700 transition-colors duration-200 ${isReadOnly ? 'bg-earth-50' : ''}`}
                   >
-                    Cancel
+                    {isReadOnly ? 'Close' : 'Cancel'}
                   </motion.button>
-                  <motion.button
-                    onClick={() => handleSave()}
-                    disabled={saving}
-                    whileHover={{ y: -2 }}
-                    whileTap={buttonTap}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Changes'
-                    )}
-                  </motion.button>
+                  
+                  {!isReadOnly && (
+                    <motion.button
+                      onClick={() => handleSave()}
+                      disabled={saving}
+                      whileHover={{ y: -2 }}
+                      whileTap={buttonTap}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-medium rounded-xl transition-colors duration-200 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </motion.button>
+                  )}
                 </div>
               </div>
             </motion.div>
+
           ) : (
             <motion.div
               key="settings-success"

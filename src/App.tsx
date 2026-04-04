@@ -69,35 +69,29 @@ function App() {
       }
 
       try {
-        const user = await authService.getUserData(currentUser.uid);
-        console.log('User data:', user);
+        let user = await authService.getUserData(currentUser.uid);
 
         if (!user) {
-          console.warn('No user data found - this is a new user');
-          // For new users, we need to wait for the user document to be created
-          // Retry fetching user data a few times with delays
+          console.warn('No user data found - retrying...');
           let retryCount = 0;
           const maxRetries = 5;
           
           while (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-            const userData = await authService.getUserData(currentUser.uid);
-            console.log(`Retry ${retryCount + 1}: User data:`, userData);
-            
-            if (userData) {
-              // User data created, restart the initialization with the new data
-              console.log('User data created, restarting initialization');
-              initializeApp();
-              return;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const retryUser = await authService.getUserData(currentUser.uid);
+            if (retryUser) {
+              user = retryUser;
+              break;
             }
             retryCount++;
           }
           
-          // If we still don't have user data after retries, show error
-          console.error('User data not created after multiple retries');
-          setSessionRole(null);
-          setCurrentView('auth');
-          return;
+          if (!user) {
+            console.error('User data not created after multiple retries');
+            setSessionRole(null);
+            setCurrentView('auth');
+            return;
+          }
         }
 
         setSessionRole(user.role);
@@ -106,14 +100,11 @@ function App() {
           setLoadingTrackerProfile(true);
           try {
             const profile = await cycleService.getTrackerProfile(currentUser.uid);
-            console.log('Tracker profile:', profile);
             setTrackerProfile(profile || null);
             
             if (profile && profile.lastPeriodDate) {
-              console.log('Going to tracker-dashboard');
               setCurrentView('tracker-dashboard');
             } else {
-              console.log('Going to tracker-onboarding');
               setCurrentView('tracker-onboarding');
             }
           } catch (err) {
@@ -130,27 +121,22 @@ function App() {
           try {
             // Try to fetch partner profile with retry mechanism
             const profile = await fetchPartnerProfileWithRetry(currentUser.uid);
-            console.log('Partner profile:', profile);
             
             // Set partnerProfile state - use null if no profile exists
             setPartnerProfile(profile || null);
 
             if (!profile?.supportStyles?.length) {
-              console.log('Going to partner-onboarding');
               setCurrentView('partner-onboarding');
             } else if (!profile?.linkedTrackerId) {
               // Manual Mode Partner: Also needs Cycle Basics onboarding
               const tProfile = await cycleService.getTrackerProfile(currentUser.uid);
               setTrackerProfile(tProfile || null);
               if (tProfile?.lastPeriodDate) {
-                console.log('Manual Partner: Cycle Basics completed. Going to dashboard.');
                 setCurrentView('partner-dashboard');
               } else {
-                console.log('Manual Partner: Cycle Basics missing. Going to tracker-onboarding.');
                 setCurrentView('tracker-onboarding');
               }
             } else {
-              console.log('Going to partner-dashboard');
               setCurrentView('partner-dashboard');
             }
           } catch (err) {
@@ -179,7 +165,6 @@ function App() {
         setLoadingPartnerProfile(true);
         try {
           const profile = await fetchPartnerProfileWithRetry(currentUser.uid);
-          console.log('Refetched partner profile:', profile);
           setPartnerProfile(profile || null);
         } catch (err) {
           console.error('Error refetching partner profile:', err);
@@ -200,7 +185,6 @@ function App() {
         setLoadingTrackerProfile(true);
         try {
           const profile = await cycleService.getTrackerProfile(currentUser.uid);
-          console.log('Refetched tracker profile:', profile);
           setTrackerProfile(profile || null);
         } catch (err) {
           console.error('Error refetching tracker profile:', err);
@@ -218,16 +202,17 @@ function App() {
   React.useEffect(() => {
     if (currentUser) {
       const unsubscribe = cycleService.onTrackerProfileChange(currentUser.uid, (profile) => {
-        console.log('Real-time tracker profile update:', profile);
         setTrackerProfile(profile || null);
         
         // If we're on tracker dashboard and profile has period date, stay on dashboard
         // If we're on tracker onboarding and profile has period date, switch to dashboard
         if (profile && profile.lastPeriodDate) {
-          if (currentView === 'tracker-onboarding') {
-            console.log('Profile updated with period date, switching to tracker-dashboard');
-            setCurrentView('tracker-dashboard');
-          }
+          setCurrentView((prevView) => {
+            if (prevView === 'tracker-onboarding') {
+              return 'tracker-dashboard';
+            }
+            return prevView;
+          });
         }
       });
 
@@ -236,7 +221,7 @@ function App() {
         unsubscribe();
       };
     }
-  }, [currentView, currentUser]);
+  }, [currentUser]);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -280,11 +265,10 @@ function App() {
       )}
 
       {/* Main Content */}
-      {currentView === 'auth' && <AuthPage onAuthSuccess={() => {}} />}
+      {currentView === 'auth' && <AuthPage />}
 
       {currentView === 'tracker-onboarding' && (
         <>
-          {console.log('Rendering tracker onboarding with partnerCode:', trackerPartnerCode)}
           <TrackerOnboarding
             userId={currentUser!.uid}
             partnerCode={trackerPartnerCode}

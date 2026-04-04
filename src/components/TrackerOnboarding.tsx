@@ -37,9 +37,6 @@ export function TrackerOnboarding({
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Debug log to confirm component is rendering
-  console.log('TrackerOnboarding rendering with partnerCode:', partnerCode);
-
   const handleContinue = async () => {
     if (step === 'welcome') {
       setStep('cycle-basics');
