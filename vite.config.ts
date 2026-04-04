@@ -12,7 +12,7 @@ export default defineConfig({
         name: 'Phase - Period & Cycle Tracker',
         short_name: 'Phase',
         description: 'A comprehensive cycle tracker for regular and irregular cycles (PCOD/PCOS) with intelligent symptom-based prediction and personalized wellness insights.',
-        theme_color: '#7d9c78',
+        theme_color: '#faf9f7',
         background_color: '#faf9f7',
         display: 'standalone',
         scope: '/',
