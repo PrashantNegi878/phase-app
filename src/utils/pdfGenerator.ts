@@ -140,9 +140,16 @@ export async function exportClinicalReport(
         return `${normalizeDate(start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} to\n${normalizeDate(end).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
       };
 
+      const startDateStr = currentCycle.lastPeriodDate 
+        ? formatDateForDisplay(normalizeDate(currentCycle.lastPeriodDate)) 
+        : 'Not Started';
+      const endDateStr = currentCycle.nextPeriodDate 
+        ? `Exp. ${formatDateForDisplay(normalizeDate(currentCycle.nextPeriodDate))}` 
+        : 'Pending';
+
       const currentData = [[
         'Active',
-        `${formatDateForDisplay(normalizeDate(currentCycle.lastPeriodDate))} -\nExp. ${formatDateForDisplay(normalizeDate(currentCycle.nextPeriodDate))}`,
+        `${startDateStr} -\n${endDateStr}`,
         formatPhase(currentCycle.menstrualPhaseStart, currentCycle.menstrualPhaseEnd),
         formatPhase(currentCycle.follicularPhaseStart, currentCycle.follicularPhaseEnd),
         formatPhase(currentCycle.ovulationPhaseStart, currentCycle.ovulationPhaseEnd),
@@ -172,7 +179,7 @@ export async function exportClinicalReport(
           }
         }
       });
-      finalY = doc.lastAutoTable.finalY || finalY;
+      finalY = (doc as any).lastAutoTable?.finalY || finalY;
     }
 
     // --- 3rd TABLE: DAILY LOGS ---

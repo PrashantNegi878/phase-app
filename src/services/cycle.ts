@@ -32,10 +32,6 @@ export const cycleService = {
     const querySnapshot = await getDocs(q);
     const deletePromises = querySnapshot.docs.map(document => deleteDoc(document.ref));
     await Promise.all(deletePromises);
-    
-    if (querySnapshot.docs.length > 0) {
-      console.log(`[CLINICAL SCRUB] Deleted ${querySnapshot.docs.length} symptoms/ovulation logs starting from ${normalizeDate(lastPeriodDate).toLocaleDateString()}`);
-    }
   },
 
   // Listen for recent logs
@@ -615,7 +611,6 @@ export const cycleService = {
             typicalPeriodLengthDays: average,
             updatedAt: Timestamp.now()
           });
-          console.log(`[ADAPTIVE] Period length updated to ${average} days (Avg of ${lengths.length} cycles)`);
         }
       }
     } catch (error) {
