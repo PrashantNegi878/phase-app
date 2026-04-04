@@ -4,11 +4,7 @@ import { Mail, Sparkles, Heart, Users } from 'lucide-react';
 import { authService } from '../services/auth';
 import { ThemeToggle } from './ThemeToggle';
 
-interface AuthPageProps {
-  onAuthSuccess: () => void;
-}
-
-export function AuthPage({ onAuthSuccess }: AuthPageProps) {
+export function AuthPage() {
   const [role, setRole] = useState<'tracker' | 'partner'>('tracker');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -20,10 +16,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
   useEffect(() => {
     const handleMagicLink = async () => {
       try {
-        const user = await authService.handleMagicLinkSignIn();
-        if (user) {
-          onAuthSuccess();
-        }
+        await authService.handleMagicLinkSignIn();
       } catch (err) {
         setError('Invalid magic link. Please request a new one.');
         console.error('Magic Link Error:', err);
@@ -31,14 +24,13 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
     };
 
     handleMagicLink();
-  }, [onAuthSuccess]);
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError('');
     try {
       await authService.signInWithGoogle(role);
-      onAuthSuccess();
     } catch (err) {
       setError('Google Sign-In failed or was cancelled. Please try again.');
       console.error('Google Sign-In Error:', err);

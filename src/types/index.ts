@@ -54,7 +54,7 @@ export interface CycleData {
   periodEndDate?: Date | null;
   ovulationDetectedDate?: Date | null;
   nextPeriodDate: Date | null;
-  dayOfCycle: number;
+  dayOfCycle?: number; // Deprecated: calculated live in the UI from lastPeriodDate
   // Phase date ranges for UI rendering
   menstrualPhaseStart?: Date | null;
   menstrualPhaseEnd?: Date | null;

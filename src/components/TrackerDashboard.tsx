@@ -83,30 +83,28 @@ export function TrackerDashboard({
   }, [userId]);
 
   useEffect(() => {
-    const fetchTrackerProfile = async () => {
-      try {
-        const unsubscribe = onSnapshot(
-          doc(db, 'trackerProfiles', userId),
-          (docSnap) => {
-            if (docSnap.exists()) {
-              const profile = docSnap.data() as TrackerProfile;
-              setTrackerProfile(profile);
-              setCycleLengthDays(profile.cycleLengthDays || 28);
-            }
-          }
-        );
-        return () => unsubscribe();
-      } catch (error) {
+    const unsubscribeProfile = onSnapshot(
+      doc(db, 'trackerProfiles', userId),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const profile = docSnap.data() as TrackerProfile;
+          setTrackerProfile(profile);
+          setCycleLengthDays(profile.cycleLengthDays || 28);
+        }
+      },
+      (error) => {
         console.error('Error fetching tracker profile:', error);
       }
-    };
-    fetchTrackerProfile();
+    );
 
     const unsubscribePartner = cycleService.onLinkedPartnersChange(userId, (hasPartner) => {
       setHasLinkedPartner(hasPartner);
     });
 
-    return () => unsubscribePartner();
+    return () => {
+      unsubscribeProfile();
+      unsubscribePartner();
+    };
   }, [userId]);
 
   useEffect(() => {

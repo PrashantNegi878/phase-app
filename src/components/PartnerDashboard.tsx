@@ -173,7 +173,7 @@ export function PartnerDashboard({
         else if (dayOfCycle >= ovDay && dayOfCycle < ovDay + 3) phase = 'ovulation';
         else if (dayOfCycle >= ovDay + 3) phase = 'luteal';
       } else {
-        const expectedOvulationDay = Math.round(28 / 2);
+        const expectedOvulationDay = Math.round(cycleLengthDays / 2);
         if (dayOfCycle <= 5) phase = 'menstrual';
         else if (dayOfCycle > 5 && dayOfCycle < expectedOvulationDay) phase = 'follicular';
         else if (dayOfCycle >= expectedOvulationDay && dayOfCycle < expectedOvulationDay + 3) phase = 'ovulation';
@@ -323,7 +323,7 @@ export function PartnerDashboard({
           <div className="flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${colors.vibrantBg}`} />
             <span className="text-text-muted">
-              {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : (isManualMode ? `Day ${cycleData.dayOfCycle} of your cycle` : `Day ${calculateDayOfCycle(normalizeDate(cycleData.lastPeriodDate))} of the cycle`)}
+              {currentPhase === 'out-of-cycle' ? 'Out of Cycle' : `Day ${calculateDayOfCycle(normalizeDate(cycleData.lastPeriodDate))} of ${isManualMode ? 'your' : 'the'} cycle`}
             </span>
           </div>
         </motion.div>
@@ -499,7 +499,7 @@ export function PartnerDashboard({
         </AnimatePresence>
 
         {showSettings && (
-          <Settings userId={userId} onBack={() => setShowSettings(false)} />
+          <Settings userId={linkedTrackerId || userId} onBack={() => setShowSettings(false)} />
         )}
 
         {showEditPeriod && (

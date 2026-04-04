@@ -76,7 +76,6 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
     } catch (err) {
       console.error('Error logging period:', err);
       setError('Failed to log period start. Please try again.');
-      console.error('Log Period Error:', err);
     } finally {
       setSaving(false);
     }
@@ -202,6 +201,9 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
                 {periodDuration} days
               </p>
             </div>
+            <p className="mt-3 text-xs text-text-muted italic opacity-70">
+              *Pre-filled using your typical period length. You can adjust this when it ends.
+            </p>
           </motion.div>
 
           {/* Buttons */}

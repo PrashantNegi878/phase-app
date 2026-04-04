@@ -207,9 +207,12 @@ function App() {
         // If we're on tracker dashboard and profile has period date, stay on dashboard
         // If we're on tracker onboarding and profile has period date, switch to dashboard
         if (profile && profile.lastPeriodDate) {
-          if (currentView === 'tracker-onboarding') {
-            setCurrentView('tracker-dashboard');
-          }
+          setCurrentView((prevView) => {
+            if (prevView === 'tracker-onboarding') {
+              return 'tracker-dashboard';
+            }
+            return prevView;
+          });
         }
       });
 
@@ -218,7 +221,7 @@ function App() {
         unsubscribe();
       };
     }
-  }, [currentView, currentUser]);
+  }, [currentUser]);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -262,7 +265,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      {currentView === 'auth' && <AuthPage onAuthSuccess={() => {}} />}
+      {currentView === 'auth' && <AuthPage />}
 
       {currentView === 'tracker-onboarding' && (
         <>
