@@ -4,6 +4,7 @@ import { X, History, Calendar, CheckCircle2, AlertCircle, ChevronRight } from 'l
 import { CycleHistory as CycleHistoryType, CycleData } from '../types';
 import { cycleService } from '../services/cycle';
 import { formatDateForDisplay, normalizeDate, calculatePhaseDates } from '../utils/dateUtils';
+import { exportClinicalReport } from '../utils/pdfGenerator';
 import { CycleCalendar } from './CycleCalendar';
 import { useScrollLock } from '../hooks/useScrollLock';
 
@@ -15,8 +16,21 @@ interface CycleHistoryProps {
 export function CycleHistory({ userId, onClose }: CycleHistoryProps) {
   useScrollLock();
   const [history, setHistory] = useState<CycleHistoryType[]>([]);
+  const [currentCycle, setCurrentCycle] = useState<CycleData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [selectedCycleData, setSelectedCycleData] = useState<CycleData | null>(null);
+
+  const handleDownloadReport = async () => {
+    setDownloading(true);
+    try {
+      await exportClinicalReport(userId, history, currentCycle);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handleItemClick = (item: CycleHistoryType) => {
     // If the record has frozen phase dates, use them directly (Frozen Time Machine)
@@ -59,11 +73,26 @@ export function CycleHistory({ userId, onClose }: CycleHistoryProps) {
   };
 
   useEffect(() => {
-    const unsubscribe = cycleService.onCycleHistoryChange(userId, (data) => {
-      setHistory(data);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const fetchCurrentAndHistory = async () => {
+      setLoading(true);
+      try {
+        const currentData = await cycleService.getCycleData(userId);
+        setCurrentCycle(currentData);
+      } catch (err) {
+        console.error("Error fetching current cycle:", err);
+      }
+      
+      const unsubscribe = cycleService.onCycleHistoryChange(userId, (data) => {
+        setHistory(data);
+        setLoading(false);
+      });
+      return unsubscribe;
+    };
+
+    const unsubscribePromise = fetchCurrentAndHistory();
+    return () => {
+      unsubscribePromise.then(unsub => unsub?.());
+    };
   }, [userId]);
 
   const modalVariants = {
@@ -102,12 +131,26 @@ export function CycleHistory({ userId, onClose }: CycleHistoryProps) {
               <p className="text-xs text-text-muted">Your past 12 months</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadReport}
+              disabled={downloading || loading || (history.length === 0 && !currentCycle)}
+              title="Export Clinical Report (PDF)"
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-sage-50 text-sage-600 hover:bg-sage-100 dark:bg-sage-900/40 dark:text-sage-400 dark:hover:bg-sage-900/60 transition-colors disabled:opacity-50"
+            >
+              {downloading ? (
+                <div className="w-5 h-5 border-2 border-sage-600/30 border-t-sage-600 rounded-full animate-spin" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-earth-100 dark:hover:bg-slate-700 text-text-muted hover:text-text-main transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
