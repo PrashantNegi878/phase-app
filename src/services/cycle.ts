@@ -18,7 +18,7 @@ import { db } from './firebase';
 import { DailyLog, CycleData, TrackerProfile, PartnerProfile, CycleHistory } from '../types';
 import { calculateCyclePhase, calculateSymptomScore } from '../utils/pcod-algorithm';
 import { getToday, normalizeDate, calculatePhaseDates, addDays, daysBetween } from '../utils/dateUtils';
-import { MIN_CYCLE_LENGTH_FOR_ARCHIVE, STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
+import { MIN_ABSOLUTE_CYCLE_LENGTH, MIN_CYCLE_LENGTH_FOR_ARCHIVE, STALE_CYCLE_THRESHOLD_DAYS } from '../constants/cycle';
 
 export const cycleService = {
   // Delete all logs for the current cycle
@@ -201,8 +201,8 @@ export const cycleService = {
     const endDate = normalizeDate(nextCycleStartDate);
     const length = daysBetween(startDate, endDate);
 
-    // Only archive if it's a valid completed cycle (prevents duplicates or accidental logs)
-    if (length < MIN_CYCLE_LENGTH_FOR_ARCHIVE) return;
+    // Only archive if it's above the absolute minimum (prevents ghost entries from accidental taps)
+    if (length < MIN_ABSOLUTE_CYCLE_LENGTH) return;
 
     // 1. Get tracker profile for typical cycle length
     const trackerProfile = await this.getTrackerProfile(userId);
@@ -263,8 +263,8 @@ export const cycleService = {
     if (profile?.lastPeriodDate) {
       const lastStart = normalizeDate(profile.lastPeriodDate);
       const daysSinceLastStart = daysBetween(lastStart, normalizeDate(startDate));
-      if (daysSinceLastStart < MIN_CYCLE_LENGTH_FOR_ARCHIVE) {
-        throw new Error(`Collision Detected: A new cycle cannot start only ${daysSinceLastStart} days after your last period (Min ${MIN_CYCLE_LENGTH_FOR_ARCHIVE} days).`);
+      if (daysSinceLastStart < MIN_ABSOLUTE_CYCLE_LENGTH) {
+        throw new Error(`Collision Detected: A new cycle cannot start only ${daysSinceLastStart} days after your last period (Min ${MIN_ABSOLUTE_CYCLE_LENGTH} days).`);
       }
     }
 

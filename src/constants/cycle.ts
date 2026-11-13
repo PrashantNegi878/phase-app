@@ -9,7 +9,11 @@ export const STALE_CYCLE_THRESHOLD_DAYS = 55;
 // Standard Luteal Phase length used for retrospective reconstruction when no symptoms are logged.
 export const STANDARD_LUTEAL_PHASE_DAYS = 14;
 
+// Absolute minimum cycle length — hard block below this (clinically, cycles under 10 days are physiologically implausible).
+export const MIN_ABSOLUTE_CYCLE_LENGTH = 10;
+
 // Minimum cycle length for a valid entry in history (prevents duplicates or accidental logs).
+// Cycles shorter than this will show a soft warning but are still allowed.
 export const MIN_CYCLE_LENGTH_FOR_ARCHIVE = 21;
 
 // The minimum number of days allowed for a "Typical Cycle Length" setting.

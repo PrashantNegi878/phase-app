@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MIN_ABSOLUTE_CYCLE_LENGTH, MIN_CYCLE_LENGTH_FOR_ARCHIVE } from '../constants/cycle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Droplets, Calendar } from 'lucide-react';
 import { cycleService } from '../services/cycle';
@@ -24,11 +25,13 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
   const [hasManuallyChangedEndDate, setHasManuallyChangedEndDate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
 
   const handleSavePeriod = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
+    setWarning('');
 
     const parsedStart = parseDateFromInput(startDate);
     const parsedEnd = parseDateFromInput(endDate);
@@ -44,10 +47,14 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
         return;
       }
       
-      if (daysSinceLast < 21) {
-        setError(`Date Verification Required: Your last period began only ${daysSinceLast} days ago. A new cycle typically requires a minimum of 21 days for clinical accuracy.`);
+      if (daysSinceLast < MIN_ABSOLUTE_CYCLE_LENGTH) {
+        setError(`Too Soon: Your last period began only ${daysSinceLast} days ago. A new cycle cannot begin within ${MIN_ABSOLUTE_CYCLE_LENGTH} days of the previous one.`);
         setSaving(false);
         return;
+      }
+
+      if (daysSinceLast < MIN_CYCLE_LENGTH_FOR_ARCHIVE) {
+        setWarning(`Short Cycle Detected: Your last period began ${daysSinceLast} days ago, which is shorter than the typical minimum of ${MIN_CYCLE_LENGTH_FOR_ARCHIVE} days. This can be normal — your entry has been saved.`);
       }
     }
 
@@ -148,6 +155,16 @@ export function LogPeriod({ userId, trackerProfile, onLogComplete, onCancel }: L
                 className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-2xl text-sm opacity-100"
               >
                 {error}
+              </motion.div>
+            )}
+            {!error && warning && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 rounded-2xl text-sm"
+              >
+                ⚠️ {warning}
               </motion.div>
             )}
           </AnimatePresence>
